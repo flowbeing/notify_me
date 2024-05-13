@@ -15,9 +15,7 @@ Future main() async{
 
   String apiKey = dotenv.env['API_KEY']!;
 
-  Data dataObject = Data(
-      apiKey: apiKey
-  );
+  Data dataObject = Data();
 
   /// needed to set data symbols and data fetching error files
   await dataObject.createAppFilesAndFolders();
@@ -30,8 +28,15 @@ Future main() async{
   // dataObject.updateAllFundsData();
   // dataObject.updateAllBondsData();
 
-  await dataObject.updateAndSaveAllSymbolsData();
-  // await dataObject.getAllSymbolsData();
-  // dataObject.getAppDirectory();
+  // await dataObject.updateAndSaveAllSymbolsData();
+  // await dataObject.getAllSymbolsLocalData();
+  // dataObject.getUriAppDirectory();
+
+  // await dataObject.getRealTimePriceAll();
+
+  // dataObject.getRealTimePriceSingle(
+  //   symbol: "INO/USD",
+  //   country: "US"
+  // );
 
 }

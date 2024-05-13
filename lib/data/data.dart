@@ -13,12 +13,9 @@ import "data_type.dart";
 
 class Data {
 
-  Data({
-    required this.apiKey
-  });
-
-  final String apiKey;
   final List<Map<dynamic, dynamic>> _listOfAllSymbolsDataMaps = [];
+
+  final String apiKey =  dotenv.env["API_KEY"]!;
 
   Directory? _appDir;
   String? _appDirPath;
@@ -28,6 +25,7 @@ class Data {
   final String _dataFetchingErrorLogFileName = dotenv.env["DATA_FETCHING_ERROR_LOG_FILE_NAME"]!;
   final String _dataUpdateSessionsFileName = dotenv.env["DATA_UPDATE_SESSIONS_FILE_NAME"]!;
   final String _otherErrorsLogFileName = dotenv.env["OTHER_ERRORS_LOG_FILE_NAME"]!;
+  final String _urlRealTimePrice = dotenv.env["URL_REAL_TIME_PRICE"]!;
 
   File? _dataFetchingErrorLogFile;
   File? _allSymbolsDataFile;
@@ -60,7 +58,7 @@ class Data {
             _dataFetchingErrorLogFileName
     );
     
-    File dataUpdateSessionsFileName = File(
+    File dataUpdateSessionsFile = File(
       _appDirPath! +
           _dataFolderName +
           _logFolderName +
@@ -76,20 +74,46 @@ class Data {
 
     bool isAllSymbolsDataFile = await allSymbolsDataFile.exists();
     bool isDataFetchingErrorLogfile = await dataFetchingErrorLogfile.exists();
+    bool isdataUpdateSessionsFile = await dataUpdateSessionsFile.exists();
+    bool isOtherErrorsLogFile = await otherErrorsLogFile.exists();
 
-    /// if data file and error log file do not exist, create them.
+    /// if data file and log files do not exist, create them.
+    // all symbols data file
     if (isAllSymbolsDataFile == false){
       await allSymbolsDataFile.create(recursive: true);
+      allSymbolsDataFile.writeAsString(
+        json.encode([{}]),
+      );
     }
 
+    // data fetching error log file
     if (isDataFetchingErrorLogfile == false){
       await dataFetchingErrorLogfile.create(recursive: true);
     }
 
+    // data update sessions file
+    if ( isdataUpdateSessionsFile == false){
+
+      DateTime now = DateTime.now();
+
+      await dataUpdateSessionsFile.create(recursive: true);
+      await dataUpdateSessionsFile.writeAsString(json.encode({}));
+
+    }
+
+    // other error log file
+    if (isOtherErrorsLogFile == false){
+
+      await otherErrorsLogFile.create(recursive: true);
+
+    }
+
+
+
     /// setting the symbols data and data fetching error (File) objects
     _allSymbolsDataFile = allSymbolsDataFile;
     _dataFetchingErrorLogFile = dataFetchingErrorLogfile;
-    _dataUpdateSessionsFile = dataUpdateSessionsFileName;
+    _dataUpdateSessionsFile = dataUpdateSessionsFile;
     _otherErrorsLogFile = otherErrorsLogFile;
 
     print("Done with creating files!");
@@ -124,6 +148,7 @@ class Data {
       print("_dataFetchingErrorLogFile: $_dataFetchingErrorLogFile");
       _dataFetchingErrorLogFile!.writeAsString(""
           "$dateTime: \n"
+          "_updateAllForexSymbolsData\n"
           "AN ERROR OCCURRED WHILE FETCHING FOREX SYMBOLS!\n"
           "${error.toString()}\n\n",
           mode: FileMode.append
@@ -161,6 +186,7 @@ class Data {
       print("_dataFetchingErrorLogFile: $_dataFetchingErrorLogFile");
       _dataFetchingErrorLogFile!.writeAsString(""
           "$dateTime: \n"
+          "_updateAllStockSymbolsData\n"
           "AN ERROR OCCURRED WHILE FETCHING STOCK SYMBOLS' DATA!\n"
           "${error.toString()}\n\n",
           mode: FileMode.append
@@ -201,6 +227,7 @@ class Data {
       print("_dataFetchingErrorLogFile: $_dataFetchingErrorLogFile");
       _dataFetchingErrorLogFile!.writeAsString(""
           "$dateTime: \n"
+          "_updateAllCryptoSymbolsData\n"
           "AN ERROR OCCURRED WHILE FETCHING CRYPTO SYMBOLS' DATA!\n"
           "${error.toString()}\n\n",
           mode: FileMode.append
@@ -239,6 +266,7 @@ class Data {
       print("_dataFetchingErrorLogFile: $_dataFetchingErrorLogFile");
       _dataFetchingErrorLogFile!.writeAsString(""
           "$dateTime: \n"
+          "_updateAllETFSymbolsData\n"
           "AN ERROR OCCURRED WHILE FETCHING ETF SYMBOL's DATA!\n"
           "${error.toString()}\n\n",
           mode: FileMode.append
@@ -276,6 +304,7 @@ class Data {
       print("_dataFetchingErrorLogFile: $_dataFetchingErrorLogFile");
       _dataFetchingErrorLogFile!.writeAsString(""
           "$dateTime: \n"
+          "_updateAllIndexSymbolsData\n"
           "AN ERROR OCCURRED WHILE FETCHING INDEX SYMBOLS' DATA!\n"
           "${error.toString()}\n\n",
           mode: FileMode.append
@@ -355,6 +384,7 @@ class Data {
       print("_dataFetchingErrorLogFile: $_dataFetchingErrorLogFile");
       _dataFetchingErrorLogFile!.writeAsString(""
           "$dateTime: \n"
+          "_updateAllFundSymbolsData\n"
           "AN ERROR OCCURRED WHILE FETCHING BOND SYMBOLS' DATA!\n"
           "${error.toString()}\n\n",
         mode: FileMode.append
@@ -368,40 +398,77 @@ class Data {
   /// Cost: 6 API credits per day -> 180 API credits per month
   Future updateAndSaveAllSymbolsData() async {
 
+    /// update sessions file
+    var updateSessions = json.decode(await _dataUpdateSessionsFile!.readAsString());
+    dynamic lastSymbolsDataUpdateTime = updateSessions["last_symbols_data_update_time"];
+
+    /// checking whether the last symbols' data update session is greater than
+    /// 24 hrs.
+    /// 1. If not, task will be cancelled..
+    /// 2. If no previous symbols' data update session exists, this task will
+    /// continue..
+    if (lastSymbolsDataUpdateTime != null){
+
+      lastSymbolsDataUpdateTime = DateTime.parse(lastSymbolsDataUpdateTime);
+
+      DateTime now = DateTime.now();
+
+      int diffLastSymbolsDataUpdateTimeInHours = now.difference(lastSymbolsDataUpdateTime).inHours;
+      // print("lastSymbolsDataUpdateTime: $lastSymbolsDataUpdateTime");
+      // print("now - lastSymbolsDataUpdateTime: ${now.difference(lastSymbolsDataUpdateTime).inHours}");
+
+      /// determining whether to proceed with the symbols' data update..
+      if (diffLastSymbolsDataUpdateTimeInHours < 24){
+        print("Can't update symbols data now! Last update session was less than 24hrs ago..");
+        return;
+      }
+
+    }
+
+    // print("aDay - lastSymbolsDataUpdateTime: ${aDay.}")
+    // if (lastSymbolsDataUpdateTime )
+
+    /// updating symbols' data
     try{
 
       print("Updating All Data..");
 
       /// updating all financial data
       await _updateAllForexSymbolsData();
-      await _updateAllStockSymbolsData();
+      // await _updateAllStockSymbolsData();  // skipped - v1
       await _updateAllCryptoSymbolsData();
-      await _updateAllETFSymbolsData();
-      await _updateAllIndexSymbolsData();
-      await _updateAllFundSymbolsData();
-      await _updateAllBondSymbolsData();
+      // await _updateAllETFSymbolsData();    // skipped - v1
+      // await _updateAllIndexSymbolsData();  // skipped - v1
+      // await _updateAllFundSymbolsData();   // skipped - v1
+      // await _updateAllBondSymbolsData();   // skipped - v1
 
-      /// saving the financial data to all data
+      /// saving the financial data to all symbols' data file
       String allSymbolsData = jsonEncode(_listOfAllSymbolsDataMaps);
       _allSymbolsDataFile!.writeAsString(
           allSymbolsData,
           mode: FileMode.write
       );
 
+      /// saving the update session's time to 'data update sessions' log file
       DateTime now = DateTime.now();
-      Map dataUpdatesInfoMap = {
-        "last_symbols_update_time": now.toString()
-      };
-      _dataUpdateSessionsFile!.writeAsString(json.encode(dataUpdatesInfoMap));
+
+      var updateSessions = json.decode(await _dataUpdateSessionsFile!.readAsString());
+      updateSessions["last_symbols_data_update_time"] = now.toString();
+
+      print("updateSessions: $updateSessions");
+
+      _dataUpdateSessionsFile!.writeAsString(json.encode(updateSessions));
 
       print("Data Update Complete!");
 
     } catch(error){
 
+      /// logging symbols' data update error
       DateTime now = DateTime.now();
 
       _otherErrorsLogFile!.writeAsString(
           "$now: \n"
+              "updateAndSaveAllSymbolsData\n"
               "AN ERROR OCCURRED WHILE UPDATING AND SAVING ALL SYMBOLS' DATA!\n"
               "${error.toString()}\n\n",
           mode: FileMode.append
@@ -413,42 +480,164 @@ class Data {
 
   }
 
-  Future<List<dynamic>> getAllSymbolsData() async{
+  /// This method retrieves all locally saved symbols' data
+  // Future<List<dynamic>> getAllSymbolsLocalData() async{
+  //
+  //   print("");
+  //   print("List of all Data");
+  //   print("________________");
+  //   print("");
+  //
+  //   int count = 0;
+  //
+  //   dynamic savedlistOfAllSymbolsDataMaps = await _allSymbolsDataFile!.readAsString();
+  //   savedlistOfAllSymbolsDataMaps = json.decode(savedlistOfAllSymbolsDataMaps);
+  //
+  //   // for (var symbol in savedlistOfAllSymbolsDataMaps){
+  //   //   print(symbol);
+  //   // }
+  //   count = savedlistOfAllSymbolsDataMaps.length; // 5846
+  //   count =
+  //
+  //   return savedlistOfAllSymbolsDataMaps;
+  //
+  // }
 
-    print("");
-    print("List of all Data");
-    print("________________");
-    print("");
-
-    int notIsCountry = 0;
-    
-    dynamic savedlistOfAllSymbolsDataMaps = await _allSymbolsDataFile!.readAsString();
-    savedlistOfAllSymbolsDataMaps = json.decode(savedlistOfAllSymbolsDataMaps);
-
-    // for (Map data in savedlistOfAllSymbolsDataMaps){
-    //   print(data);
-    //
-    //   // if (!data.keys.contains("country")){
-    //   //   notIsCountry += 1;
-    //   //
-    //   //   print("");
-    //   //   print('notIsCountry: $notIsCountry}');
-    //   //
-    //   //   break;
-    //   // }
-    //
-    // }
-
-
-    return savedlistOfAllSymbolsDataMaps;
-
-  }
-
-  /// This method returns the app's directory uri
-  void getAppDirectory(){
+  /// This method prints the app's directory uri
+  void getUriAppDirectory(){
     
     print("This app's directory: ${_appDir!.uri}");
     
   }
+
+  /// This method retrieves a symbol(s)'s realtime price
+  Future<Map<String, String>> getRealTimePriceSingle({
+    required String symbol,
+    required String country
+  }) async{
+
+    Map<String, String> aMapPriceOfCurrentSymbol = {};
+
+    try{
+
+      dynamic urlRealTimePrice = _urlRealTimePrice;
+      urlRealTimePrice = urlRealTimePrice.replaceFirst("/", " ");
+
+      /// replacing unnecessary symbols
+      urlRealTimePrice = urlRealTimePrice.replaceFirst("{abc}", symbol);
+      urlRealTimePrice = urlRealTimePrice.replaceFirst("{xyz}", country);
+      urlRealTimePrice = urlRealTimePrice.replaceFirst("?", "&");
+      urlRealTimePrice = urlRealTimePrice + apiKey;
+
+      urlRealTimePrice = urlRealTimePrice.split(" ");
+
+      List<String> urlPathAndParameters = urlRealTimePrice[1].split("&");
+
+      /// defining urlAuthority, urlPath, & urlParameters - for http.get() module
+      String urlAuthority = urlRealTimePrice[0];
+      String urlPath = urlPathAndParameters[0];
+      Map<String, String> urlParameters = {};
+
+      /// urlParameters
+      for (String parameter in urlPathAndParameters.sublist(1)){
+        List<String> paramAndParamValue = parameter.split("=");
+        String paramKey = paramAndParamValue[0];
+        String paramValue = paramAndParamValue[1];
+        urlParameters[paramKey] = paramValue;
+      }
+
+      print("urlRealTimePrice: $urlRealTimePrice");
+      print("urlAuthority: $urlAuthority");
+      print("urlParameters: $urlParameters");
+
+      /// sending a request
+      Uri uriUrlRealTimePrice = Uri.https(urlAuthority, urlPath, urlParameters);
+
+      http.Response response = await http.get(uriUrlRealTimePrice);
+      Map<String, String> resolvedResponse = json.decode(response.body);
+      print("response: $response}");
+
+      aMapPriceOfCurrentSymbol = {symbol: resolvedResponse["price"]!};
+
+      // List<dynamic> resolvedResponse = json.decode(response.body);
+      //
+      // for (var i in resolvedResponse){
+      //   print("i: $i");
+      // }
+
+    } catch(error){
+
+      /// logging symbols' data update error
+      DateTime now = DateTime.now();
+
+      _otherErrorsLogFile!.writeAsString(
+          "$now: \n"
+              "getRealTimePriceSingle\n"
+              "AN ERROR OCCURRED WHILE FETCHING THIS INSTRUMENT'S PRICE: ${symbol}!\n"
+              "${error.toString()}\n\n",
+          mode: FileMode.append
+      );
+
+    }
+
+    return aMapPriceOfCurrentSymbol;
+
+  }
+
+  /// This method obtains the prices of all saved instruments (symbols)
+  // Future<Map<dynamic,dynamic>> getRealTimePriceAll() async{
+  //
+  //   /// current symbol
+  //   String? currentSymbol;
+  //
+  //   /// instruments' prices (map)
+  //   var mapOfAllRealtimePrices = {};
+  //
+  //   try{
+  //
+  //     /// all instruments / symbols' data -> forex & crypto inclusive
+  //     List<dynamic> savedlistOfAllSymbolsDataMaps = [{}];
+  //
+  //     /// mapping out instruments and their prices
+  //     savedlistOfAllSymbolsDataMaps = await getAllSymbolsLocalData();
+  //
+  //     int count = 0;
+  //     for (var symbolData in savedlistOfAllSymbolsDataMaps){
+  //
+  //       currentSymbol = symbolData["symbol"];
+  //
+  //       print(symbolData);
+  //
+  //       var priceOfCurrentSymbol = await getRealTimePriceSingle(
+  //           symbol: currentSymbol!,
+  //           country: "US"
+  //       );
+  //       //
+  //       // mapOfAllRealtimePrices[currentSymbol] = priceOfCurrentSymbol["price"]!;
+  //       //
+  //       count += 1;
+  //       if (count == 2) break;
+  //     }
+  //
+  //     print(mapOfAllRealtimePrices);
+  //
+  //   } catch(error){
+  //
+  //     /// logging instrument's price fetching error
+  //     DateTime now = DateTime.now();
+  //
+  //     _otherErrorsLogFile!.writeAsString(
+  //         "$now: \n"
+  //             "getRealTimePriceAll\n"
+  //             "AN ERROR OCCURRED WHILE FETCHING THIS INSTRUMENT'S PRICE: ${currentSymbol!}!\n"
+  //             "${error.toString()}\n\n",
+  //         mode: FileMode.append
+  //     );
+  //
+  //   }
+  //
+  //   return mapOfAllRealtimePrices;
+  //
+  // }
 
 }
