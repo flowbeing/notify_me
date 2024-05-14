@@ -481,27 +481,27 @@ class Data {
   }
 
   /// This method retrieves all locally saved symbols' data
-  // Future<List<dynamic>> getAllSymbolsLocalData() async{
-  //
-  //   print("");
-  //   print("List of all Data");
-  //   print("________________");
-  //   print("");
-  //
-  //   int count = 0;
-  //
-  //   dynamic savedlistOfAllSymbolsDataMaps = await _allSymbolsDataFile!.readAsString();
-  //   savedlistOfAllSymbolsDataMaps = json.decode(savedlistOfAllSymbolsDataMaps);
-  //
-  //   // for (var symbol in savedlistOfAllSymbolsDataMaps){
-  //   //   print(symbol);
-  //   // }
-  //   count = savedlistOfAllSymbolsDataMaps.length; // 5846
-  //   count =
-  //
-  //   return savedlistOfAllSymbolsDataMaps;
-  //
-  // }
+  Future<List<dynamic>> getAllSymbolsLocalData() async{
+
+    print("");
+    print("List of all Data");
+    print("________________");
+    print("");
+
+    int count = 0;
+
+    dynamic savedlistOfAllSymbolsDataMaps = await _allSymbolsDataFile!.readAsString();
+    savedlistOfAllSymbolsDataMaps = json.decode(savedlistOfAllSymbolsDataMaps);
+
+    // for (var symbol in savedlistOfAllSymbolsDataMaps){
+    //   print(symbol);
+    // }
+    count = savedlistOfAllSymbolsDataMaps.length; // 5846
+
+
+    return savedlistOfAllSymbolsDataMaps;
+
+  }
 
   /// This method prints the app's directory uri
   void getUriAppDirectory(){
@@ -585,59 +585,59 @@ class Data {
   }
 
   /// This method obtains the prices of all saved instruments (symbols)
-  // Future<Map<dynamic,dynamic>> getRealTimePriceAll() async{
-  //
-  //   /// current symbol
-  //   String? currentSymbol;
-  //
-  //   /// instruments' prices (map)
-  //   var mapOfAllRealtimePrices = {};
-  //
-  //   try{
-  //
-  //     /// all instruments / symbols' data -> forex & crypto inclusive
-  //     List<dynamic> savedlistOfAllSymbolsDataMaps = [{}];
-  //
-  //     /// mapping out instruments and their prices
-  //     savedlistOfAllSymbolsDataMaps = await getAllSymbolsLocalData();
-  //
-  //     int count = 0;
-  //     for (var symbolData in savedlistOfAllSymbolsDataMaps){
-  //
-  //       currentSymbol = symbolData["symbol"];
-  //
-  //       print(symbolData);
-  //
-  //       var priceOfCurrentSymbol = await getRealTimePriceSingle(
-  //           symbol: currentSymbol!,
-  //           country: "US"
-  //       );
-  //       //
-  //       // mapOfAllRealtimePrices[currentSymbol] = priceOfCurrentSymbol["price"]!;
-  //       //
-  //       count += 1;
-  //       if (count == 2) break;
-  //     }
-  //
-  //     print(mapOfAllRealtimePrices);
-  //
-  //   } catch(error){
-  //
-  //     /// logging instrument's price fetching error
-  //     DateTime now = DateTime.now();
-  //
-  //     _otherErrorsLogFile!.writeAsString(
-  //         "$now: \n"
-  //             "getRealTimePriceAll\n"
-  //             "AN ERROR OCCURRED WHILE FETCHING THIS INSTRUMENT'S PRICE: ${currentSymbol!}!\n"
-  //             "${error.toString()}\n\n",
-  //         mode: FileMode.append
-  //     );
-  //
-  //   }
-  //
-  //   return mapOfAllRealtimePrices;
-  //
-  // }
+  Future<Map<dynamic,dynamic>> getRealTimePriceAll() async{
+
+    /// current symbol
+    String? currentSymbol;
+
+    /// instruments' prices (map)
+    var mapOfAllRealtimePrices = {};
+
+    try{
+
+      /// all instruments / symbols' data -> forex & crypto inclusive
+      List<dynamic> savedlistOfAllSymbolsDataMaps = [{}];
+
+      /// mapping out instruments and their prices
+      savedlistOfAllSymbolsDataMaps = await getAllSymbolsLocalData();
+
+      int count = 0;
+      for (var symbolData in savedlistOfAllSymbolsDataMaps){
+
+        currentSymbol = symbolData["symbol"];
+
+        print(symbolData);
+
+        var priceOfCurrentSymbol = await getRealTimePriceSingle(
+            symbol: currentSymbol!,
+            country: "US"
+        );
+        //
+        // mapOfAllRealtimePrices[currentSymbol] = priceOfCurrentSymbol["price"]!;
+        //
+        count += 1;
+        if (count == 2) break;
+      }
+
+      print(mapOfAllRealtimePrices);
+
+    } catch(error){
+
+      /// logging instrument's price fetching error
+      DateTime now = DateTime.now();
+
+      _otherErrorsLogFile!.writeAsString(
+          "$now: \n"
+              "getRealTimePriceAll\n"
+              "AN ERROR OCCURRED WHILE FETCHING THIS INSTRUMENT'S PRICE: ${currentSymbol!}!\n"
+              "${error.toString()}\n\n",
+          mode: FileMode.append
+      );
+
+    }
+
+    return mapOfAllRealtimePrices;
+
+  }
 
 }
