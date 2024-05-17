@@ -1,7 +1,7 @@
 import "dart:io";
 
+import 'package:flutter/material.dart';
 import "package:flutter_dotenv/flutter_dotenv.dart";
-
 
 import "data/data.dart";
 
@@ -30,13 +30,28 @@ Future main() async{
 
   // await dataObject.updateAndSaveAllSymbolsData();
   // await dataObject.getAllSymbolsLocalData();
-  // dataObject.getUriAppDirectory();
-
-  // await dataObject.getRealTimePriceAll();
+  await dataObject.getRealTimePriceAll();
 
   // dataObject.getRealTimePriceSingle(
   //   symbol: "INO/USD",
   //   country: "US"
   // );
 
+  // dataObject.getUriAppDirectory();
+
+  runApp(App());
+
+}
+
+class App extends StatelessWidget{
+
+  Widget build(BuildContext context){
+
+    return MaterialApp(
+      title: "App",
+      home: Container(
+        color: Colors.teal
+      )
+    );
+  }
 }

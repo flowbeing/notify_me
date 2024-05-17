@@ -14,8 +14,25 @@ import "data_type.dart";
 class Data {
 
   final List<Map<dynamic, dynamic>> _listOfAllSymbolsDataMaps = [];
+  final List<String> _listOfImportantForexPairs = [
+    "AUD/USD", "EUR/USD", "GBP/USD", "NZD/USD", "USD/CAD", "USD/CHF", "USD/JPY",
+    "AUD/CAD", "AUD/CHF", "AUD/JPY", "AUD/NZD", "CAD/CHF", "CAD/JPY", "CHF/JPY",
+    "EUR/AUD", "EUR/CAD", "EUR/CHF", "EUR/GBP", "EUR/JPY", "EUR/NZD", "GBP/AUD",
+    "GBP/CAD", "GBP/CHF", "GBP/JPY", "GBP/NZD", "NZD/CAD", "NZD/CHF", "NZD/JPY"
+  ];
+  final List<String> _listOfImportantCryptoPairs = [
+    "BTC/USD",  "ETH/USD",  "USDT/USD",  "BNB/USD",  "SOL/USD",  "USDC/USD",
+    "XRP/USD",  "TON/USD",  "DOGE/USD",  "ADA/USD",  "SHIB/USD",  "AVAX/USD",
+    "TRX/USD",  "DOT/USD",  "LINK/USD",  "BCH/USD",  "NEAR/USD",  "MATIC/USD",
+    "LTC/USD",  "ICP/USD",  "LEOu/USD",  "DAI/USD",  "UNI/USD",  "PEPE/USD",
+    "ETC/USD",  "HBAR/USD",  "RNDR/USD"
+  ];
 
-  final String apiKey =  dotenv.env["API_KEY"]!;
+  /// "BTC", "ETH", "USDT", "BNB", "SOL", "USDC", "XRP", "TON", "DOGE", "ADA",
+  /// "SHIB", "AVAX", "TRX", "DOT", "LINK", "BCH", "NEAR", "MATIC", "LTC", "ICP",
+  /// "LEO", "DAI", "UNI", "PEPE", "ETC", "HBAR", "RNDR"
+
+  final String _apiKey =  dotenv.env["API_KEY"]!;
 
   Directory? _appDir;
   String? _appDirPath;
@@ -420,7 +437,7 @@ class Data {
       /// determining whether to proceed with the symbols' data update..
       if (diffLastSymbolsDataUpdateTimeInHours < 24){
         print("Can't update symbols data now! Last update session was less than 24hrs ago..");
-        return;
+        return {};
       }
 
     }
@@ -493,11 +510,27 @@ class Data {
     dynamic savedlistOfAllSymbolsDataMaps = await _allSymbolsDataFile!.readAsString();
     savedlistOfAllSymbolsDataMaps = json.decode(savedlistOfAllSymbolsDataMaps);
 
-    // for (var symbol in savedlistOfAllSymbolsDataMaps){
-    //   print(symbol);
+    // for (var symbolMap in savedlistOfAllSymbolsDataMaps){
+    //
+    //   String symbolDenominator = symbolMap["symbol"].split("/")[1];
+    //
+    //   if (
+    //     symbolDenominator.endsWith("USD")
+    //         // ||
+    //         // symbolDenominator.endsWith("ETH") ||
+    //         // symbolDenominator.endsWith("BTC")
+    //   ){
+    //
+    //     print(symbolMap);
+    //     count += 1;
+    //
+    //   }
+    //
     // }
-    count = savedlistOfAllSymbolsDataMaps.length; // 5846
 
+    count = savedlistOfAllSymbolsDataMaps.length; // 5846
+    print("count: $count");
+    print("");
 
     return savedlistOfAllSymbolsDataMaps;
 
@@ -516,7 +549,7 @@ class Data {
     required String country
   }) async{
 
-    Map<String, String> aMapPriceOfCurrentSymbol = {};
+    Map<String, String> aMapPriceOfcurrentPair = {};
 
     try{
 
@@ -527,7 +560,7 @@ class Data {
       urlRealTimePrice = urlRealTimePrice.replaceFirst("{abc}", symbol);
       urlRealTimePrice = urlRealTimePrice.replaceFirst("{xyz}", country);
       urlRealTimePrice = urlRealTimePrice.replaceFirst("?", "&");
-      urlRealTimePrice = urlRealTimePrice + apiKey;
+      urlRealTimePrice = urlRealTimePrice + _apiKey;
 
       urlRealTimePrice = urlRealTimePrice.split(" ");
 
@@ -546,9 +579,9 @@ class Data {
         urlParameters[paramKey] = paramValue;
       }
 
-      print("urlRealTimePrice: $urlRealTimePrice");
-      print("urlAuthority: $urlAuthority");
-      print("urlParameters: $urlParameters");
+      // print("urlRealTimePrice: $urlRealTimePrice");
+      // print("urlAuthority: $urlAuthority");
+      // print("urlParameters: $urlParameters");
 
       /// sending a request
       Uri uriUrlRealTimePrice = Uri.https(urlAuthority, urlPath, urlParameters);
@@ -557,7 +590,7 @@ class Data {
       Map<String, String> resolvedResponse = json.decode(response.body);
       print("response: $response}");
 
-      aMapPriceOfCurrentSymbol = {symbol: resolvedResponse["price"]!};
+      aMapPriceOfcurrentPair = {symbol: resolvedResponse["price"]!};
 
       // List<dynamic> resolvedResponse = json.decode(response.body);
       //
@@ -580,20 +613,85 @@ class Data {
 
     }
 
-    return aMapPriceOfCurrentSymbol;
+    return aMapPriceOfcurrentPair;
 
   }
+
+  /// This method logs all important pairs that have been saved locally i.e
+  /// recognised by data provider
+  void checkIfImportantPairsInSavedPairs({
+    required List<String> listOfImportantPairs,
+    required List<dynamic> listOfSavedPairs
+  }){
+
+    int count = 0;
+    for (var symbolData in listOfSavedPairs){
+
+      String currentSavedPair = symbolData["symbol"];
+
+      /// QUICK CHECK
+
+      for (var importantPair in listOfImportantPairs){
+        if (currentSavedPair == importantPair){
+
+          print("currentSavedPair: ${currentSavedPair}, importantPair: ${importantPair}");
+
+          count += 1;
+        }
+      }
+
+    }
+    print("Total number of important pairs: ${count}");
+
+  }
+
 
   /// This method obtains the prices of all saved instruments (symbols)
   Future<Map<dynamic,dynamic>> getRealTimePriceAll() async{
 
-    /// current symbol
-    String? currentSymbol;
+    /// last update sessions data
+    Map<String, String> lastUpdateSessionsMap =
+      json.decode(await _dataUpdateSessionsFile!.readAsString());
+
+    /// checking whether the last prices' data update session is greater than
+    /// 24 hrs.
+    /// 1. If not, task will be cancelled..
+    /// 2. If no previous prices' data update session exists, this task will
+    /// continue..
+    if (lastUpdateSessionsMap.keys.contains("last_prices_data_update_time")){
+
+      String lastPricesDataUpdateTimeString =
+        lastUpdateSessionsMap["last_prices_data_update_time"]!;
+
+      DateTime lastPricesDataUpdateTime =
+        DateTime.parse(lastPricesDataUpdateTimeString);
+
+      DateTime now = DateTime.now();
+
+      int diffLastPricesDataUpdateTimeInMinutes =
+          now.difference(lastPricesDataUpdateTime).inMinutes;
+      // print("lastPricesDataUpdateTime: $lastSymbolsDataUpdateTime");
+      // print("now - lastSymbolsDataUpdateTime: ${now.difference(lastSymbolsDataUpdateTime).inHours}");
+
+      /// determining whether to proceed with the prices' data update..
+      if (diffLastPricesDataUpdateTimeInMinutes < 1){
+        print("Can't update symbols data now! Last update session was less than 1 minute ago..");
+        return {};
+      }
+
+    }
+
+    /// current symbol / pair
+    String? currentPair;
 
     /// instruments' prices (map)
     var mapOfAllRealtimePrices = {};
 
     try{
+
+      /// list of all important pairs
+      List<String> listOfAllFiftyFiveImportantPairs =
+          _listOfImportantForexPairs + _listOfImportantCryptoPairs;
 
       /// all instruments / symbols' data -> forex & crypto inclusive
       List<dynamic> savedlistOfAllSymbolsDataMaps = [{}];
@@ -601,25 +699,48 @@ class Data {
       /// mapping out instruments and their prices
       savedlistOfAllSymbolsDataMaps = await getAllSymbolsLocalData();
 
-      int count = 0;
+      // checkIfImportantPairsInSavedPairs(
+      //   listOfImportantPairs: listOfAllFiftyFiveImportantPairs,
+      //   listOfSavedPairs: savedlistOfAllSymbolsDataMaps
+      // );
+
+      /// obtaining each pair's price, especially the most important ones
+      /// i.e the most traded ones..
+      int countSavedPairs = 0;
+
       for (var symbolData in savedlistOfAllSymbolsDataMaps){
 
-        currentSymbol = symbolData["symbol"];
+        currentPair = symbolData["symbol"];
 
-        print(symbolData);
+        // print(symbolData);
 
-        var priceOfCurrentSymbol = await getRealTimePriceSingle(
-            symbol: currentSymbol!,
-            country: "US"
-        );
-        //
-        // mapOfAllRealtimePrices[currentSymbol] = priceOfCurrentSymbol["price"]!;
-        //
-        count += 1;
-        if (count == 2) break;
+        /// retrieving price from data provider if pair is important or
+        /// popularly traded
+        if (listOfAllFiftyFiveImportantPairs.contains(currentPair)){
+
+          var priceOfcurrentPairResponse = await getRealTimePriceSingle(
+              symbol: currentPair!,
+              country: "US"
+          );
+
+          mapOfAllRealtimePrices[currentPair] = priceOfcurrentPairResponse["price"]!;
+          print("${mapOfAllRealtimePrices[currentPair]}:${priceOfcurrentPairResponse["price"]}");
+
+        }
+        /// ...otherwise, setting the price to "No (Demo) Price"
+        else {
+
+          mapOfAllRealtimePrices[currentPair] = "No (Demo) Price";
+          print("${mapOfAllRealtimePrices[currentPair]}:No (Demo) Price");
+
+        }
+
+        countSavedPairs += 1;
+        // if (count == 2) break;
       }
+      print("Total number of saved pairs: ${countSavedPairs}");
+      // print(mapOfAllRealtimePrices);
 
-      print(mapOfAllRealtimePrices);
 
     } catch(error){
 
@@ -629,12 +750,17 @@ class Data {
       _otherErrorsLogFile!.writeAsString(
           "$now: \n"
               "getRealTimePriceAll\n"
-              "AN ERROR OCCURRED WHILE FETCHING THIS INSTRUMENT'S PRICE: ${currentSymbol!}!\n"
+              "AN ERROR OCCURRED WHILE FETCHING THIS INSTRUMENT'S PRICE: ${currentPair!}!\n"
               "${error.toString()}\n\n",
           mode: FileMode.append
       );
 
     }
+
+    /// logging this prices update session time
+    DateTime now =  DateTime.now();
+    lastUpdateSessionsMap["last_prices_data_update_time"] = now.toString();
+    _dataUpdateSessionsFile!.writeAsString(json.encode(lastUpdateSessionsMap));
 
     return mapOfAllRealtimePrices;
 
