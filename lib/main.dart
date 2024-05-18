@@ -1,57 +1,27 @@
-import "dart:io";
+import "package:flutter/material.dart";
+import "package:provider/provider.dart";
 
-import 'package:flutter/material.dart';
-import "package:flutter_dotenv/flutter_dotenv.dart";
+import 'providers/data_provider.dart';
 
-import "data/data.dart";
+import 'pages/homepage.dart';
 
-Future main() async{
+void main(){
 
-  // Directory.current = Platform.pathSeparator;
-
-  print('pre loading');
-  await dotenv.load(fileName: 'config.env');
-  print('post loading');
-
-  String apiKey = dotenv.env['API_KEY']!;
-
-  Data dataObject = Data();
-
-  /// needed to set data symbols and data fetching error files
-  await dataObject.createAppFilesAndFolders();
-
-  // dataObject.updateAllForexData();
-  // dataObject.updateAllStocksData();
-  // dataObject.updateAllCryptoData();
-  // dataObject.updateAllETFData();
-  // dataObject.updateAllIndicesData();
-  // dataObject.updateAllFundsData();
-  // dataObject.updateAllBondsData();
-
-  // await dataObject.updateAndSaveAllSymbolsData();
-  // await dataObject.getAllSymbolsLocalData();
-  await dataObject.getRealTimePriceAll();
-
-  // dataObject.getRealTimePriceSingle(
-  //   symbol: "INO/USD",
-  //   country: "US"
-  // );
-
-  // dataObject.getUriAppDirectory();
-
-  runApp(App());
+  runApp(NotifyMeApp());
 
 }
 
-class App extends StatelessWidget{
+class NotifyMeApp extends StatelessWidget{
 
   Widget build(BuildContext context){
 
-    return MaterialApp(
-      title: "App",
-      home: Container(
-        color: Colors.teal
-      )
+    return ChangeNotifierProvider(
+      create: (ctx) => DataProvider(),
+      child: MaterialApp(
+          title: "Notify Me",
+          home: Homepage()
+      ),
     );
   }
+
 }

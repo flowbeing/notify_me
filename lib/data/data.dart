@@ -436,7 +436,7 @@ class Data {
 
       /// determining whether to proceed with the symbols' data update..
       if (diffLastSymbolsDataUpdateTimeInHours < 24){
-        print("Can't update symbols data now! Last update session was less than 24hrs ago..");
+        print("Can't update symbols data now! Last update session is lesser than 24hrs ago..");
         return {};
       }
 
@@ -529,7 +529,7 @@ class Data {
     // }
 
     count = savedlistOfAllSymbolsDataMaps.length; // 5846
-    print("count: $count");
+    print("Total number of symbols: $count");
     print("");
 
     return savedlistOfAllSymbolsDataMaps;
@@ -675,7 +675,7 @@ class Data {
 
       /// determining whether to proceed with the prices' data update..
       if (diffLastPricesDataUpdateTimeInMinutes < 1){
-        print("Can't update symbols data now! Last update session was less than 1 minute ago..");
+        print("Can't update symbols data now! Last update session is lesser than 1 minute ago..");
         return {};
       }
 
