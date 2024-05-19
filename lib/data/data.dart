@@ -778,35 +778,44 @@ class Data {
         /// popularly traded
         if (listOfAllFiftyFiveImportantPairs.contains(currentPair)){
 
-          Map<String, dynamic>? priceOfCurrentPairResponse;
+          Map<String, dynamic>? priceOfCurrentPairResponseQuote;
+          Map<String, String>? priceOfCurrentPairResponseRealTime;
 
           /// if prices data has not previously been retrieved, request for
-          /// the current pair's "quote", which contains the previous minute
-          /// and it's predecessor's closing prices..
+          /// the current pair's "quote", which contains the previous minute's
+          /// opening price..
+          /// Helps with documenting and noting whether the current realtime
+          /// price of each pair is an upward or downward price movement,
+          /// when compared with the previous minute's closing price provided
+          /// by priceOfCurrentPairResponseQuote..
           if (maplastSavedPricesOneMinInterval.isEmpty){
 
-            priceOfCurrentPairResponse = await getRealTimePriceSingle(
+            priceOfCurrentPairResponseQuote = await getRealTimePriceSingle(
                 symbol: currentPair!,
                 country: "US",
                 priceDataType: PriceDataType.quote
             );
 
           }
-          /// if prices data has previously been retrieved, request for
-          /// the current pair's "price", which contains the previous minute
-          /// and it's predecessor's closing prices..
-          else if (maplastSavedPricesOneMinInterval.isNotEmpty){
-
-            priceOfCurrentPairResponse = await getRealTimePriceSingle(
+          /// Retrieve the current pair's price regardless of whether or not
+          /// prices data has previously been retrieved.
+          /// Helps with documenting each symbols current (realtime) price
+          priceOfCurrentPairResponseRealTime =
+            await getRealTimePriceSingle(
                 symbol: currentPair!,
                 country: "US",
                 priceDataType: PriceDataType.realtime
             );
 
-          }
 
-          mapOfAllRealtimePrices[currentPair] = priceOfCurrentPairResponse!["price"];
-          print("${mapOfAllRealtimePrices[currentPair]}:${priceOfCurrentPairResponse["price"]}");
+          mapOfAllRealtimePrices[currentPair] = {
+            "pricePreviousMinute": "",
+            "priceCurrentMinute": ""
+          };
+
+
+          // mapOfAllRealtimePrices[currentPair] = priceOfCurrentPairResponse!["price"];
+          // print("${mapOfAllRealtimePrices[currentPair]}:${priceOfCurrentPairResponse["price"]}");
 
         }
         /// ...otherwise, setting the price to "No (Demo) Price"
