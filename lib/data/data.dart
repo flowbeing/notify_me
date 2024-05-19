@@ -11,6 +11,11 @@ import "package:path_provider/path_provider.dart";
 import "data_type.dart";
 
 
+enum PriceDataType{
+  realtime,
+  quote
+}
+
 class Data {
 
   final List<Map<dynamic, dynamic>> _listOfAllSymbolsDataMaps = [];
@@ -419,8 +424,7 @@ class Data {
     var updateSessions = json.decode(await _dataUpdateSessionsFile!.readAsString());
     dynamic lastSymbolsDataUpdateTime = updateSessions["last_symbols_data_update_time"];
 
-    /// checking whether the last symbols' data update session is greater than
-    /// 24 hrs.
+    /// checking whether the last symbols' data updated over 24 hrs ago.
     /// 1. If not, task will be cancelled..
     /// 2. If no previous symbols' data update session exists, this task will
     /// continue..
@@ -546,7 +550,8 @@ class Data {
   /// This method retrieves a symbol(s)'s realtime price
   Future<Map<String, String>> getRealTimePriceSingle({
     required String symbol,
-    required String country
+    required String country,
+    required PriceDataType priceDataType,
   }) async{
 
     Map<String, String> aMapPriceOfcurrentPair = {};
@@ -649,22 +654,77 @@ class Data {
   /// This method obtains the prices of all saved instruments (symbols)
   Future<Map<dynamic,dynamic>> getRealTimePriceAll() async{
 
-    /// last update sessions data
-    Map<String, String> lastUpdateSessionsMap =
+    /// last update sessions data -> both time and prices
+    Map<String, dynamic> lastUpdateSessionsMap =
       json.decode(await _dataUpdateSessionsFile!.readAsString());
 
-    /// checking whether the last prices' data update session is greater than
-    /// 24 hrs.
+    /// A map of previously retrieved prices... if any
+    Map<String, Map<String, String>> maplastSavedPricesOneMinInterval = {};
+
+    /// checking whether the last prices' data session was updated over 1 min
+    /// ago.
     /// 1. If not, task will be cancelled..
     /// 2. If no previous prices' data update session exists, this task will
     /// continue..
-    if (lastUpdateSessionsMap.keys.contains("last_prices_data_update_time")){
+    /// 3. Also, if prices data have previously been retrieved and saved, the
+    ///    value of lastSavedPricesOneMinInterval will be set to the map of
+    ///    that data
+    if (
+      lastUpdateSessionsMap.keys.contains("last_prices_data_update_time") ||
+          lastUpdateSessionsMap.keys.contains(
+              "last_prices_data_update_time_initial"
+          )
+    ){
 
-      String lastPricesDataUpdateTimeString =
-        lastUpdateSessionsMap["last_prices_data_update_time"]!;
+      String? lastPricesDataUpdateTimeString;
+
+      /// if there's been more than one forex and crypto prices updates,
+      /// set lastPricesDataUpdateTimeString to last_prices_data_update_time's
+      /// map key..
+      if (lastUpdateSessionsMap.keys.contains("last_prices_data_update_time")){
+
+        /// last prices data update time
+        lastPricesDataUpdateTimeString =
+          lastUpdateSessionsMap["last_prices_data_update_time"]!.keys[0];
+
+        /// latest prices of all forex and crypto pairs...
+        maplastSavedPricesOneMinInterval =
+          lastUpdateSessionsMap
+            ["last_prices_data_update_time"][lastPricesDataUpdateTimeString];
+
+        /// if the last update sessions map still contains an initial prices
+        /// update sessions key, remove it from the map..
+        if (
+        lastUpdateSessionsMap.keys.contains(
+            "last_prices_data_update_time_initial"
+          )
+        ) {
+          /// removing the initial prices data update session's map
+          lastUpdateSessionsMap.remove("last_prices_data_update_time_initial");
+        }
+
+      }
+      /// else set lastPricesDataUpdateTimeString to
+      /// last_prices_data_update_time_initial's map key..
+      else if (
+        lastUpdateSessionsMap.keys.contains(
+          "last_prices_data_update_time_initial"
+        )
+      ){
+
+        /// last prices data update time
+        lastPricesDataUpdateTimeString =
+          lastUpdateSessionsMap["last_prices_data_update_time_initial"]!.keys[0];
+
+        /// latest prices of all forex and crypto pairs...
+        maplastSavedPricesOneMinInterval =
+          lastUpdateSessionsMap
+          ["last_prices_data_update_time_initial"][lastPricesDataUpdateTimeString];
+
+      }
 
       DateTime lastPricesDataUpdateTime =
-        DateTime.parse(lastPricesDataUpdateTimeString);
+        DateTime.parse(lastPricesDataUpdateTimeString!);
 
       DateTime now = DateTime.now();
 
@@ -718,13 +778,35 @@ class Data {
         /// popularly traded
         if (listOfAllFiftyFiveImportantPairs.contains(currentPair)){
 
-          var priceOfcurrentPairResponse = await getRealTimePriceSingle(
-              symbol: currentPair!,
-              country: "US"
-          );
+          Map<String, dynamic>? priceOfCurrentPairResponse;
 
-          mapOfAllRealtimePrices[currentPair] = priceOfcurrentPairResponse["price"]!;
-          print("${mapOfAllRealtimePrices[currentPair]}:${priceOfcurrentPairResponse["price"]}");
+          /// if prices data has not previously been retrieved, request for
+          /// the current pair's "quote", which contains the previous minute
+          /// and it's predecessor's closing prices..
+          if (maplastSavedPricesOneMinInterval.isEmpty){
+
+            priceOfCurrentPairResponse = await getRealTimePriceSingle(
+                symbol: currentPair!,
+                country: "US",
+                priceDataType: PriceDataType.quote
+            );
+
+          }
+          /// if prices data has previously been retrieved, request for
+          /// the current pair's "price", which contains the previous minute
+          /// and it's predecessor's closing prices..
+          else if (maplastSavedPricesOneMinInterval.isNotEmpty){
+
+            priceOfCurrentPairResponse = await getRealTimePriceSingle(
+                symbol: currentPair!,
+                country: "US",
+                priceDataType: PriceDataType.realtime
+            );
+
+          }
+
+          mapOfAllRealtimePrices[currentPair] = priceOfCurrentPairResponse!["price"];
+          print("${mapOfAllRealtimePrices[currentPair]}:${priceOfCurrentPairResponse["price"]}");
 
         }
         /// ...otherwise, setting the price to "No (Demo) Price"
@@ -759,7 +841,7 @@ class Data {
 
     /// logging this prices update session time
     DateTime now =  DateTime.now();
-    lastUpdateSessionsMap["last_prices_data_update_time"] = now.toString();
+
     _dataUpdateSessionsFile!.writeAsString(json.encode(lastUpdateSessionsMap));
 
     return mapOfAllRealtimePrices;
