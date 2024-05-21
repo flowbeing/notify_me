@@ -18,6 +18,10 @@ enum PriceDataType{
 
 class Data {
 
+  /// a map of symbols or instruments before any price is fetched..
+  Map<String, String> mapOfSymbolsPreInitialPriceFetch = {};
+
+  /// a list of all symbols or instrument's (data) map...
   final List<Map<dynamic, dynamic>> _listOfAllSymbolsDataMaps = [];
   final List<String> _listOfImportantForexPairs = [
     "AUD/USD", "EUR/USD", "GBP/USD", "NZD/USD", "USD/CAD", "USD/CHF", "USD/JPY",
@@ -460,7 +464,7 @@ class Data {
         diffLastSymbolsDataUpdateTimeInHours < 24
             && isLastSymbolsDataUpdateTimeEqualToLastSymbolsDataUpdateErrorTime == false
       ){
-        print("Can't update symbols data now! Last update session is lesser than 24hrs ago..");
+        print("Can't update symbols data now! Last update session was under 24hrs ago..");
         return {};
       }
 
@@ -633,9 +637,9 @@ class Data {
       http.Response response = await http.get(uriUrlRealTimePrice);
       Map<String, dynamic> resolvedResponse = json.decode(response.body);
 
-      print("");
-      print("response: ${resolvedResponse}}");
-      print("");
+      // print("");
+      // print("response: ${resolvedResponse}}");
+      // print("");
 
       if (priceDataType == PriceDataType.realtime){
         aMapPriceOfcurrentPair = resolvedResponse;
@@ -697,8 +701,35 @@ class Data {
 
   }
 
+  Future<Map<dynamic, dynamic>> getMapOfAllPairsWithFetchingNotification() async{
+
+    Map<dynamic, dynamic> mapOfSymbolsPreInitialPriceFetch = {};
+
+    /// all instruments / symbols' data -> forex & crypto inclusive
+    List<dynamic> savedListOfAllSymbolsDataMaps =  await getAllSymbolsLocalData();
+
+    for (var symbolData in savedListOfAllSymbolsDataMaps){
+
+      String symbol = symbolData['symbol'];
+
+      /// creating a map of all symbols before any price is fetched...
+      mapOfSymbolsPreInitialPriceFetch[symbol] = "fetching";
+
+    }
+
+    await _dataFetchingErrorLogFile!.writeAsString(json.encode(mapOfSymbolsPreInitialPriceFetch));
+
+    return mapOfSymbolsPreInitialPriceFetch;
+
+  }
+
 
   /// This method obtains the prices of all saved instruments (symbols)
+  /// {} as the return value means:
+  /// a. A session took place less than 1 minute ago, OR
+  /// b. A session took place but didn't complete due to network or other errors
+  /// It is bes to wait for one minute before calling this function again in
+  /// the event any of the above two happen..
   Future<Map<dynamic,dynamic>> getRealTimePriceAll() async{
 
     /// last update sessions data -> both time and prices
@@ -720,17 +751,21 @@ class Data {
 
     /// mapping out instruments and their prices
     savedListOfAllSymbolsDataMaps = await getAllSymbolsLocalData();
+
     /// Set of the above to remove duplicate symbols
     Set<String> savedListOfAllSymbolsDataMapsSet = {};
 
     for (var symbolData in savedListOfAllSymbolsDataMaps){
       String symbol = symbolData['symbol'];
 
+      /// creating a map of all symbols before any price is fetched...
+      mapOfSymbolsPreInitialPriceFetch[symbol] = "fetching";
+
       savedListOfAllSymbolsDataMapsSet.add(symbol);
     }
 
     /// A map of previously retrieved prices... if any
-    Map<String, Map<String, String>> mapLastSavedPricesOneMinInterval = {};
+    Map<String, dynamic> mapLastSavedPricesOneMinInterval = {};
 
     try{
 
@@ -758,7 +793,9 @@ class Data {
 
           /// last prices data update time
           lastPricesDataUpdateTimeString =
-          lastUpdateSessionsMap["last_prices_data_update_time"]!.keys[0];
+          lastUpdateSessionsMap["last_prices_data_update_time"]!.keys.toList()[0];
+
+          print("lastPricesDataUpdateTimeString: $lastPricesDataUpdateTimeString");
 
           /// latest prices of all forex and crypto pairs...
           mapLastSavedPricesOneMinInterval =
@@ -774,14 +811,22 @@ class Data {
         )
         ){
 
+          /// STOPPED HERE!
+          // print("here 1");
+
+          // print("lastPricesDataUpdateTimeString: ${lastUpdateSessionsMap["last_prices_data_update_time_initial"]!.}");
+
           /// last prices data update time
           lastPricesDataUpdateTimeString =
-          lastUpdateSessionsMap["last_prices_data_update_time_initial"]!.keys[0];
+          lastUpdateSessionsMap["last_prices_data_update_time_initial"]!.keys.toList()[0];
+
 
           /// latest prices of all forex and crypto pairs...
           mapLastSavedPricesOneMinInterval =
           lastUpdateSessionsMap
           ["last_prices_data_update_time_initial"][lastPricesDataUpdateTimeString];
+
+          // print("here 2");
 
         }
 
@@ -796,8 +841,8 @@ class Data {
         // print("now - lastSymbolsDataUpdateTime: ${now.difference(lastSymbolsDataUpdateTime).inHours}");
 
         /// determining whether to proceed with the prices' data update..
-        if (diffLastPricesDataUpdateTimeInMinutes < 1){
-          print("Can't update symbols data now! Last update session is lesser than 1 minute ago..");
+        if (diffLastPricesDataUpdateTimeInMinutes < 1.09090909091){
+          print("Can't update symbols data now! Last update session was under 1 minute (approx) ago..");
           return {};
         }
 
@@ -836,16 +881,16 @@ class Data {
           /// by mapPriceOfCurrentPairResponseQuote..
           if (mapLastSavedPricesOneMinInterval.isEmpty){
 
-            print("");
-            print("obtaining quote");
+            // print("");
+            // print("obtaining quote");
 
             mapPriceOfCurrentPairResponseQuote = await getRealTimePriceSingle(
-                symbol: currentPair!,
+                symbol: currentPair,
                 country: "US",
                 priceDataType: PriceDataType.quote
             );
 
-            print("mapPriceOfCurrentPairResponseQuote: $mapPriceOfCurrentPairResponseQuote");
+            // print("mapPriceOfCurrentPairResponseQuote: $mapPriceOfCurrentPairResponseQuote");
 
 
 
@@ -855,17 +900,17 @@ class Data {
           /// prices data has previously been retrieved.
           /// Helps with documenting each symbols current (realtime) price
           ///
-          print("");
-          print("obtaining realtime price");
+          // print("");
+          // print("obtaining realtime price");
 
           mapPriceOfCurrentPairResponseRealTime =
             await getRealTimePriceSingle(
-                symbol: currentPair!,
+                symbol: currentPair,
                 country: "US",
                 priceDataType: PriceDataType.realtime
             );
 
-          print("mapPriceOfCurrentPairResponseRealTime: $mapPriceOfCurrentPairResponseRealTime");
+          // print("mapPriceOfCurrentPairResponseRealTime: $mapPriceOfCurrentPairResponseRealTime");
 
 
           /// if the current pair's quote has been retrieved, which will only
@@ -901,7 +946,7 @@ class Data {
 
           countSavedPairs += 1;
           /// printing the current pair's old and current price map
-          print("${mapOfAllPrices[currentPair]}");
+          // print("${mapOfAllPrices[currentPair]}");
 
           // mapOfAllPrices[currentPair] = priceOfCurrentPairResponse!["price"];
           // print("${mapOfAllPrices[currentPair]}:${priceOfCurrentPairResponse["price"]}");
@@ -910,14 +955,14 @@ class Data {
         /// ...otherwise, setting the price to "No (Demo) Price"
         else if (!listOfAllTwentySevenImportantPairs.contains(currentPair)){
 
-          mapOfAllPrices[currentPair!] = {
+          mapOfAllPrices[currentPair] = {
             "old_price": "No (Demo) Price",
             "current_price": "No (Demo) Price"
           };
 
           countSavedPairs += 1;
           /// printing the current pair's old and current price map
-          print("${mapOfAllPrices[currentPair]}");
+          // print("${mapOfAllPrices[currentPair]}");
 
         }
 
@@ -925,11 +970,12 @@ class Data {
         // if (count == 2) break;
       }
 
-      print("");
-      print("Total number of saved pairs: $countSavedPairs");
-      print("length of mapOfAllPrices: ${mapOfAllPrices.length}");
-      print("length of savedListOfAllSymbolsDataMaps: ${savedListOfAllSymbolsDataMaps.length}");
-      print("");
+      // print("");
+      // print("Total number of saved pairs: $countSavedPairs");
+      // print("length of mapOfAllPrices: ${mapOfAllPrices.length}");
+      // print("length of savedListOfAllSymbolsDataMaps: ${savedListOfAllSymbolsDataMaps.length}");
+      // print("length of savedListOfAllSymbolsDataMapsSet: ${savedListOfAllSymbolsDataMapsSet.length}");
+      // print("");
       // print(mapOfAllPrices);
 
 
@@ -950,8 +996,8 @@ class Data {
 
     }
 
-    print("Out here!");
-    print("mapLastSavedPricesOneMinInterval: $mapLastSavedPricesOneMinInterval}");
+    // print("Out here!");
+    // print("mapLastSavedPricesOneMinInterval: $mapLastSavedPricesOneMinInterval}");
     // print("mapOfAllPrices: $mapOfAllPrices");
 
 
@@ -959,43 +1005,17 @@ class Data {
     /// message, otherwise save the map locally
 
     if (mapOfAllPrices.length < savedListOfAllSymbolsDataMapsSet.length){
-      print("mapOfAllPrices is lesser than savedListOfAllSymbolsDataMaps");
-      /// updateAndSaveAllSymbolsData();
 
-      print("");
-      // print(mapOfAllPrices.keys.toList().join(", "));
-      // print("savedListOfAllSymbolsDataMaps[0]: ${savedListOfAllSymbolsDataMaps[0]}");
-      //
-      // int count = 0;
-      // String symbols = "";
-      // for (var symbol in savedListOfAllSymbolsDataMapsSet){
-      //
-      //   String currentSymbol = symbol;
-      //
-      //   if (!listOfAllTwentySevenImportantPairs.contains(currentSymbol)){
-      //
-      //     List mKeys = mapOfAllPrices.keys.toList();
-      //     String mCurrentKey = mKeys[count];
-      //
-      //     // print("${currentSymbol.runtimeType} == ${mCurrentKey.runtimeType}");
-      //     print("${currentSymbol.runtimeType} == ${mCurrentKey.runtimeType}, $currentSymbol == $mCurrentKey: ${currentSymbol == mCurrentKey}");
-      //
-      //     if (currentSymbol != mCurrentKey){
-      //       break;
-      //     }
-      //
-      //     count += 1;
-      //
-      //   }
-      //
-      // }
-      //
-      // print(symbols);
+      // print("mapOfAllPrices is lesser than savedListOfAllSymbolsDataMaps");
+      /// updateAndSaveAllSymbolsData();
+      return {};
 
     }
     else {
 
-      print("It's a match");
+      print("");
+      print("It's a match. Prices update completed!");
+      print("");
 
       /// LOGGING THIS PRICES UPDATE SESSION TIME
       DateTime now =  DateTime.now();
@@ -1026,6 +1046,9 @@ class Data {
         };
 
         /// removing the initial prices data, if any, to free up file space..
+        /// This code is best placed here to ensure that an initial prices data
+        /// map will only be removed if all instruments' prices have been
+        /// fetched and mapped successfully...
         if (
         lastUpdateSessionsMap.containsKey("last_prices_data_update_time_initial")
         ) {

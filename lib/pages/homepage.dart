@@ -1,4 +1,10 @@
+import 'dart:async';
+
 import "package:flutter/material.dart";
+
+import "package:provider/provider.dart";
+
+import "../providers/data_provider.dart";
 
 class Homepage extends StatefulWidget{
 
@@ -28,8 +34,14 @@ class HomepageState extends State<Homepage>{
   double radiusGridTile = 0;
   double heightFirstSixGridTiles = 0;
 
+  /// Provider
+  DataProvider? dataProvider;
+
   @override
-  void didChangeDependencies() {
+  void didChangeDependencies() async {
+
+    print("");
+    print("within didChangeDependencies");
 
     paddingTop = MediaQuery.of(context).padding.top;
     paddingBottom = MediaQuery.of(context).padding.bottom;
@@ -54,60 +66,121 @@ class HomepageState extends State<Homepage>{
     print("radiusGridTile: $radiusGridTile");
     print("heightFirstSixGridTiles: $heightFirstSixGridTiles");
 
+    /// Data Provider
+    dataProvider = Provider.of<DataProvider>(context, listen:true);
+
     // TODO: implement didChangeDependencies
     super.didChangeDependencies();
 
   }
 
   Widget build(BuildContext context){
+
+    print("");
+    print("BUILT HOMEPAGE!");
+
     return Scaffold(
         appBar: null,
         /// The background
-        body: Container(
-          color: Colors.white,
-          padding: EdgeInsets.only(
-            top: paddingTopScreen,
-            left: paddingLeftAndRightScreen,
-            right: paddingLeftAndRightScreen
-          ),
-          child: Column(
-            children: [
+        body: FutureBuilder(
+          future: dataProvider!.updatePrices(),
+          builder: (ctx, snapshot) {
 
-              /// Currency Pairs - GridView Tiles
-              Container(
-                width: double.infinity,
-                height: heightFirstSixGridTiles,
-                margin: const EdgeInsets.all(0),
-                padding: const EdgeInsets.all(0),
-                child: GridView.builder(
-                  padding: const EdgeInsets.all(0),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: crossAxisSpacing,
-                      mainAxisSpacing: mainAxisSpacing
-                  ),
-                  itemCount: 6,
-                  itemBuilder: (context, index) {
-                    return Container(
-                      alignment: Alignment.center,
-                      width: widthGridTile,
-                      height: heightGridTile,
-                      decoration: BoxDecoration(
-                        // const Color(0xFFF3F7FF), // Color(0xFFFEF7F2) -> light orange, Color(0xFFFC8955) -> Orange
-                        color: Colors.transparent,
-                        border: Border.all(
-                          color: const Color(0xFF0066FF).withOpacity(0.1), // Color(0xFFFC8955).withOpacity(0.1)
-                        ),
-                        borderRadius: BorderRadius.circular(radiusGridTile)
-                      ),
-                      child: const Text("1")
-                    );
-                  },
+            print("initialData: ${snapshot.data}");
+
+            /// Prices - all instruments / symbols
+            Map<dynamic, dynamic> pricesAllInstruments = dataProvider!.allForexAndCryptoPrices;
+            dynamic firstKeyPricesAllInstruments;
+
+            print("dataProvider!.allForexAndCryptoPrices: ${dataProvider!.allForexAndCryptoPrices}");
+
+            firstKeyPricesAllInstruments = pricesAllInstruments.keys.toList()[0];
+
+            /// if the values of pricesAllInstruments are Strings, which
+            /// will only happen when the prices are being displayed for the
+            /// first time, rebuild the page
+            if (pricesAllInstruments[firstKeyPricesAllInstruments].runtimeType == String){
+
+              print('pricesAllInstruments contains "fetching"');
+              Timer.periodic(const Duration(seconds: 5), (timer) {
+
+                setState((){
+                  // pricesAllInstruments = dataProvider!.allForexAndCryptoPrices;
+                });
+
+                timer.cancel();
+              });
+
+            }
+            /// ... otherwise, wait for 1 minute (approx) before rebuilding
+            /// this page i.e before providing new price data..
+            // else {
+
+              print('pricesAllInstruments contains prices data');
+              Timer.periodic(const Duration(minutes: 1, seconds: 6), (timer) {
+
+                setState((){
+                  // pricesAllInstruments = dataProvider!.allForexAndCryptoPrices;
+                });
+
+                timer.cancel();
+              });
+
+            // }
+
+            List<dynamic> listOfAllInstruments = pricesAllInstruments.keys.toList();
+            List<dynamic> listOfAllInstrumentsValues = pricesAllInstruments.values.toList();
+
+            return Container(
+                color: Colors.white,
+                padding: EdgeInsets.only(
+                    top: paddingTopScreen,
+                    left: paddingLeftAndRightScreen,
+                    right: paddingLeftAndRightScreen
                 ),
-              )
+                child: Column(
+                  children: [
 
-            ],
-          )
+                    /// Currency Pairs - GridView Tiles
+                    Container(
+                      width: double.infinity,
+                      height: heightFirstSixGridTiles,
+                      margin: const EdgeInsets.all(0),
+                      padding: const EdgeInsets.all(0),
+                      child: GridView.builder(
+                        padding: const EdgeInsets.all(0),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: crossAxisSpacing,
+                            mainAxisSpacing: mainAxisSpacing
+                        ),
+                        itemCount: pricesAllInstruments.isEmpty ?
+                          6 : pricesAllInstruments.length,
+                        itemBuilder: (context, index) {
+                          return Container(
+                              alignment: Alignment.center,
+                              width: widthGridTile,
+                              height: heightGridTile,
+                              decoration: BoxDecoration(
+                                // const Color(0xFFF3F7FF), // Color(0xFFFEF7F2) -> light orange, Color(0xFFFC8955) -> Orange
+                                  color: Colors.transparent,
+                                  border: Border.all(
+                                    color: const Color(0xFF0066FF).withOpacity(0.1), // Color(0xFFFC8955).withOpacity(0.1)
+                                  ),
+                                  borderRadius: BorderRadius.circular(radiusGridTile)
+                              ),
+                              child: Text(
+                                  listOfAllInstruments[index].toString()
+                              )
+                          );
+                        },
+                      ),
+                    )
+
+                  ],
+                )
+            );
+          }
         )
     );
   }
