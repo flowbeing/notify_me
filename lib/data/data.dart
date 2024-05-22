@@ -421,7 +421,10 @@ class Data {
 
   /// This method updates and saves all financial data to this app's directory
   /// Cost: 6 API credits per day -> 180 API credits per month
-  Future updateAndSaveAllSymbolsData() async {
+  Future updateAndSaveAllSymbolsData({
+      /// a bool to break free from the 24 hrs limit set for this function
+      bool unconditionally = false
+  }) async {
 
     /// saving the update session's time to 'data update sessions' log file
     String lastUpdateTime = DateTime.now().toString();
@@ -463,6 +466,7 @@ class Data {
       if (
         diffLastSymbolsDataUpdateTimeInHours < 24
             && isLastSymbolsDataUpdateTimeEqualToLastSymbolsDataUpdateErrorTime == false
+            && unconditionally == false
       ){
         print("Can't update symbols data now! Last update session was under 24hrs ago..");
         return {};
@@ -732,9 +736,17 @@ class Data {
   /// the event any of the above two happen..
   Future<Map<dynamic,dynamic>> getRealTimePriceAll() async{
 
-    /// last update sessions data -> both time and prices
+    /// last update session's data -> both time and prices
     Map<String, dynamic> lastUpdateSessionsMap =
     json.decode(await _dataUpdateSessionsFile!.readAsString());
+
+    /// last prices data update session's key (found in lastUpdateSession Map)..
+    /// Value is either "last_prices_data_update_time" or
+    /// "last_prices_data_update_time_initial"
+    String? lastUpdateSessionsMapPricesDataKey;
+
+    /// last prices data update session's time..
+    String? lastPricesDataUpdateTimeString;
 
     /// instruments' prices (map)
     Map<String, dynamic> mapOfAllPrices = {};
@@ -753,7 +765,7 @@ class Data {
     savedListOfAllSymbolsDataMaps = await getAllSymbolsLocalData();
 
     /// Set of the above to remove duplicate symbols
-    Set<String> savedListOfAllSymbolsDataMapsSet = {};
+    Set<String> setSavedListOfAllSymbols = {};
 
     for (var symbolData in savedListOfAllSymbolsDataMaps){
       String symbol = symbolData['symbol'];
@@ -761,7 +773,7 @@ class Data {
       /// creating a map of all symbols before any price is fetched...
       mapOfSymbolsPreInitialPriceFetch[symbol] = "fetching";
 
-      savedListOfAllSymbolsDataMapsSet.add(symbol);
+      setSavedListOfAllSymbols.add(symbol);
     }
 
     /// A map of previously retrieved prices... if any
@@ -784,12 +796,13 @@ class Data {
           )
       ){
 
-        String? lastPricesDataUpdateTimeString;
-
         /// if there's been more than one forex and crypto prices updates and
         /// local storage, set lastPricesDataUpdateTimeString to
         /// last_prices_data_update_time's map key..
         if (lastUpdateSessionsMap.containsKey("last_prices_data_update_time")){
+
+          /// saving the last prices data update session's key
+          lastUpdateSessionsMapPricesDataKey = "last_prices_data_update_time";
 
           /// last prices data update time
           lastPricesDataUpdateTimeString =
@@ -806,15 +819,20 @@ class Data {
         /// else set lastPricesDataUpdateTimeString to
         /// last_prices_data_update_time_initial's map key..
         else if (
-        lastUpdateSessionsMap.containsKey(
-            "last_prices_data_update_time_initial"
-        )
+          lastUpdateSessionsMap.containsKey(
+              "last_prices_data_update_time_initial"
+          )
         ){
 
-          /// STOPPED HERE!
+
+
+          // STOPPED HERE!
           // print("here 1");
 
           // print("lastPricesDataUpdateTimeString: ${lastUpdateSessionsMap["last_prices_data_update_time_initial"]!.}");
+
+          /// saving the last prices data update session's key
+          lastUpdateSessionsMapPricesDataKey = "last_prices_data_update_time";
 
           /// last prices data update time
           lastPricesDataUpdateTimeString =
@@ -857,7 +875,7 @@ class Data {
       /// i.e the most traded ones..
       int countSavedPairs = 0;
 
-      for (var symbol in savedListOfAllSymbolsDataMapsSet){
+      for (var symbol in setSavedListOfAllSymbols){
 
         currentPair = symbol;
 
@@ -974,14 +992,14 @@ class Data {
       // print("Total number of saved pairs: $countSavedPairs");
       // print("length of mapOfAllPrices: ${mapOfAllPrices.length}");
       // print("length of savedListOfAllSymbolsDataMaps: ${savedListOfAllSymbolsDataMaps.length}");
-      // print("length of savedListOfAllSymbolsDataMapsSet: ${savedListOfAllSymbolsDataMapsSet.length}");
+      // print("length of setSavedListOfAllSymbols: ${setSavedListOfAllSymbols.length}");
       // print("");
       // print(mapOfAllPrices);
 
 
     } catch(error){
 
-      print("ERROR OCCURED WHILE GETTING PRICE QUOTES AND REAL TIME PRICES");
+      print("ERROR OCCURRED WHILE GETTING PRICE QUOTES AND REAL TIME PRICES");
 
       /// logging instrument's price fetching error
       DateTime now = DateTime.now();
@@ -994,17 +1012,143 @@ class Data {
           mode: FileMode.append
       );
 
+      /// if the error is a connection error (connection cut before or during
+      /// data fetching) replace the last data fetching time with the current
+      /// time to prevent this method from running again immediately, i.e to
+      /// ensure that there's a minute (approx) wait period
+      ///
+      /// Caveat: if the connection error occurs when this methods is being
+      /// executed for the first time, there's no provision to how many times
+      /// this method can be fully re-executed. Hence, creating a precedence
+      /// for exceeding the API limits
+      ///
+      /// checking whether prices data has previously been fetched..
+      String errorString = error.toString();
+      if (
+        errorString.contains("Connection reset")
+            || errorString.contains("Connection closed")
+            || errorString.contains("Failed host lookup")
+      ){
+
+        if (lastUpdateSessionsMapPricesDataKey != null){
+
+          /// checking whether a previous prices data update session's time string
+          /// exists. It should normally exist if the above key is not null
+          if (lastPricesDataUpdateTimeString != null){
+
+            /// replacing the last prices data update session time with the
+            /// current time to enforce a 1 minute waiting period for this method
+            /// can run again
+            lastUpdateSessionsMap[lastUpdateSessionsMapPricesDataKey][now.toString()] = mapLastSavedPricesOneMinInterval;
+            lastUpdateSessionsMap[lastUpdateSessionsMapPricesDataKey].remove(lastPricesDataUpdateTimeString);
+
+            _dataUpdateSessionsFile!.writeAsString(
+                json.encode(lastUpdateSessionsMap),
+                mode: FileMode.write
+            );
+
+          }
+
+        }
+
+      }
+      /// if the error is not a connection error, the only reasonable cause
+      /// would be the presence of an inaccurate symbols / instruments' map..
+      /// Hence, update and save the symbols / instruments' data unconditionally
+      /// Note:
+      else {
+
+        print("Updating and Saving All Symbols Locally & Unconditionally");
+
+        await updateAndSaveAllSymbolsData(
+          unconditionally: true
+        );
+      }
+
+
     }
 
     // print("Out here!");
     // print("mapLastSavedPricesOneMinInterval: $mapLastSavedPricesOneMinInterval}");
     // print("mapOfAllPrices: $mapOfAllPrices");
 
+    /// re-ordering mapOfAllPrice to ensure that instruments or symbols that
+    /// have actual prices will get displayed first when possible..
+    ///
+    /// This sorting operation will run regardless of whether all instrument
+    /// have been included in the map or not
+    List<MapEntry> allRetrievedPrices = [];
+
+    mapOfAllPrices.forEach((key, value) {
+
+      dynamic oldPrice = value['old_price'];
+      dynamic currentPrice = value['current_price'];
+
+      try {
+
+        oldPrice = double.parse(oldPrice);
+        currentPrice = double.parse(currentPrice);
+
+        MapEntry mapEntryCurrentInstrument = MapEntry(key, {
+          "old_price": oldPrice.toString(),
+          "current_price": currentPrice.toString()
+        });
+
+        allRetrievedPrices.insert(0, mapEntryCurrentInstrument);
+
+      } catch(error){
+
+
+        MapEntry mapEntryCurrentInstrument = MapEntry(key, {
+          "old_price": oldPrice,
+          "current_price": currentPrice
+        });
+
+        allRetrievedPrices.add(mapEntryCurrentInstrument);
+
+      }
+
+    });
+
 
     /// if there's been an incomplete price data mapping, print a notification
     /// message, otherwise save the map locally
+    ///
+    /// Note: The if-statement below will run if the above try-catch block
+    /// returns an error, since it does so always before the try block gets to
+    /// to fill up mapOfAllPrices with all symbols in
+    /// setSavedListOfAllSymbols
+    if (mapOfAllPrices.length < setSavedListOfAllSymbols.length){
 
-    if (mapOfAllPrices.length < savedListOfAllSymbolsDataMapsSet.length){
+      /// if up to 6 instruments' prices were retrieved, map out all instruments
+      int lengthOfMapOfAllPrices = mapOfAllPrices.length;
+
+      if (lengthOfMapOfAllPrices >= 6){
+
+        /// list of retrieved instruments (which also always have prices)..
+        List allRetrievedSymbolsOrInstrumentsKey =  mapOfAllPrices.keys.toList();
+
+
+        for (var symbol in setSavedListOfAllSymbols){
+
+          /// if the instrument is an important one i.e it should be displayed
+          /// but was not retrieved, notify the user that it's price will be
+          /// available after the next retrieval process..
+          if (listOfAllTwentySevenImportantPairs.contains(symbol)
+              && !allRetrievedSymbolsOrInstrumentsKey.contains(symbol)){
+
+            MapEntry mapEntryCurrentInstrument = MapEntry(symbol, {
+              "old_price": "wait 1 min",
+              "current_price": "wait 1 min"
+            });
+
+
+
+          }
+
+        }
+
+      }
 
       // print("mapOfAllPrices is lesser than savedListOfAllSymbolsDataMaps");
       /// updateAndSaveAllSymbolsData();
@@ -1065,6 +1209,7 @@ class Data {
       );
 
     }
+
 
     return mapOfAllPrices;
 

@@ -19,7 +19,7 @@ class DataProvider with ChangeNotifier{
   
   /// tracking whether an initial "fetching" notification has previously been
   /// set for allForexCryptoPrices
-  bool isSetAllForexAndCrytoPricesFetching = false;
+  bool isSetAllForexAndCryptoPricesFetching = false;
 
   /// Number of times prices have been retrieved from the relevant data provider
   int _countPricesRetrieval = 0;

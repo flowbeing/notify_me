@@ -96,37 +96,41 @@ class HomepageState extends State<Homepage>{
 
             firstKeyPricesAllInstruments = pricesAllInstruments.keys.toList()[0];
 
-            /// if the values of pricesAllInstruments are Strings, which
-            /// will only happen when the prices are being displayed for the
-            /// first time, rebuild the page
-            if (pricesAllInstruments[firstKeyPricesAllInstruments].runtimeType == String){
+            if (snapshot.connectionState == ConnectionState.done){
 
-              print('pricesAllInstruments contains "fetching"');
-              Timer.periodic(const Duration(seconds: 5), (timer) {
+              /// if the values of pricesAllInstruments are Strings, which
+              /// will only happen when the prices are being displayed for the
+              /// first time, rebuild the page..
+              if (pricesAllInstruments[firstKeyPricesAllInstruments].runtimeType == String){
 
-                setState((){
-                  // pricesAllInstruments = dataProvider!.allForexAndCryptoPrices;
+                print('pricesAllInstruments contains "fetching"');
+                Timer.periodic(const Duration(seconds: 5), (timer) {
+
+                  setState((){
+                    // pricesAllInstruments = dataProvider!.allForexAndCryptoPrices;
+                  });
+
+                  timer.cancel();
                 });
 
-                timer.cancel();
-              });
+              }
+              /// ... otherwise, wait for 1 minute (approx) before rebuilding
+              /// this page i.e before providing new price data..
+              else {
+
+                print('pricesAllInstruments contains prices data');
+                Timer.periodic(const Duration(minutes: 1, seconds: 6), (timer) {
+
+                  setState((){
+                    // pricesAllInstruments = dataProvider!.allForexAndCryptoPrices;
+                  });
+
+                  timer.cancel();
+                });
+
+              }
 
             }
-            /// ... otherwise, wait for 1 minute (approx) before rebuilding
-            /// this page i.e before providing new price data..
-            // else {
-
-              print('pricesAllInstruments contains prices data');
-              Timer.periodic(const Duration(minutes: 1, seconds: 6), (timer) {
-
-                setState((){
-                  // pricesAllInstruments = dataProvider!.allForexAndCryptoPrices;
-                });
-
-                timer.cancel();
-              });
-
-            // }
 
             List<dynamic> listOfAllInstruments = pricesAllInstruments.keys.toList();
             List<dynamic> listOfAllInstrumentsValues = pricesAllInstruments.values.toList();
