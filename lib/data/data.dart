@@ -767,6 +767,9 @@ class Data {
     /// Set of the above to remove duplicate symbols
     Set<String> setSavedListOfAllSymbols = {};
 
+    /// boolean that tracks whether or not there's been a connection error
+    bool connectionError = false;
+
     for (var symbolData in savedListOfAllSymbolsDataMaps){
       String symbol = symbolData['symbol'];
 
@@ -939,10 +942,17 @@ class Data {
           /// mapPriceOfCurrentPairResponseQuote
           if (mapPriceOfCurrentPairResponseQuote != null){
 
-            mapOfAllPrices[currentPair] = {
+            Map currentSymbolsPriceDataToSave = {
               "old_price": mapPriceOfCurrentPairResponseQuote['close'],
               "current_price": mapPriceOfCurrentPairResponseRealTime['price']
             };
+
+            mapOfAllPrices[currentPair] = currentSymbolsPriceDataToSave;
+
+            /// including the result unconditionally in previously saved price
+            /// data map, which could be empty by the way..
+            mapLastSavedPricesOneMinInterval[currentPair] =
+                currentSymbolsPriceDataToSave;
 
           }
           /// ... else if current pair's quote has not been retrieved, which
@@ -955,10 +965,17 @@ class Data {
           ///
           else if (mapPriceOfCurrentPairResponseQuote == null){
 
-            mapOfAllPrices[currentPair] = {
+            Map currentSymbolsPriceDataToSave = {
               "old_price": mapLastSavedPricesOneMinInterval[currentPair]!['current_price'],
               "current_price": mapPriceOfCurrentPairResponseRealTime['price']
             };
+
+            mapOfAllPrices[currentPair] = currentSymbolsPriceDataToSave;
+
+            /// including the result unconditionally in previously saved price
+            /// data map, which could be empty by the way..
+            mapLastSavedPricesOneMinInterval[currentPair] =
+                currentSymbolsPriceDataToSave;
 
           }
 
@@ -986,6 +1003,7 @@ class Data {
 
 
         // if (count == 2) break;
+        if (countSavedPairs == 6) throw Error();
       }
 
       // print("");
@@ -1030,6 +1048,8 @@ class Data {
             || errorString.contains("Failed host lookup")
       ){
 
+        connectionError = true;
+
         if (lastUpdateSessionsMapPricesDataKey != null){
 
           /// checking whether a previous prices data update session's time string
@@ -1038,7 +1058,8 @@ class Data {
 
             /// replacing the last prices data update session time with the
             /// current time to enforce a 1 minute waiting period for this method
-            /// can run again
+            /// can run again, and reflect the partially fetched prices data -
+            /// helps API credits wastage..
             lastUpdateSessionsMap[lastUpdateSessionsMapPricesDataKey][now.toString()] = mapLastSavedPricesOneMinInterval;
             lastUpdateSessionsMap[lastUpdateSessionsMapPricesDataKey].remove(lastPricesDataUpdateTimeString);
 
@@ -1077,36 +1098,53 @@ class Data {
     ///
     /// This sorting operation will run regardless of whether all instrument
     /// have been included in the map or not
-    List<MapEntry> allRetrievedPrices = [];
+    ///
+    /// This code block is placed outside the if-else statement below to ensure
+    /// that a sorted prices data map will be returned when all important
+    /// prices have been fetched successfully..
+    List<MapEntry> listOfMapEntryAllRetrievedPrices = [];
+    int countRetrievedImportantPairs = 0;
 
-    mapOfAllPrices.forEach((key, value) {
+    mapOfAllPrices.forEach((symbol, priceData) {
 
-      dynamic oldPrice = value['old_price'];
-      dynamic currentPrice = value['current_price'];
+      dynamic oldPrice = priceData['old_price'];
+      dynamic currentPrice = priceData['current_price'];
 
       try {
 
+        /// if the current price convert to a double, i.e the price of the
+        /// current symbol has been retrieved, which should be all the current
+        /// contents of mapOfAllPrices, place it in front of all other symbols
+        /// in listOfMapEntryAllRetrievedPrices..
+        /// ...ensures that symbols with prices get displayed first
         oldPrice = double.parse(oldPrice);
         currentPrice = double.parse(currentPrice);
 
-        MapEntry mapEntryCurrentInstrument = MapEntry(key, {
+        MapEntry mapEntryCurrentInstrument = MapEntry(symbol, {
           "old_price": oldPrice.toString(),
           "current_price": currentPrice.toString()
         });
 
-        allRetrievedPrices.insert(0, mapEntryCurrentInstrument);
+        listOfMapEntryAllRetrievedPrices.insert(0, mapEntryCurrentInstrument);
+
+        /// Counting the number of important pairs whose prices have been
+        /// retrieved..
+        countRetrievedImportantPairs += 1;
 
       } catch(error){
 
-
-        MapEntry mapEntryCurrentInstrument = MapEntry(key, {
+        /// ... otherwise place it at the end of the listOfMapEntryAllRetrievedPrices to
+        /// ensure that symbols with "No (Demo) Price" get displayed last
+        MapEntry mapEntryCurrentInstrument = MapEntry(symbol, {
           "old_price": oldPrice,
           "current_price": currentPrice
         });
 
-        allRetrievedPrices.add(mapEntryCurrentInstrument);
+        listOfMapEntryAllRetrievedPrices.add(mapEntryCurrentInstrument);
 
       }
+
+
 
     });
 
@@ -1120,31 +1158,130 @@ class Data {
     /// setSavedListOfAllSymbols
     if (mapOfAllPrices.length < setSavedListOfAllSymbols.length){
 
-      /// if up to 6 instruments' prices were retrieved, map out all instruments
+      /// if up to 6 symbols' or instruments' prices have been retrieved,
+      /// map out all instrumentsand display the important symbols or
+      /// instruments whose prices have been retrieved first followed by other
+      /// important instruments whose prices have not been retrieved
       int lengthOfMapOfAllPrices = mapOfAllPrices.length;
 
       if (lengthOfMapOfAllPrices >= 6){
 
-        /// list of retrieved instruments (which also always have prices)..
+        /// list of retrieved (prices) and mapped instruments ..
         List allRetrievedSymbolsOrInstrumentsKey =  mapOfAllPrices.keys.toList();
-
-
+        
         for (var symbol in setSavedListOfAllSymbols){
 
+          MapEntry? mapEntryCurrentInstrument;
+
+          List<MapEntry> listOfMapEntryAllRetrievedPricesCopy =
+            [...listOfMapEntryAllRetrievedPrices];
+
+          /// map that will be returned
+          Map<dynamic, dynamic> mapEntryAllRetrievedPrices = {};
+
           /// if the instrument is an important one i.e it should be displayed
-          /// but was not retrieved, notify the user that it's price will be
-          /// available after the next retrieval process..
+          /// but it's price was not retrieved, notify the user that it's price
+          /// will be available after the next retrieval process if it
+          /// does not already exist within mapLastSavedPricesOneMinInterval -
+          /// a map of previously retrieved prices' data..
           if (listOfAllTwentySevenImportantPairs.contains(symbol)
               && !allRetrievedSymbolsOrInstrumentsKey.contains(symbol)){
 
-            MapEntry mapEntryCurrentInstrument = MapEntry(symbol, {
-              "old_price": "wait 1 min",
-              "current_price": "wait 1 min"
-            });
 
 
+            // if (mapLastSavedPricesOneMinInterval.containsKey(symbol)){
+
+              // /// ensuring that the previous price data of the current symbol
+              // /// is included where the current session fails to fetch only
+              // /// 6 (prices' data) of all the important pairs'..
+              // mapEntryCurrentInstrument = MapEntry(symbol, {
+              //   "old_price": mapLastSavedPricesOneMinInterval[symbol]["old_price"],
+              //   "current_price": mapLastSavedPricesOneMinInterval[symbol]["current_price"]
+              // });
+              //
+              // listOfMapEntryAllRetrievedPrices.insert(
+              //     countRetrievedImportantPairs - 1, mapEntryCurrentInstrument
+              // );
+
+            // }
+            // else{
+
+              mapEntryCurrentInstrument = MapEntry(symbol, {
+                "old_price": "Refresh - 1 min",
+                "current_price": "Refresh - 1 min"
+              });
+
+              /// placing all non retrieved important pairs just after the
+              /// retrieved important pairs
+              listOfMapEntryAllRetrievedPrices.insert(
+                  countRetrievedImportantPairs - 1, mapEntryCurrentInstrument
+              );
+
+            // }
 
           }
+
+          /// if the current symbol or instrument is not an important one i.e
+          /// should not be displayed first, add it the the end of the list of
+          /// all instruments-prices map entry list (listOfMapEntryAllRetrievedPrices)
+          if (!listOfAllTwentySevenImportantPairs.contains(symbol)){
+
+            mapEntryCurrentInstrument = MapEntry(symbol, {
+              "old_price": "No (Demo) Price",
+              "current_price": "No (Demo) Price"
+            });
+            
+            listOfMapEntryAllRetrievedPrices.add(mapEntryCurrentInstrument);
+            
+          }
+
+          /// saving an (UNCONDITIONALLY) updated copy of the previous prices
+          /// data if any
+          if (mapLastSavedPricesOneMinInterval.isNotEmpty
+              && lastUpdateSessionsMapPricesDataKey != null
+              && lastPricesDataUpdateTimeString != null
+          ){
+
+            DateTime now = DateTime.now();
+
+            lastUpdateSessionsMap[lastUpdateSessionsMapPricesDataKey][now.toString()] = mapLastSavedPricesOneMinInterval;
+            lastUpdateSessionsMap[lastUpdateSessionsMapPricesDataKey].remove(lastPricesDataUpdateTimeString);
+
+            _dataUpdateSessionsFile!.writeAsString(
+                json.encode(lastUpdateSessionsMap),
+                mode: FileMode.write
+            );
+
+          }
+
+          /// if a previous prices' data map exists, return the unconditionally
+          /// updated version
+          if (mapLastSavedPricesOneMinInterval.isNotEmpty){
+            return mapLastSavedPricesOneMinInterval;
+          }
+          /// ... otherwise return a map of prices' data that lets the user
+          /// know that some important pairs' prices were not retrieved but
+          /// will be retrieved when this method run again..
+          else{
+
+            /// converting listOfMapEntryAllRetrievedPrices from a List<MapEntry> to
+            /// Iterable<MapEntry>
+            ///
+            /// At this point, all instruments' data (prices preferred) should
+            /// have been included in listOfMapEntryAllRetrievedPrices
+
+            Iterable<MapEntry> listOfMapEntryAllRetrievedPricesIterable = Iterable.castFrom(
+                listOfMapEntryAllRetrievedPricesCopy
+            );
+
+            /// converting the entries (iterable) to a map
+            mapEntryAllRetrievedPrices = Map.fromEntries(
+                listOfMapEntryAllRetrievedPricesIterable
+            );
+
+          }
+
+          return mapEntryAllRetrievedPrices;
 
         }
 
@@ -1155,24 +1292,51 @@ class Data {
       return {};
 
     }
+    /// will be executed when:
+    /// a. all prices' data have been retrieved
+    /// b. no price data has been retrieved and no previous prices' data exists,
+    ///    since length zero cannot be lesser than length of zero. i.e the
+    ///    length of mapOfAllPrices cannot be lesser than the length of
+    ///    setSavedListOfAllSymbols when both objects have a size of zero
     else {
 
       print("");
       print("It's a match. Prices update completed!");
       print("");
 
+      /// converting listOfMapEntryAllRetrievedPrices from a List<MapEntry> to
+      /// Iterable<MapEntry>
+      ///
+      /// At this point, all instruments' data (prices preferred) should
+      /// have been included in listOfMapEntryAllRetrievedPrices
+      Iterable<MapEntry> listOfMapEntryAllRetrievedPricesIterable = Iterable.castFrom(
+          listOfMapEntryAllRetrievedPrices
+      );
+
+      // print("listOfMapEntryAllRetrievedPricesIterable: $listOfMapEntryAllRetrievedPricesIterable");
+
+      /// converting the entries (iterable) to a map
+      Map<dynamic,dynamic> finalMapAllInstrumentsPrices = Map.fromEntries(
+          listOfMapEntryAllRetrievedPricesIterable
+      );
+
+      // print("finalMapAllInstrumentsPrices: ${finalMapAllInstrumentsPrices}");
+
+
       /// LOGGING THIS PRICES UPDATE SESSION TIME
       DateTime now =  DateTime.now();
+      print("currentPricesDataUpdateTimeString: $now");
 
       /// if no prices data have previously been retrieved or saved, save the
       /// latest prices data as the initial..
       if (
-      !lastUpdateSessionsMap.containsKey('last_prices_data_update_time_initial')
+        !lastUpdateSessionsMap.containsKey('last_prices_data_update_time_initial')
           && !lastUpdateSessionsMap.containsKey('last_prices_data_update_time')
+          && finalMapAllInstrumentsPrices.isNotEmpty
       ){
 
         lastUpdateSessionsMap["last_prices_data_update_time_initial"] = {
-          now.toString() : mapOfAllPrices
+          now.toString() : finalMapAllInstrumentsPrices
         };
 
       }
@@ -1181,12 +1345,15 @@ class Data {
       /// prices data, and remove the initial prices data, if any,
       /// to free up file space..
       else if (
-      lastUpdateSessionsMap.containsKey('last_prices_data_update_time_initial')
-          || lastUpdateSessionsMap.containsKey('last_prices_data_update_time')
+        (
+            lastUpdateSessionsMap.containsKey('last_prices_data_update_time_initial')
+            || lastUpdateSessionsMap.containsKey('last_prices_data_update_time')
+        ) 
+            && finalMapAllInstrumentsPrices.isNotEmpty
       ){
 
         lastUpdateSessionsMap["last_prices_data_update_time"] = {
-          now.toString() : mapOfAllPrices
+          now.toString() : finalMapAllInstrumentsPrices
         };
 
         /// removing the initial prices data, if any, to free up file space..
@@ -1194,7 +1361,8 @@ class Data {
         /// map will only be removed if all instruments' prices have been
         /// fetched and mapped successfully...
         if (
-        lastUpdateSessionsMap.containsKey("last_prices_data_update_time_initial")
+          lastUpdateSessionsMap.containsKey("last_prices_data_update_time_initial") 
+              && finalMapAllInstrumentsPrices.isNotEmpty
         ) {
 
           lastUpdateSessionsMap.remove("last_prices_data_update_time_initial");
@@ -1208,10 +1376,48 @@ class Data {
           mode: FileMode.write
       );
 
+      /// 1. if there's been a connection error and no prices data have been
+      ///    retrieved, if there's a previous prices' data map, serve it..
+      ///
+      /// 2. if there's been a connection error and no prices data have been
+      ///    retrieved, if there's no previous prices' data map, return an empty
+      ///    map
+      ///
+      /// 3. if all symbols' price data have been fetched, serve it i.e if:
+      ///    a. finalMapAllInstrumentsPrices is not empty at this point
+      ///       which is the same as:
+      ///       mapOfAllPrices.length == setSavedListOfAllSymbols.length
+      ///
+      /// 4. if there's any other kind of error, return an empty list
+      if (
+          connectionError == true
+          && mapOfAllPrices.isEmpty
+          && mapLastSavedPricesOneMinInterval.isNotEmpty
+      ){
+
+        return mapLastSavedPricesOneMinInterval;
+
+      }
+      else if (
+          connectionError == true
+          && mapOfAllPrices.isEmpty
+          && mapLastSavedPricesOneMinInterval.isEmpty
+      ){
+
+        return {};
+
+      } else if (mapOfAllPrices.length == setSavedListOfAllSymbols.length){
+
+        return finalMapAllInstrumentsPrices;
+
+      } else{
+
+        return finalMapAllInstrumentsPrices;
+
+
+      }
+
     }
-
-
-    return mapOfAllPrices;
 
   }
 

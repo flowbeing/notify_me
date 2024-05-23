@@ -57,7 +57,7 @@ class DataProvider with ChangeNotifier{
     print("");
 
     _countPricesRetrieval += 1;
-    print("Retrieved Forex & Crypto Prices: $_countPricesRetrieval");
+    print("Called UpdatePrices Method (Provider) $_countPricesRetrieval times");
 
     /// retrieving all prices..
     /// if successful, a map of all prices will be returned. Otherwise, an empty

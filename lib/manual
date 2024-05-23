@@ -1,0 +1,10 @@
+Financial Markets Price Alert App
+Author: Oyebolu Daniel
+LinkedIn: linkedin.com/in/daniel-oyebolu
+Refresh Rate: Once Per Minute
+Instruments: 27 (Forex & Crypto)
+Solutions - API based data provision (A websocket would eliminate the need for the solutions below):
+    -   When there's a connection error during a prices' data update, the previous prices' data update session time,
+        if any, will be updated to prevent immediate API access. Hence, ensuring that the app does not exceed the
+        current API credit limit - 55 per minute.
+    -   Where prices' data have been partially retrieved, a previous prices' data will be updated and served..
