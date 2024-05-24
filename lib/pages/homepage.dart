@@ -77,7 +77,10 @@ class HomepageState extends State<Homepage>{
   Widget build(BuildContext context){
 
     print("");
-    print("BUILT HOMEPAGE!");
+    print("");
+    print("--------------------------------------------------------------------------------");
+    print("");
+    print("HOMEPAGE - BEGINNING (BUILT HOMEPAGE!)");
 
     return Scaffold(
         appBar: null,
@@ -85,6 +88,7 @@ class HomepageState extends State<Homepage>{
         body: FutureBuilder(
           future: dataProvider!.updatePrices(),
           builder: (ctx, snapshot) {
+
 
             print("initialData: ${snapshot.data}");
 
@@ -98,12 +102,18 @@ class HomepageState extends State<Homepage>{
 
             if (snapshot.connectionState == ConnectionState.done){
 
+
+
               /// if the values of pricesAllInstruments are Strings, which
               /// will only happen when the prices are being displayed for the
               /// first time, rebuild the page..
               if (pricesAllInstruments[firstKeyPricesAllInstruments].runtimeType == String){
 
                 print('pricesAllInstruments contains "fetching"');
+                print("");
+                print("HOMEPAGE - END");
+                print("--------------------------------------------------------------------------------");
+                print("");
                 Timer.periodic(const Duration(seconds: 5), (timer) {
 
                   setState((){
@@ -117,8 +127,11 @@ class HomepageState extends State<Homepage>{
               /// ... otherwise, wait for 1 minute (approx) before rebuilding
               /// this page i.e before providing new price data..
               else {
-
-                print('pricesAllInstruments contains prices data');
+                print('pricesAllInstruments contains "prices"');
+                print("");
+                print("HOMEPAGE - END");
+                print("--------------------------------------------------------------------------------");
+                print("");
                 Timer.periodic(const Duration(minutes: 1, seconds: 6), (timer) {
 
                   setState((){

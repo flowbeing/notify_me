@@ -48,13 +48,16 @@ class DataProvider with ChangeNotifier{
   /// This method retrieves the prices of forex and crypto pairs periodically
   Future updatePrices() async{
 
+    print("--------------------------------------------------------------------------------");
+    print("");
+    print("UPDATEPRICES METHOD - START");
+
     /// initialzing dotenv, creating necessary files and folders, and
     /// updating instruments / symbols..
     await _initialDataAndDotEnv();
 
     print("");
-    print("fetching all instruments' prices every 1 minute (approx)...");
-    print("");
+    print("Fetching all instruments' prices every 1 minute (approx)...");
 
     _countPricesRetrieval += 1;
     print("Called UpdatePrices Method (Provider) $_countPricesRetrieval times");
@@ -81,6 +84,12 @@ class DataProvider with ChangeNotifier{
       print("");
       allForexAndCryptoPrices = mapOfAllPrices;
     }
+
+
+    print("UPDATEPRICES METHOD - END");
+    print("");
+    print("--------------------------------------------------------------------------------");
+    print("");
 
     /// note: if allForexAndCryptoPrices.isNotEmpty &&
     /// mapOfAllPrices.isNotEmpty, the previous value of
