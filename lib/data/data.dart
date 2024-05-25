@@ -801,6 +801,9 @@ class Data {
     /// number of saved important pairs
     int countSavedImportantPairs = 0;
 
+    /// number of saved unimportant pairs
+    int countSavedUnimportantPairs = 0;
+
     for (var symbolData in savedListOfAllSymbolsDataMaps){
       String symbol = symbolData['symbol'];
 
@@ -812,6 +815,9 @@ class Data {
 
     /// A map of previously retrieved prices... if any
     Map<String, dynamic> mapLastSavedPricesOneMinInterval = {};
+
+
+    print("lengthMapOfAllPrices 1: ${mapOfAllPrices.length}");
 
     try{
 
@@ -937,21 +943,21 @@ class Data {
           /// by mapPriceOfCurrentPairResponseQuote..
 
           print("");
-          print("Getting quote - 1");
+          // print("Getting quote - 1");
           if (mapLastSavedPricesOneMinInterval.isEmpty){
 
             // print("");
             // print("obtaining quote");
 
-            print("Getting quote - 2");
+            // print("Getting quote - 2");
             mapPriceOfCurrentPairResponseQuote = await getRealTimePriceSingle(
                 symbol: currentPair,
                 country: "US",
                 priceDataType: PriceDataType.quote
             );
-            print("mapPriceOfCurrentPairResponseQuote: $mapPriceOfCurrentPairResponseQuote");
-            print("Getting quote - 3");
-            print("");
+            // print("mapPriceOfCurrentPairResponseQuote: $mapPriceOfCurrentPairResponseQuote");
+            // print("Getting quote - 3");
+            // print("");
 
             // print("mapPriceOfCurrentPairResponseQuote: $mapPriceOfCurrentPairResponseQuote");
 
@@ -966,14 +972,14 @@ class Data {
 
 
           print("");
-          print("Getting realtime price - 4");
+          // print("Getting realtime price - 4");
           mapPriceOfCurrentPairResponseRealTime =
             await getRealTimePriceSingle(
                 symbol: currentPair,
                 country: "US",
                 priceDataType: PriceDataType.realtime
             );
-          print("Getting realtime price - 5");
+          // print("Getting realtime price - 5");
 
           // print("mapPriceOfCurrentPairResponseRealTime: $mapPriceOfCurrentPairResponseRealTime");
 
@@ -1002,7 +1008,6 @@ class Data {
             }
 
             countSavedImportantPairs += 1;
-            if (countSavedImportantPairs == 6) throw Error();
 
           }
           /// ... else if current pair's quote has not been retrieved, which
@@ -1031,7 +1036,6 @@ class Data {
             }
 
             countSavedImportantPairs += 1;
-            if (countSavedImportantPairs == 6) throw Error();
 
           }
 
@@ -1043,7 +1047,7 @@ class Data {
 
         }
         /// ...otherwise, setting the price to "No (Demo) Price"
-        else if (!listOfAppliedImportantPairs.contains(currentPair)){
+        else if (listOfAppliedImportantPairs.contains(currentPair) == false){
 
           mapOfAllPrices[currentPair] = {
             "old_price": "No (Demo) Price",
@@ -1052,6 +1056,8 @@ class Data {
 
           /// printing the current pair's old and current price map
           // print("${mapOfAllPrices[currentPair]}");
+
+          countSavedUnimportantPairs += 1;
 
         }
 
@@ -1066,8 +1072,6 @@ class Data {
       // print("length of savedListOfAllSymbolsDataMaps: ${savedListOfAllSymbolsDataMaps.length}");
       // print("length of setSavedListOfAllSymbols: ${setSavedListOfAllSymbols.length}");
       // print("");
-      print("mapOfAllPrices: $mapOfAllPrices");
-      print("mapLastSavedPricesOneMinInterval: $mapLastSavedPricesOneMinInterval");
 
 
     } catch(error){
@@ -1148,6 +1152,12 @@ class Data {
     // print("mapLastSavedPricesOneMinInterval: $mapLastSavedPricesOneMinInterval}");
     // print("mapOfAllPrices: $mapOfAllPrices");
 
+    // print("mapOfAllPrices: $mapOfAllPrices");
+    // print("mapLastSavedPricesOneMinInterval: $mapLastSavedPricesOneMinInterval");
+
+    print("");
+    // print("lengthMapOfAllPrices 2: ${mapOfAllPrices.length}");
+
     /// re-ordering mapOfAllPrice to ensure that instruments or symbols that
     /// have actual prices will get displayed first when possible..
     ///
@@ -1201,6 +1211,12 @@ class Data {
 
     });
 
+    // print("");
+    // print("lengthMapOfAllPrices 3: ${mapOfAllPrices.length}");
+    // print("");
+    // print("countSavedImportantPairs: $countSavedImportantPairs");
+    // print('countSavedUnimportantPairs: $countSavedUnimportantPairs');
+
 
     /// if there's been an incomplete price data mapping, print a notification
     /// message, otherwise save the map locally
@@ -1217,25 +1233,26 @@ class Data {
       /// other important instruments whose prices have not been retrieved
       int lengthOfMapOfAllPrices = mapOfAllPrices.length;
 
+      int countRefreshInOneMin = 0;
+
+      /// manually constructed map of instruments' prices to be returned when
+      /// relevant..
+      Map<dynamic, dynamic> mapEntryAllRetrievedPrices = {};
+
+
       if (countSavedImportantPairs >= 6){
 
         /// list of retrieved (prices) and mapped instruments ..
         List allRetrievedSymbolsOrInstrumentsKey =  mapOfAllPrices.keys.toList();
 
-        /// manually constructed map of instruments' prices to be returned when
-        /// relevant..
-        Map<String, dynamic> mapEntryAllRetrievedPrices;
+        // print("lengthListOfAppliedImportantPairs: $listOfAppliedImportantPairs");
 
-        
         for (var symbol in setSavedListOfAllSymbols){
 
           MapEntry? mapEntryCurrentInstrument;
 
           // List<MapEntry> listOfMapEntryAllRetrievedPricesCopy =
           //   [...listOfMapEntryAllRetrievedPrices];
-
-          /// map that will be returned
-          Map<dynamic, dynamic> mapEntryAllRetrievedPrices = {};
 
           /// if the instrument is an important one i.e it should be displayed
           /// but it's price was not retrieved, notify the user that it's price
@@ -1247,11 +1264,13 @@ class Data {
           // print("allRetrievedSymbolsOrInstrumentsKey: $allRetrievedSymbolsOrInstrumentsKey");
           // print("lengthMapofAllPrices: ${mapOfAllPrices.length}");
 
-          print("isSymbolImportant: ${listOfAppliedImportantPairs.contains(symbol)}, isSymbolInMapOfAllPrices: ${allRetrievedSymbolsOrInstrumentsKey.contains(symbol)}");
+          // print("isSymbolImportant: ${listOfAppliedImportantPairs.contains(symbol)}, isSymbolInMapOfAllPrices: ${allRetrievedSymbolsOrInstrumentsKey.contains(symbol)}");
           if (
             listOfAppliedImportantPairs.contains(symbol)
             && !allRetrievedSymbolsOrInstrumentsKey.contains(symbol)
           ){
+
+            countRefreshInOneMin += 1;
 
 
 
@@ -1272,7 +1291,8 @@ class Data {
             // }
             // else{
 
-              print('here! Refresh - 1 min');
+              // print("");
+              // print('here! Refresh - 1 min');
 
               mapEntryCurrentInstrument = MapEntry(symbol, {
                 "old_price": "Refresh - 1 min",
@@ -1285,6 +1305,9 @@ class Data {
                   countRetrievedImportantPairs, mapEntryCurrentInstrument
               );
 
+              // print("map entry: refresh 1 min: $mapEntryCurrentInstrument");
+
+
             // }
 
           }
@@ -1292,7 +1315,10 @@ class Data {
           /// if the current symbol or instrument is not an important one i.e
           /// should not be displayed first, add it the the end of the list of
           /// all instruments-prices map entry list (listOfMapEntryAllRetrievedPrices)
-          if (!listOfAppliedImportantPairs.contains(symbol)){
+          else if (!listOfAppliedImportantPairs.contains(symbol)
+              && !allRetrievedSymbolsOrInstrumentsKey.contains(symbol)){
+
+            // print("Unimportant Pair - Unsaved - Start");
 
             mapEntryCurrentInstrument = MapEntry(symbol, {
               "old_price": "No (Demo) Price",
@@ -1300,10 +1326,15 @@ class Data {
             });
             
             listOfMapEntryAllRetrievedPrices.add(mapEntryCurrentInstrument);
+
+            // print("Unimportant Pair - Unsaved - End");
             
           }
 
         }
+
+        // print("Out here - isMapLastSavedPricesOneMinIntervalEmpty");
+        // print("isMapLastSavedPricesOneMinIntervalEmpty: ${mapLastSavedPricesOneMinInterval.isEmpty}");
 
         /// saving an updated copy of a previous prices data
         /// (mapLastSavedPricesOneMinInterval), if any
@@ -1326,7 +1357,7 @@ class Data {
 
         /// if a previous prices' data map exists, return its updated version
         if (mapLastSavedPricesOneMinInterval.isNotEmpty){
-          return mapLastSavedPricesOneMinInterval;
+          mapEntryAllRetrievedPrices = mapLastSavedPricesOneMinInterval;
         }
         /// ... otherwise return a map of prices' data that lets the user
         /// know that some important pairs' prices were not retrieved but
@@ -1339,26 +1370,53 @@ class Data {
           /// At this point, all instruments' data (prices preferred) should
           /// have been included in listOfMapEntryAllRetrievedPrices
 
-          Iterable<MapEntry<String, dynamic>> listOfMapEntryAllRetrievedPricesIterable = Iterable.castFrom(
+          // print("IN ITERABLE CONVERSION");
+          Iterable<MapEntry<dynamic, dynamic>> listOfMapEntryAllRetrievedPricesIterable = Iterable.castFrom(
               listOfMapEntryAllRetrievedPrices
           );
 
-          print("listOfMapEntryAllRetrievedPricesIterable: $listOfMapEntryAllRetrievedPricesIterable");
+          // print("listOfMapEntryAllRetrievedPricesIterableIn: $listOfMapEntryAllRetrievedPricesIterable");
+          // print("next");
+          // print("Map.fromIterableIn: ${Map.fromIterable(
+          //     listOfMapEntryAllRetrievedPricesIterable
+          // )}");
 
-          /// converting the entries (iterable) to a map
-          mapEntryAllRetrievedPrices = Map.fromEntries(
-              listOfMapEntryAllRetrievedPricesIterable
-          );
+          try{
 
-          return mapEntryAllRetrievedPrices;
+            /// converting the entries (iterable) to a map
+            mapEntryAllRetrievedPrices = Map.fromEntries(
+                listOfMapEntryAllRetrievedPricesIterable
+            );
+
+            // print("mapEntryAllRetrievedPricesIn: $mapEntryAllRetrievedPrices");
+
+          } catch(error){
+
+            DateTime now = DateTime.now();
+
+            _otherErrorsLogFile!.writeAsString(
+              "now\n"
+              "AN ERROR OCCURED WHILE CONVERTING ITERABLE<MAPENTRY> TO MAP:\n"
+                  "$error\n",
+              mode: FileMode.append
+            );
+          }
+
 
         }
 
       }
 
       // print("mapOfAllPrices is lesser than savedListOfAllSymbolsDataMaps");
+      print("✔");
+      // print("listOfMapEntryAllRetrievedPrices: $listOfMapEntryAllRetrievedPrices");
+      // print("countRefreshInOneMin: $countRefreshInOneMin");
+
+
+      print("mapEntryAllRetrievedPrices: $mapEntryAllRetrievedPrices");
+
       /// updateAndSaveAllSymbolsData();
-      return {};
+      return mapEntryAllRetrievedPrices;
 
     }
     /// will be executed when:

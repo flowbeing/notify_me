@@ -66,7 +66,7 @@ class DataProvider with ChangeNotifier{
     /// if successful, a map of all prices will be returned. Otherwise, an empty
     /// map will be returned..
     DateTime startTime = DateTime.now();
-    Map<dynamic, dynamic> mapOfAllPrices = await _data!.getRealTimePriceAll();
+    // Map<dynamic, dynamic> mapOfAllPrices = await _data!.getRealTimePriceAll();
     DateTime finishTime = DateTime.now();
 
     print("");
@@ -80,10 +80,11 @@ class DataProvider with ChangeNotifier{
     //   print("allForexAndCryptoPrices & mapOfAllPrices are both empty");
     //   allForexAndCryptoPrices = _data!.mapOfSymbolsPreInitialPriceFetch;
     // }
-    if (mapOfAllPrices.isNotEmpty){
-      print("");
-      allForexAndCryptoPrices = mapOfAllPrices;
-    }
+
+    // if (mapOfAllPrices.isNotEmpty){
+    //   print("");
+    //   allForexAndCryptoPrices = mapOfAllPrices;
+    // }
 
 
     print("UPDATEPRICES METHOD - END");
