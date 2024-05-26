@@ -750,6 +750,8 @@ class Data {
   /// the event any of the above two happen..
   Future<Map<dynamic,dynamic>> getRealTimePriceAll() async{
 
+    DateTime nowGetRealTimePriceAll = DateTime.now();
+
     print("");
     print("--------------------------------------------------------------------------------");
     print("GETREALTIMEPRICEALL METHOD - START");
@@ -891,17 +893,22 @@ class Data {
         DateTime lastPricesDataUpdateTime =
         DateTime.parse(lastPricesDataUpdateTimeString!);
 
-        DateTime now = DateTime.now();
 
-        int diffLastPricesDataUpdateTimeInMinutes =
-            now.difference(lastPricesDataUpdateTime).inMinutes;
+
+        int diffLastPricesDataUpdateTimeInMilliSeconds =
+            nowGetRealTimePriceAll.difference(lastPricesDataUpdateTime).inMilliseconds;
         // print("lastPricesDataUpdateTime: $lastSymbolsDataUpdateTime");
         // print("now - lastSymbolsDataUpdateTime: ${now.difference(lastSymbolsDataUpdateTime).inHours}");
 
         /// determining whether to proceed with the prices' data update..
-        if (diffLastPricesDataUpdateTimeInMinutes < 1.09090909091){
+        if (diffLastPricesDataUpdateTimeInMilliSeconds <= 60000){
+          print("Timer.periodic - data - start: ${DateTime.now()}");
+          print("nowGetRealTimePriceAll: $nowGetRealTimePriceAll");
+          print("diffLastPricesDataUpdateTimeInMilliSeconds: $diffLastPricesDataUpdateTimeInMilliSeconds");
           print("Can't update symbols data now! Last update session was under 1 minute (approx) ago..");
-          return {};
+
+          /// return the last saved prices' data
+          return mapLastSavedPricesOneMinInterval;
         }
 
       }
@@ -1046,12 +1053,12 @@ class Data {
           // print("${mapOfAllPrices[currentPair]}:${priceOfCurrentPairResponse["price"]}");
 
         }
-        /// ...otherwise, setting the price to "No (Demo) Price"
+        /// ...otherwise, setting the price to "demo"
         else if (listOfAppliedImportantPairs.contains(currentPair) == false){
 
           mapOfAllPrices[currentPair] = {
-            "old_price": "No (Demo) Price",
-            "current_price": "No (Demo) Price"
+            "old_price": "demo",
+            "current_price": "demo"
           };
 
           /// printing the current pair's old and current price map
@@ -1199,7 +1206,7 @@ class Data {
       } catch(error){
 
         /// ... otherwise place it at the end of the listOfMapEntryAllRetrievedPrices to
-        /// ensure that symbols with "No (Demo) Price" get displayed last
+        /// ensure that symbols with "demo" get displayed last
         MapEntry mapEntryCurrentInstrument = MapEntry(symbol, {
           "old_price": oldPrice,
           "current_price": currentPrice
@@ -1321,8 +1328,8 @@ class Data {
             // print("Unimportant Pair - Unsaved - Start");
 
             mapEntryCurrentInstrument = MapEntry(symbol, {
-              "old_price": "No (Demo) Price",
-              "current_price": "No (Demo) Price"
+              "old_price": "demo",
+              "current_price": "demo"
             });
             
             listOfMapEntryAllRetrievedPrices.add(mapEntryCurrentInstrument);
@@ -1540,6 +1547,7 @@ class Data {
 
       } else if (mapOfAllPrices.length == setSavedListOfAllSymbols.length){
 
+        print("Timer.periodic - data - complete: ${DateTime.now()}");
         return finalMapAllInstrumentsPrices;
 
       } else{
