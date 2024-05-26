@@ -287,7 +287,8 @@ class HomepageState extends State<Homepage> {
                             /// should be selected
                             bool isSelectedTile =
                                 index == indexSelectedGridTile &&
-                                    isFetchingPrices == false;
+                                    isFetchingPrices == false &&
+                                    priceDifferenceIfAny != "demo";
 
                             /// defining each grid tile's colors
                             Color pureColorGridTile = const Color(0xFF0066FF);
@@ -301,9 +302,10 @@ class HomepageState extends State<Homepage> {
                               gridTileColor = Colors.black.withOpacity(.01);
                               gridBorderColor = gridTileColor;
                             } else if (isUpwardPriceMovement) {
-                              pureColorGridTile = const Color(0xFF0066FF);
+                              pureColorGridTile =
+                                  const Color(0xFF0066FF).withOpacity(.7);
                               gridTileColor =
-                                  pureColorGridTile.withOpacity(.05);
+                                  const Color(0xFF0066FF).withOpacity(.05);
                               gridBorderColor =
                                   const Color(0xFF0066FF).withOpacity(.1);
                             } else if (isDownwardPriceMovement) {
@@ -318,44 +320,60 @@ class HomepageState extends State<Homepage> {
                               //   0.07, 0.1, 0.07, 0.1, 0.07, 0.1, 0.07, 0.1];
 
                               gridTileColor =
-                                  pureColorGridTile.withOpacity(0.07);
+                                  const Color(0xFFFC8955).withOpacity(0.07);
                               gridBorderColor =
-                                  pureColorGridTile.withOpacity(0.1);
+                                  const Color(0xFFFC8955).withOpacity(0.1);
                             }
 
                             /// Grid Tile - custom template
-                            return GridTileCurrencyPair(
-                                isSelected: isSelectedTile,
-                                widthGridTile: widthGridTile,
-                                heightGridTile: heightGridTile,
-                                paddingTopGridTile: paddingTopGridTile,
-                                gridTileColor: isSelectedTile
-                                    ? pureColorGridTile.withOpacity(.58)
-                                    : gridTileColor!,
-                                gridBorderColor: gridBorderColor!,
-                                radiusGridTile: radiusGridTile,
-                                isFetchingPrices: isFetchingPrices,
-                                heightPriceDirectionIcon:
-                                    heightPriceDirectionIcon,
-                                isDownwardPriceMovement:
-                                    isDownwardPriceMovement,
-                                isUpwardPriceMovement: isUpwardPriceMovement,
-                                isNotDisplayedPriceOrNoPriceMovement:
-                                    isNotDisplayedPriceOrNoPriceMovement,
-                                marginPriceDirectionAndCurrencyPair:
-                                    marginPriceDirectionAndCurrencyPair,
-                                heightSymbolSizedBox: heightSymbolSizedBox,
-                                currencyPairLazyLoading:
-                                    currencyPairLazyLoading,
-                                currencyPairOrPrice: currencyPairOrPrice,
-                                currentSymbolOrInstrument:
-                                    currentSymbolOrInstrument,
-                                fontSizeSymbols: fontSizeSymbols,
-                                marginCurrencyPairAndCurrencyPrice:
-                                    marginCurrencyPairAndCurrencyPrice,
-                                heightPriceSizedBox: heightPriceSizedBox,
-                                priceAllInstruments: priceAllInstruments,
-                                fontSizePrices: fontSizePrices
+                            return GestureDetector(
+                              /// select the current grid tile when it's tapped
+                              onTap: () => {
+                                if (currentInstrumentsData.runtimeType !=
+                                        String &&
+                                    priceDifferenceIfAny != "demo")
+                                  {
+                                    setState(() {
+                                      indexSelectedGridTile = index;
+                                    })
+                                  }
+                              },
+                              child: GridTile(
+                                key: ValueKey(index),
+                                child: GridTileCurrencyPair(
+                                    isSelected: isSelectedTile,
+                                    widthGridTile: widthGridTile,
+                                    heightGridTile: heightGridTile,
+                                    paddingTopGridTile: paddingTopGridTile,
+                                    gridTileColor: isSelectedTile
+                                        ? pureColorGridTile
+                                        : gridTileColor!,
+                                    gridBorderColor: gridBorderColor!,
+                                    radiusGridTile: radiusGridTile,
+                                    isFetchingPrices: isFetchingPrices,
+                                    heightPriceDirectionIcon:
+                                        heightPriceDirectionIcon,
+                                    isDownwardPriceMovement:
+                                        isDownwardPriceMovement,
+                                    isUpwardPriceMovement:
+                                        isUpwardPriceMovement,
+                                    isNotDisplayedPriceOrNoPriceMovement:
+                                        isNotDisplayedPriceOrNoPriceMovement,
+                                    marginPriceDirectionAndCurrencyPair:
+                                        marginPriceDirectionAndCurrencyPair,
+                                    heightSymbolSizedBox: heightSymbolSizedBox,
+                                    currencyPairLazyLoading:
+                                        currencyPairLazyLoading,
+                                    currencyPairOrPrice: currencyPairOrPrice,
+                                    currentSymbolOrInstrument:
+                                        currentSymbolOrInstrument,
+                                    fontSizeSymbols: fontSizeSymbols,
+                                    marginCurrencyPairAndCurrencyPrice:
+                                        marginCurrencyPairAndCurrencyPrice,
+                                    heightPriceSizedBox: heightPriceSizedBox,
+                                    priceAllInstruments: priceAllInstruments,
+                                    fontSizePrices: fontSizePrices),
+                              ),
                             );
                           },
                         ),
@@ -367,21 +385,19 @@ class HomepageState extends State<Homepage> {
 }
 
 /// Text Widget - Currency Symbol/Instrument/Pair or Price
-Text currencyPairOrPrice({
-    required String currentSymbolOrInstrumentOrPrice,
+Text currencyPairOrPrice(
+    {required String currentSymbolOrInstrumentOrPrice,
     required FontWeight fontWeight,
     required double fontSize,
     bool isFetching = false,
-    required Color fontColor
-  }) {
+    required Color fontColor}) {
   return Text(
     isFetching == true ? "fetching" : currentSymbolOrInstrumentOrPrice,
     style: TextStyle(
         fontFamily: "PT-Mono",
         fontWeight: fontWeight,
         fontSize: fontSize, // isFetching == true ? 16 : fontSize
-        color: fontColor
-        ),
+        color: fontColor),
   );
 }
 
