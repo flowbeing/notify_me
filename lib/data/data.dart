@@ -437,14 +437,19 @@ class Data {
       bool unconditionally = false
   }) async {
 
+    print("///");
     /// saving the update session's time to 'data update sessions' log file
     String lastUpdateTime = DateTime.now().toString();
 
     /// update sessions file
-    var updateSessions = json.decode(await _dataUpdateSessionsFile!.readAsString());
-    dynamic lastSymbolsDataUpdateTime = updateSessions["last_symbols_data_update_time"];
-    dynamic lastSymbolsDataUpdateErrorTime = updateSessions["last_symbols_data_update_error_time"];
+    Map<dynamic, dynamic> updateSessions = json.decode(await _dataUpdateSessionsFile!.readAsString());
 
+
+    print("////");
+    dynamic lastSymbolsDataUpdateTime = updateSessions["last_symbols_data_update_time"];
+    // print("/////");
+    dynamic lastSymbolsDataUpdateErrorTime = updateSessions["last_symbols_data_update_error_time"];
+    print("//////");
 
     /// checking whether the last symbols' data updated over 24 hrs ago.
     /// 1. If not, task will be cancelled..
@@ -452,6 +457,7 @@ class Data {
     /// continue..
     if (lastSymbolsDataUpdateTime != null){
 
+      print("//////");
       lastSymbolsDataUpdateTime = DateTime.parse(lastSymbolsDataUpdateTime);
 
       DateTime now = DateTime.now();
@@ -466,6 +472,7 @@ class Data {
       bool isLastSymbolsDataUpdateTimeEqualToLastSymbolsDataUpdateErrorTime =
           lastSymbolsDataUpdateTime.toString() == lastSymbolsDataUpdateErrorTime.toString();
 
+      print("///////");
       print("lastSymbolsDataUpdateTime: $lastSymbolsDataUpdateTime, "
           "lastSymbolsDataUpdateErrorTime: $lastSymbolsDataUpdateErrorTime");
 
@@ -474,6 +481,7 @@ class Data {
       /// determining whether to proceed with the symbols' data update..
       /// if all symbols were updated within the last 24 hours and there was
       /// no update error, cancel the current session
+      print("////////");
       if (
         diffLastSymbolsDataUpdateTimeInHours < 24
             && isLastSymbolsDataUpdateTimeEqualToLastSymbolsDataUpdateErrorTime == false
@@ -487,7 +495,7 @@ class Data {
 
     // print("aDay - lastSymbolsDataUpdateTime: ${aDay.}")
     // if (lastSymbolsDataUpdateTime )
-
+    print("/////////");
     /// updating symbols' data
     try{
 
@@ -750,6 +758,8 @@ class Data {
   /// the event any of the above two happen..
   Future<Map<dynamic,dynamic>> getRealTimePriceAll() async{
 
+    print('PRE FOR! 1');
+
     DateTime nowGetRealTimePriceAll = DateTime.now();
 
     print("");
@@ -768,6 +778,7 @@ class Data {
 
     /// last prices data update session's time..
     String? lastPricesDataUpdateTimeString;
+    String? latestPricesDataUpdateTimeString;
 
     /// instruments' prices (map)
     Map<String, dynamic> mapOfAllPrices = {};
@@ -821,6 +832,7 @@ class Data {
 
     print("lengthMapOfAllPrices 1: ${mapOfAllPrices.length}");
 
+    print('PRE FOR! 2');
     try{
 
       /// checking whether the last prices' data session was updated over 1 min
@@ -921,6 +933,7 @@ class Data {
       /// obtaining each pair's price, especially the most important ones
       /// i.e the most traded ones..
 
+      print('PRE FOR!');
       for (var symbol in setSavedListOfAllSymbols){
 
         currentPair = symbol;
@@ -1051,6 +1064,41 @@ class Data {
 
           // mapOfAllPrices[currentPair] = priceOfCurrentPairResponse!["price"];
           // print("${mapOfAllPrices[currentPair]}:${priceOfCurrentPairResponse["price"]}");
+
+          /// saving an updated copy of a previous prices data
+          /// (mapLastSavedPricesOneMinInterval), if any
+          ///
+          /// ensure that this method will not rerun immediately after an
+          /// abnormal setState streak. Helps conserve API credits..
+          // if (mapLastSavedPricesOneMinInterval.isNotEmpty
+          //     && lastUpdateSessionsMapPricesDataKey != null
+          //     && lastPricesDataUpdateTimeString != null
+          // ){
+          //
+          //   DateTime now = DateTime.now();
+          //
+          //   print("error one");
+          //   print("now.toString one: ${now.toString()}");
+          //   Map<dynamic, dynamic> copyLastUpdateSessionsMap =
+          //     {...lastUpdateSessionsMap};
+          //
+          //   copyLastUpdateSessionsMap[lastUpdateSessionsMapPricesDataKey] = {
+          //     now.toString() : mapLastSavedPricesOneMinInterval
+          //   };
+          //   print("error two");
+          //   copyLastUpdateSessionsMap[lastUpdateSessionsMapPricesDataKey].remove(lastPricesDataUpdateTimeString);
+          //   copyLastUpdateSessionsMap[lastUpdateSessionsMapPricesDataKey].remove(latestPricesDataUpdateTimeString);
+          //   print("error three");
+          //
+          //   /// updating the last prices' data update time string to its new
+          //   /// value..
+          //
+          //   _dataUpdateSessionsFile!.writeAsString(
+          //       json.encode(copyLastUpdateSessionsMap),
+          //       mode: FileMode.write
+          //   );
+          //
+          // }
 
         }
         /// ...otherwise, setting the price to "demo"
@@ -1402,7 +1450,7 @@ class Data {
             DateTime now = DateTime.now();
 
             _otherErrorsLogFile!.writeAsString(
-              "now\n"
+              "$now\n"
               "AN ERROR OCCURED WHILE CONVERTING ITERABLE<MAPENTRY> TO MAP:\n"
                   "$error\n",
               mode: FileMode.append

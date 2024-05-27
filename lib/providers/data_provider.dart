@@ -8,6 +8,12 @@ import "package:flutter_dotenv/flutter_dotenv.dart";
 import "../data/data.dart";
 import "all_instruments_with_fetching_notification.dart";
 
+enum UpdatePricesState {
+  isIdle,
+  isUpdating,
+  isDoneUpdating
+}
+
 /// This class retrieves and forwards much needed data to the app..
 class DataProvider with ChangeNotifier{
 
@@ -16,10 +22,10 @@ class DataProvider with ChangeNotifier{
   /// A map of all forex and crypto prices
   Map<dynamic, dynamic> allForexAndCryptoPrices =
       allInstrumentsWithFetchingNotification;
-  
-  /// tracking whether an initial "fetching" notification has previously been
-  /// set for allForexCryptoPrices
-  bool isSetAllForexAndCryptoPricesFetching = false;
+
+  /// tracking whether prices are being updated
+  bool isUpdatingPrices = false;
+  // UpdatePricesState isUpdatingPrices = UpdatePricesState.isIdle;
 
   /// Number of times prices have been retrieved from the relevant data provider
   int _countPricesRetrieval = 0;
@@ -33,6 +39,7 @@ class DataProvider with ChangeNotifier{
     _data = Data();
     await _data!.createAppFilesAndFolders();
     await _data!.updateAndSaveAllSymbolsData();
+    _data!.getUriAppDirectory();
 
   }
 
@@ -47,6 +54,11 @@ class DataProvider with ChangeNotifier{
 
   /// This method retrieves the prices of forex and crypto pairs periodically
   Future updatePrices() async{
+
+    /// signalling that updatePrices method in data provider
+    /// is currently running
+    isUpdatingPrices = true;
+    // isUpdatingPrices = UpdatePricesState.isUpdating;
 
     print("--------------------------------------------------------------------------------");
     print("");
@@ -86,6 +98,12 @@ class DataProvider with ChangeNotifier{
       allForexAndCryptoPrices = mapOfAllPrices;
     }
 
+    /// signalling that updatePrices method in data provider
+    /// is currently running
+
+    isUpdatingPrices = false;
+    // isUpdatingPrices = UpdatePricesState.isDoneUpdating;
+
 
     print("UPDATEPRICES METHOD - END");
     print("");
@@ -100,4 +118,9 @@ class DataProvider with ChangeNotifier{
     // print("timer tick: ${timer.tick}");
 
   }
+
+  Future nothingToSeeHere() async{
+
+  }
+
 }

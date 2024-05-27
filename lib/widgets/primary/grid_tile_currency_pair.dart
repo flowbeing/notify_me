@@ -1,6 +1,6 @@
 import "package:flutter/material.dart";
 
-class GridTileCurrencyPair extends StatelessWidget {
+class GridTileCurrencyPair extends StatefulWidget {
   GridTileCurrencyPair(
       {required this.isSelected,
       required this.widthGridTile,
@@ -48,16 +48,21 @@ class GridTileCurrencyPair extends StatelessWidget {
   final Map priceAllInstruments;
   final double fontSizePrices;
 
+  @override
+  State<GridTileCurrencyPair> createState() => _GridTileCurrencyPairState();
+}
+
+class _GridTileCurrencyPairState extends State<GridTileCurrencyPair> {
   Widget build(BuildContext context) {
     return Container(
         alignment: Alignment.center,
-        width: widthGridTile,
-        height: heightGridTile,
-        padding: EdgeInsets.only(top: paddingTopGridTile),
+        width: widget.widthGridTile,
+        height: widget.heightGridTile,
+        padding: EdgeInsets.only(top: widget.paddingTopGridTile),
         decoration: BoxDecoration(
-            color: gridTileColor,
-            border: Border.all(color: gridBorderColor, width: 0.8),
-            borderRadius: BorderRadius.circular(radiusGridTile)),
+            color: widget.gridTileColor,
+            border: Border.all(color: widget.gridBorderColor, width: 0.8),
+            borderRadius: BorderRadius.circular(widget.radiusGridTile)),
 
         /// A column containing:
         /// 1. A price direction icon
@@ -65,10 +70,10 @@ class GridTileCurrencyPair extends StatelessWidget {
         /// 3. The currency's price
         child: Column(children: <Widget>[
           /// Icon - fetching prices
-          if (isFetchingPrices)
+          if (widget.isFetchingPrices)
             Image.asset(
               "assets/images/price_fetching.png",
-              height: heightPriceDirectionIcon,
+              height: widget.heightPriceDirectionIcon,
             ),
 
           /// PRICE INCREASE OR DECREASE ICONS
@@ -78,12 +83,12 @@ class GridTileCurrencyPair extends StatelessWidget {
           /// price reflects a decrease in the
           /// instrument's value, show an orange
           /// downward price movement (image) icon..
-          if (isDownwardPriceMovement)
+          if (widget.isDownwardPriceMovement)
             Image.asset(
-              isSelected
+              widget.isSelected
                   ? "assets/images/price_decrease_white.png"
                   : "assets/images/price_decrease.png",
-              height: heightPriceDirectionIcon,
+              height: widget.heightPriceDirectionIcon,
             ),
 
           /// 2. if the app isn't fetching the current
@@ -91,12 +96,12 @@ class GridTileCurrencyPair extends StatelessWidget {
           /// price reflects an increase in the
           /// instrument's value, show a blue upward
           /// price movement (image) icon..
-          if (isUpwardPriceMovement)
+          if (widget.isUpwardPriceMovement)
             Image.asset(
-              isSelected
+              widget.isSelected
                   ? "assets/images/price_increase_white.png"
                   : "assets/images/price_increase.png",
-              height: heightPriceDirectionIcon,
+              height: widget.heightPriceDirectionIcon,
             ),
 
           /// PRICE NOT DISPLAYED ICON
@@ -108,55 +113,55 @@ class GridTileCurrencyPair extends StatelessWidget {
           /// instrument's price should and will not be
           /// displayed, show a black downward price
           /// movement (image) icon..
-          if (isNotDisplayedPriceOrNoPriceMovement)
+          if (widget.isNotDisplayedPriceOrNoPriceMovement)
             Image.asset(
               "assets/images/price_fetching.png",
-              height: heightPriceDirectionIcon,
+              height: widget.heightPriceDirectionIcon,
             ),
 
           /// margin - price direction and currency
           /// pair
           SizedBox(
-            height: marginPriceDirectionAndCurrencyPair,
+            height: widget.marginPriceDirectionAndCurrencyPair,
           ),
 
           /// currency name / currency name holder
           SizedBox(
-            height: heightSymbolSizedBox,
-            child: isFetchingPrices
+            height: widget.heightSymbolSizedBox,
+            child: widget.isFetchingPrices
                 ?
 
                 /// currency pair lazy loading
-                currencyPairLazyLoading()
+                widget.currencyPairLazyLoading()
                 :
 
                 /// currency price
-                currencyPairOrPrice(
-                    currentSymbolOrInstrumentOrPrice: currentSymbolOrInstrument,
+                widget.currencyPairOrPrice(
+                    currentSymbolOrInstrumentOrPrice: widget.currentSymbolOrInstrument,
                     fontWeight: FontWeight.bold,
-                    fontSize: fontSizeSymbols,
-                    fontColor: isSelected ? Colors.white : Colors.black),
+                    fontSize: widget.fontSizeSymbols,
+                    fontColor: widget.isSelected ? Colors.white : Colors.black),
           ),
 
           /// margin - currency pair and currency
           /// price
           SizedBox(
-            height: marginCurrencyPairAndCurrencyPrice,
+            height: widget.marginCurrencyPairAndCurrencyPrice,
           ),
 
           /// currency price / currency price holder
           SizedBox(
-            height: heightPriceSizedBox,
-            child: currencyPairOrPrice(
-                isFetching: isFetchingPrices,
-                currentSymbolOrInstrumentOrPrice: isFetchingPrices
+            height: widget.heightPriceSizedBox,
+            child: widget.currencyPairOrPrice(
+                isFetching: widget.isFetchingPrices,
+                currentSymbolOrInstrumentOrPrice: widget.isFetchingPrices
                     ? "fetching"
-                    : priceAllInstruments[currentSymbolOrInstrument]
+                    : widget.priceAllInstruments[widget.currentSymbolOrInstrument]
                             ["current_price"]
                         .toString(),
                 fontWeight: FontWeight.w300,
-                fontSize: fontSizePrices,
-                fontColor: isSelected ? Colors.white : Colors.black),
+                fontSize: widget.fontSizePrices,
+                fontColor: widget.isSelected ? Colors.white : Colors.black),
           ),
         ]));
   }

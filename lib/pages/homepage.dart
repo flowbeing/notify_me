@@ -57,7 +57,22 @@ class HomepageState extends State<Homepage> {
   /// Provider
   DataProvider? dataProvider;
 
-  /// Index of first selected grid tile
+  /// bool to track whether a grid tile has been clicked
+  bool isGridTileClicked = false;
+
+  /// timer - updatePrices method..
+  Timer relevantTimer =
+      Timer.periodic(const Duration(microseconds: 1), (timer) {
+    timer.cancel();
+  });
+
+  /// timer - check if prices have finished updating
+  Timer isPricesUpdatedCheckingTimer =
+      Timer.periodic(const Duration(microseconds: 1), (timer) {
+    timer.cancel();
+  });
+
+  /// Index of selected grid tile
   int indexSelectedGridTile = 3;
 
   @override
@@ -125,7 +140,9 @@ class HomepageState extends State<Homepage> {
 
         /// The background
         body: FutureBuilder(
-            future: dataProvider!.updatePrices(),
+            future: isGridTileClicked == true
+                ? dataProvider!.nothingToSeeHere()
+                : dataProvider!.updatePrices(),
             builder: (ctx, snapshot) {
               /// Prices - all instruments / symbols
               Map<dynamic, dynamic> priceAllInstruments =
@@ -138,27 +155,51 @@ class HomepageState extends State<Homepage> {
               firstKeypriceAllInstruments =
                   priceAllInstruments.keys.toList()[0];
 
+              /// resetting isGridTileClicked
+              isGridTileClicked = false;
+
+              /// if dataProvider!.updatePrices() (Future) has finished running,
+              /// replace the current timer to reflect a price update that
+              /// will take place within 5 seconds and 1 minute
               if (snapshot.connectionState == ConnectionState.done) {
+                /// bool that signal whether prices are currently being fetched.
+                /// true when:
+                /// a. the relevant timer has been cancelled &&
+                /// b. updatePrices is running
+                // bool isUpdatingPrices = relevantTimer.isActive == false &&
+                //     dataProvider!.isUpdatingPrices == true;
+
                 /// if the values of priceAllInstruments are Strings, which
                 /// will only happen when the prices are being displayed for the
                 /// first time, rebuild the page..
+
                 if (priceAllInstruments[firstKeypriceAllInstruments]
                         .runtimeType ==
                     String) {
                   print('priceAllInstruments contains "fetching"');
                   print("");
-                  print("HOMEPAGE - END");
+                  print("HOMEPAGE - END - 5s");
                   print(
                       "--------------------------------------------------------------------------------");
                   print("");
-                  Timer.periodic(const Duration(seconds: 5), (timer) {
-                    setState(() {
-                      print("Timer.periodic - 1 min: ${DateTime.now()}");
-                      // priceAllInstruments = dataProvider!.allForexAndCryptoPrices;
-                    });
 
-                    timer.cancel();
-                  });
+                  /// if a previous 5 seconds timer is no longer active and it's
+                  /// corresponding dataProvider!.updatePrices (Future) is has
+                  /// finished running set relevantTimer to a timer that should
+                  /// execute  dataProvider!.updatePrices one minute in the
+                  /// future
+
+                  if (relevantTimer.isActive == false &&
+                      dataProvider!.isUpdatingPrices == true) {
+                    relevantTimer =
+                        Timer.periodic(const Duration(seconds: 5), (timer) {
+                      timer.cancel();
+
+                      setState(() {
+                        print("Timer.periodic - 1 min: ${DateTime.now()}");
+                      });
+                    });
+                  }
                 }
 
                 /// ... otherwise, wait for 1 minute (approx) before rebuilding
@@ -166,17 +207,90 @@ class HomepageState extends State<Homepage> {
                 else {
                   print('priceAllInstruments contains "prices"');
                   print("");
-                  print("HOMEPAGE - END");
+                  print("HOMEPAGE - END - 1min");
                   print(
                       "--------------------------------------------------------------------------------");
                   print("");
-                  Timer.periodic(const Duration(milliseconds: 60001), (timer) {
-                    setState(() {
-                      // priceAllInstruments = dataProvider!.allForexAndCryptoPrices;
-                    });
 
-                    timer.cancel();
-                  });
+                  print("relevantTimer outside: $relevantTimer");
+                  print(
+                      "relevantTimer.isActive == false && dataProvider!.isUpdatingPrices == false in: ${relevantTimer.isActive == false && dataProvider!.isUpdatingPrices == false}");
+
+                  /// If prices are currently being updated, replace current
+                  /// relevantTimer with another when prices have fully been
+                  /// updated..
+                  ///
+                  /// useful when a grid tile has been clicked but prices
+                  /// are still being updated, which would normally prevent
+                  /// the rebuilt version of this page that has been triggered
+                  /// by the grid tile selection from reflecting the updated
+                  /// prices when the prices update has ended..
+                  if (dataProvider!.isUpdatingPrices == true) {
+                    /// cancel any previously set (active) price update
+                    /// operation status checking timer to prevent the creation
+                    /// of multiple memory hogging timers..
+                    if (isPricesUpdatedCheckingTimer.isActive) {
+                      isPricesUpdatedCheckingTimer.cancel();
+                    }
+
+                    /// create and store a new the value of price update
+                    /// operation status checking timer..
+                    isPricesUpdatedCheckingTimer = Timer.periodic(
+                        const Duration(milliseconds: 1000), (timer) {
+                      if (relevantTimer.isActive == false &&
+                          dataProvider!.isUpdatingPrices == false) {
+                        print("gridTile relevantTimer in: $relevantTimer");
+                        print(
+                            "gridTile selected: relevantTimer.isActive == false && dataProvider!.isUpdatingPrices == false in: ${relevantTimer.isActive == false && dataProvider!.isUpdatingPrices == false}");
+
+                        // /// updating all instruments' price data
+                        // priceAllInstruments = dataProvider!.allForexAndCryptoPrices;
+
+                        relevantTimer = Timer.periodic(
+                            const Duration(milliseconds: 60001), (timer) {
+                          timer.cancel();
+
+                          setState(() {});
+                        });
+
+                        timer.cancel();
+
+                        /// arbitrarily rebuild this FutureBuilder widget..
+                        ///
+                        /// Note that isGridTileClicked will be set back to
+                        /// false once this FutureBuilder widget has been
+                        /// rebuilt..
+                        setState(() {
+                          isGridTileClicked = true;
+                        });
+                      }
+                    });
+                  }
+
+                  /// if a previous 1 minute timer is no longer active and it's
+                  /// corresponding dataProvider!.updatePrices (Future) has
+                  /// finished running i.e prices have finished updating,
+                  /// set relevantTimer to a timer that should
+                  /// execute dataProvider!.updatePrices one minute in the
+                  /// future..
+                  ///
+                  /// the conditions below mean "wait until the previously set
+                  /// relevant timer has done it's job.."
+                  else if (relevantTimer.isActive == false &&
+                      dataProvider!.isUpdatingPrices == false) {
+                    print("relevantTimer in: $relevantTimer");
+                    print("relevantTimer.isActive == false "
+                        "&& dataProvider!.isUpdatingPrices == false in: "
+                        "${relevantTimer.isActive == false
+                        && dataProvider!.isUpdatingPrices == false}");
+
+                    relevantTimer = Timer.periodic(
+                        const Duration(milliseconds: 60001), (timer) {
+                      timer.cancel();
+
+                      setState(() {});
+                    });
+                  }
                 }
               }
 
@@ -303,22 +417,13 @@ class HomepageState extends State<Homepage> {
                               gridBorderColor = gridTileColor;
                             } else if (isUpwardPriceMovement) {
                               pureColorGridTile =
-                                  const Color(0xFF0066FF).withOpacity(.7);
+                                  const Color(0xFF0066FF).withOpacity(.67);
                               gridTileColor =
                                   const Color(0xFF0066FF).withOpacity(.05);
                               gridBorderColor =
                                   const Color(0xFF0066FF).withOpacity(.1);
                             } else if (isDownwardPriceMovement) {
                               pureColorGridTile = const Color(0xFFFC8955);
-
-                              // Random random = Random();
-
-                              // int randomIndex = random.nextInt(11);
-                              // print("randomIndex: $randomIndex");
-
-                              // List<double> opacity = [0.07, 0.1, 0.07, 0.1,
-                              //   0.07, 0.1, 0.07, 0.1, 0.07, 0.1, 0.07, 0.1];
-
                               gridTileColor =
                                   const Color(0xFFFC8955).withOpacity(0.07);
                               gridBorderColor =
@@ -334,46 +439,55 @@ class HomepageState extends State<Homepage> {
                                     priceDifferenceIfAny != "demo")
                                   {
                                     setState(() {
+                                      print("Gesture Detector Setting State");
                                       indexSelectedGridTile = index;
+
+                                      /// signalling that a grid tile has been
+                                      /// clicked
+                                      ///
+                                      /// This will change the value of the
+                                      /// FutureBuilder widget's "future"
+                                      /// parameter to
+                                      /// "dataProvider!.nothingToSeeHere" -
+                                      /// a filler Future method that helps
+                                      /// ensure that a selected grid tile is
+                                      /// colored and a timer is set ...
+                                      isGridTileClicked = true;
                                     })
                                   }
                               },
-                              child: GridTile(
-                                key: ValueKey(index),
-                                child: GridTileCurrencyPair(
-                                    isSelected: isSelectedTile,
-                                    widthGridTile: widthGridTile,
-                                    heightGridTile: heightGridTile,
-                                    paddingTopGridTile: paddingTopGridTile,
-                                    gridTileColor: isSelectedTile
-                                        ? pureColorGridTile
-                                        : gridTileColor!,
-                                    gridBorderColor: gridBorderColor!,
-                                    radiusGridTile: radiusGridTile,
-                                    isFetchingPrices: isFetchingPrices,
-                                    heightPriceDirectionIcon:
-                                        heightPriceDirectionIcon,
-                                    isDownwardPriceMovement:
-                                        isDownwardPriceMovement,
-                                    isUpwardPriceMovement:
-                                        isUpwardPriceMovement,
-                                    isNotDisplayedPriceOrNoPriceMovement:
-                                        isNotDisplayedPriceOrNoPriceMovement,
-                                    marginPriceDirectionAndCurrencyPair:
-                                        marginPriceDirectionAndCurrencyPair,
-                                    heightSymbolSizedBox: heightSymbolSizedBox,
-                                    currencyPairLazyLoading:
-                                        currencyPairLazyLoading,
-                                    currencyPairOrPrice: currencyPairOrPrice,
-                                    currentSymbolOrInstrument:
-                                        currentSymbolOrInstrument,
-                                    fontSizeSymbols: fontSizeSymbols,
-                                    marginCurrencyPairAndCurrencyPrice:
-                                        marginCurrencyPairAndCurrencyPrice,
-                                    heightPriceSizedBox: heightPriceSizedBox,
-                                    priceAllInstruments: priceAllInstruments,
-                                    fontSizePrices: fontSizePrices),
-                              ),
+                              child: GridTileCurrencyPair(
+                                  isSelected: isSelectedTile,
+                                  widthGridTile: widthGridTile,
+                                  heightGridTile: heightGridTile,
+                                  paddingTopGridTile: paddingTopGridTile,
+                                  gridTileColor: isSelectedTile
+                                      ? pureColorGridTile
+                                      : gridTileColor!,
+                                  gridBorderColor: gridBorderColor!,
+                                  radiusGridTile: radiusGridTile,
+                                  isFetchingPrices: isFetchingPrices,
+                                  heightPriceDirectionIcon:
+                                      heightPriceDirectionIcon,
+                                  isDownwardPriceMovement:
+                                      isDownwardPriceMovement,
+                                  isUpwardPriceMovement: isUpwardPriceMovement,
+                                  isNotDisplayedPriceOrNoPriceMovement:
+                                      isNotDisplayedPriceOrNoPriceMovement,
+                                  marginPriceDirectionAndCurrencyPair:
+                                      marginPriceDirectionAndCurrencyPair,
+                                  heightSymbolSizedBox: heightSymbolSizedBox,
+                                  currencyPairLazyLoading:
+                                      currencyPairLazyLoading,
+                                  currencyPairOrPrice: currencyPairOrPrice,
+                                  currentSymbolOrInstrument:
+                                      currentSymbolOrInstrument,
+                                  fontSizeSymbols: fontSizeSymbols,
+                                  marginCurrencyPairAndCurrencyPrice:
+                                      marginCurrencyPairAndCurrencyPrice,
+                                  heightPriceSizedBox: heightPriceSizedBox,
+                                  priceAllInstruments: priceAllInstruments,
+                                  fontSizePrices: fontSizePrices),
                             );
                           },
                         ),
