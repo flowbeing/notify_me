@@ -7,6 +7,7 @@ import "package:lottie/lottie.dart";
 
 import "../providers/data_provider.dart";
 
+import "../widgets/primary/container_gridview_builder.dart";
 import "../widgets/primary/grid_tile_currency_pair.dart";
 
 class Homepage extends StatefulWidget {
@@ -125,6 +126,15 @@ class HomepageState extends State<Homepage> {
 
     // TODO: implement didChangeDependencies
     super.didChangeDependencies();
+  }
+
+  dynamic updateGridTileClicked(
+      {required bool isGridTileClicked,
+      required int indexNewSelectedGridTile}) {
+    setState(() {
+      isGridTileClicked = isGridTileClicked;
+      indexSelectedGridTile = indexNewSelectedGridTile;
+    });
   }
 
   Widget build(BuildContext context) {
@@ -281,8 +291,7 @@ class HomepageState extends State<Homepage> {
                     print("relevantTimer in: $relevantTimer");
                     print("relevantTimer.isActive == false "
                         "&& dataProvider!.isUpdatingPrices == false in: "
-                        "${relevantTimer.isActive == false
-                        && dataProvider!.isUpdatingPrices == false}");
+                        "${relevantTimer.isActive == false && dataProvider!.isUpdatingPrices == false}");
 
                     relevantTimer = Timer.periodic(
                         const Duration(milliseconds: 60001), (timer) {
@@ -312,186 +321,32 @@ class HomepageState extends State<Homepage> {
                     children: [
                       /// Currency Pairs Container
                       /// - holds a gridview builder..
-                      Container(
-                        // color: Colors.yellow,
-                        width: double.infinity,
-                        height: heightFirstSixGridTiles,
-                        margin: const EdgeInsets.all(0),
-                        padding: const EdgeInsets.all(0),
+                      ContainerGridViewBuilder(
+                          heightFirstSixGridTiles: heightFirstSixGridTiles,
+                          crossAxisSpacing: crossAxisSpacing,
+                          mainAxisSpacing: mainAxisSpacing,
+                          listOfAllInstruments: listOfAllInstruments,
+                          priceAllInstruments: priceAllInstruments,
+                          indexSelectedGridTile: indexSelectedGridTile,
+                          widthGridTile: widthGridTile,
+                          heightGridTile: heightGridTile,
+                          paddingTopGridTile: paddingTopGridTile,
+                          radiusGridTile: radiusGridTile,
+                          heightPriceDirectionIcon: heightPriceDirectionIcon,
+                          marginPriceDirectionAndCurrencyPair:
+                              marginPriceDirectionAndCurrencyPair,
+                          heightSymbolSizedBox: heightSymbolSizedBox,
+                          currencyPairLazyLoading: currencyPairLazyLoading,
+                          currencyPairOrPrice: currencyPairOrPrice,
+                          fontSizeSymbols: fontSizeSymbols,
+                          marginCurrencyPairAndCurrencyPrice:
+                              marginCurrencyPairAndCurrencyPrice,
+                          heightPriceSizedBox: heightPriceSizedBox,
+                          fontSizePrices: fontSizePrices,
+                          updateGridTileClicked: updateGridTileClicked
+                      ),
 
-                        /// A GridView Builder - contains all currency pairs
-                        child: GridView.builder(
-                          padding: const EdgeInsets.all(0),
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2,
-                                  crossAxisSpacing: crossAxisSpacing,
-                                  mainAxisSpacing: mainAxisSpacing),
-                          itemCount: priceAllInstruments.isEmpty
-                              ? 6
-
-                              /// a minimum of six instruments will be
-                              /// displayed post fetch operation
-                              : priceAllInstruments.length,
-                          itemBuilder: (context, index) {
-                            String currentSymbolOrInstrument =
-                                listOfAllInstruments[index];
-
-                            /// Current instrument's data - could contain both
-                            /// the old and current prices of the instrument
-                            /// (actual prices or "demo") or
-                            /// "fetching"
-                            dynamic currentInstrumentsData =
-                                priceAllInstruments[currentSymbolOrInstrument];
-
-                            /// checking whether the current instrument's price
-                            /// is being fetched..
-                            bool isFetchingPrices =
-                                currentInstrumentsData == "fetching";
-
-                            String? current_price;
-                            String? old_price;
-
-                            String priceDifferenceIfAny = "";
-
-                            if (currentInstrumentsData.runtimeType != String) {
-                              current_price =
-                                  currentInstrumentsData["current_price"];
-
-                              old_price = currentInstrumentsData["old_price"];
-
-                              /// if both the prices of the current instrument
-                              /// are actual prices, calculate the price
-                              /// movement. Otherwise, set
-                              /// priceDifferenceIfAny to "demo"
-                              try {
-                                priceDifferenceIfAny =
-                                    (double.parse(current_price!) -
-                                            double.parse(old_price!))
-                                        .toString();
-                              } catch (error) {
-                                priceDifferenceIfAny = current_price!;
-                              }
-                            }
-
-                            /// determining whether there was an upward price
-                            /// movement
-                            bool isUpwardPriceMovement =
-                                currentInstrumentsData.runtimeType != String &&
-                                    !priceDifferenceIfAny.startsWith("-") &&
-                                    priceDifferenceIfAny != "0" &&
-                                    priceDifferenceIfAny != "demo";
-
-                            /// determining whether there was a downward price
-                            /// movement
-                            bool isDownwardPriceMovement =
-                                currentInstrumentsData.runtimeType != String &&
-                                    priceDifferenceIfAny.startsWith("-");
-
-                            /// determining whether the current instrument's
-                            /// price should not be displayed or whether there
-                            /// was no price movement..
-                            bool isNotDisplayedPriceOrNoPriceMovement =
-                                currentInstrumentsData.runtimeType != String &&
-                                    !priceDifferenceIfAny.startsWith("-") &&
-                                    (priceDifferenceIfAny == "0" ||
-                                        priceDifferenceIfAny == "demo");
-
-                            /// determining whether the current tile has been or
-                            /// should be selected
-                            bool isSelectedTile =
-                                index == indexSelectedGridTile &&
-                                    isFetchingPrices == false &&
-                                    priceDifferenceIfAny != "demo";
-
-                            /// defining each grid tile's colors
-                            Color pureColorGridTile = const Color(0xFF0066FF);
-                            Color? gridTileColor;
-                            Color? gridBorderColor;
-
-                            if (isFetchingPrices == true) {
-                              gridTileColor = Colors.white;
-                              gridBorderColor = gridTileColor;
-                            } else if (isNotDisplayedPriceOrNoPriceMovement) {
-                              gridTileColor = Colors.black.withOpacity(.01);
-                              gridBorderColor = gridTileColor;
-                            } else if (isUpwardPriceMovement) {
-                              pureColorGridTile =
-                                  const Color(0xFF0066FF).withOpacity(.67);
-                              gridTileColor =
-                                  const Color(0xFF0066FF).withOpacity(.05);
-                              gridBorderColor =
-                                  const Color(0xFF0066FF).withOpacity(.1);
-                            } else if (isDownwardPriceMovement) {
-                              pureColorGridTile = const Color(0xFFFC8955);
-                              gridTileColor =
-                                  const Color(0xFFFC8955).withOpacity(0.07);
-                              gridBorderColor =
-                                  const Color(0xFFFC8955).withOpacity(0.1);
-                            }
-
-                            /// Grid Tile - custom template
-                            return GestureDetector(
-                              /// select the current grid tile when it's tapped
-                              onTap: () => {
-                                if (currentInstrumentsData.runtimeType !=
-                                        String &&
-                                    priceDifferenceIfAny != "demo")
-                                  {
-                                    setState(() {
-                                      print("Gesture Detector Setting State");
-                                      indexSelectedGridTile = index;
-
-                                      /// signalling that a grid tile has been
-                                      /// clicked
-                                      ///
-                                      /// This will change the value of the
-                                      /// FutureBuilder widget's "future"
-                                      /// parameter to
-                                      /// "dataProvider!.nothingToSeeHere" -
-                                      /// a filler Future method that helps
-                                      /// ensure that a selected grid tile is
-                                      /// colored and a timer is set ...
-                                      isGridTileClicked = true;
-                                    })
-                                  }
-                              },
-                              child: GridTileCurrencyPair(
-                                  isSelected: isSelectedTile,
-                                  widthGridTile: widthGridTile,
-                                  heightGridTile: heightGridTile,
-                                  paddingTopGridTile: paddingTopGridTile,
-                                  gridTileColor: isSelectedTile
-                                      ? pureColorGridTile
-                                      : gridTileColor!,
-                                  gridBorderColor: gridBorderColor!,
-                                  radiusGridTile: radiusGridTile,
-                                  isFetchingPrices: isFetchingPrices,
-                                  heightPriceDirectionIcon:
-                                      heightPriceDirectionIcon,
-                                  isDownwardPriceMovement:
-                                      isDownwardPriceMovement,
-                                  isUpwardPriceMovement: isUpwardPriceMovement,
-                                  isNotDisplayedPriceOrNoPriceMovement:
-                                      isNotDisplayedPriceOrNoPriceMovement,
-                                  marginPriceDirectionAndCurrencyPair:
-                                      marginPriceDirectionAndCurrencyPair,
-                                  heightSymbolSizedBox: heightSymbolSizedBox,
-                                  currencyPairLazyLoading:
-                                      currencyPairLazyLoading,
-                                  currencyPairOrPrice: currencyPairOrPrice,
-                                  currentSymbolOrInstrument:
-                                      currentSymbolOrInstrument,
-                                  fontSizeSymbols: fontSizeSymbols,
-                                  marginCurrencyPairAndCurrencyPrice:
-                                      marginCurrencyPairAndCurrencyPrice,
-                                  heightPriceSizedBox: heightPriceSizedBox,
-                                  priceAllInstruments: priceAllInstruments,
-                                  fontSizePrices: fontSizePrices),
-                            );
-                          },
-                        ),
-                      )
+                      /// Alerts & Other menu items
                     ],
                   ));
             }));
