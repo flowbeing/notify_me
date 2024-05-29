@@ -8,7 +8,8 @@ import "package:lottie/lottie.dart";
 import "../providers/data_provider.dart";
 
 import "../widgets/primary/container_gridview_builder.dart";
-import "../widgets/primary/grid_tile_currency_pair.dart";
+import "../widgets/secondary/custom_text_button.dart";
+import "../widgets/secondary/dot_divider.dart";
 
 class Homepage extends StatefulWidget {
   State<Homepage> createState() {
@@ -76,6 +77,27 @@ class HomepageState extends State<Homepage> {
   /// Index of selected grid tile
   int indexSelectedGridTile = 3;
 
+  /// Dimensions and other measurements - alerts & other menu items sized box
+  double heightAlertsAndOtherMenuItemsSizedBox = 0;
+  double marginTopAlertsAndOtherMenuItemsSizedBox = 0;
+  double marginBottomAlertsAndOtherMenuItemsSizedBox = 0;
+
+  double fontSizeAlertsAndOtherMenuItemsSizedBox = 0;
+  double widthDotDivider = 0;
+  double iconSizeDotDivider = 0;
+  double widthSpaceInBetweenAlertsMenu = 0;
+
+  /// height - alerts ListView Builder
+  double heightAlertsListViewBuilder = 0;
+
+  /// height - swipe notification
+  double heightSwipeNotification = 0;
+
+  /// height - create new alert container
+  double heightCreateNewAlertContainer = 0;
+
+
+
   @override
   void didChangeDependencies() async {
     print("");
@@ -121,8 +143,28 @@ class HomepageState extends State<Homepage> {
     print("radiusGridTile: $radiusGridTile");
     print("heightFirstSixGridTiles: $heightFirstSixGridTiles");
 
+    /// dimensions and other measurements - alerts and other menu items SizedBox
+    heightAlertsAndOtherMenuItemsSizedBox = 0.04291845494 * deviceHeight;
+    marginTopAlertsAndOtherMenuItemsSizedBox = 0.01394849785 * deviceHeight;
+    marginBottomAlertsAndOtherMenuItemsSizedBox = 0.01072961373 * deviceHeight;
+
+    fontSizeAlertsAndOtherMenuItemsSizedBox = 0.0160944206 * deviceHeight;
+    widthDotDivider = 0.04418604651 * deviceWidth;
+    iconSizeDotDivider = 0.003755364807 * deviceHeight;
+
+    widthSpaceInBetweenAlertsMenu = 0.2348837209 * deviceWidth;
+
+    /// height - alerts ListView Builder
+    heightAlertsListViewBuilder = 0.1201716738 * deviceHeight;
+
+    /// height - swipe notification
+    heightSwipeNotification = 0.03004291845 * deviceHeight;
+
+    /// height - create new alert container
+    heightCreateNewAlertContainer = 0.05364806867 * deviceHeight;
+
     /// Data Provider
-    dataProvider = Provider.of<DataProvider>(context, listen: true);
+    dataProvider = Provider.of<DataProvider>(context, listen: false);
 
     // TODO: implement didChangeDependencies
     super.didChangeDependencies();
@@ -156,11 +198,11 @@ class HomepageState extends State<Homepage> {
             builder: (ctx, snapshot) {
               /// Prices - all instruments / symbols
               Map<dynamic, dynamic> priceAllInstruments =
-                  dataProvider!.allForexAndCryptoPrices;
+                  dataProvider!.getInstruments();
               dynamic firstKeypriceAllInstruments;
 
               print(
-                  "dataProvider!.allForexAndCryptoPrices: ${dataProvider!.allForexAndCryptoPrices}");
+                  "dataProvider!.getInstruments(): ${dataProvider!.getInstruments()}");
 
               firstKeypriceAllInstruments =
                   priceAllInstruments.keys.toList()[0];
@@ -246,7 +288,7 @@ class HomepageState extends State<Homepage> {
                     /// create and store a new the value of price update
                     /// operation status checking timer..
                     isPricesUpdatedCheckingTimer = Timer.periodic(
-                        const Duration(milliseconds: 1000), (timer) {
+                        const Duration(milliseconds: 1000), (timer) { // 1000
                       if (relevantTimer.isActive == false &&
                           dataProvider!.isUpdatingPrices == false) {
                         print("gridTile relevantTimer in: $relevantTimer");
@@ -254,10 +296,10 @@ class HomepageState extends State<Homepage> {
                             "gridTile selected: relevantTimer.isActive == false && dataProvider!.isUpdatingPrices == false in: ${relevantTimer.isActive == false && dataProvider!.isUpdatingPrices == false}");
 
                         // /// updating all instruments' price data
-                        // priceAllInstruments = dataProvider!.allForexAndCryptoPrices;
+                        // priceAllInstruments = dataProvider!.getInstruments();
 
                         relevantTimer = Timer.periodic(
-                            const Duration(milliseconds: 60001), (timer) {
+                            const Duration(milliseconds: 60001), (timer) { // 60001
                           timer.cancel();
 
                           setState(() {});
@@ -319,6 +361,7 @@ class HomepageState extends State<Homepage> {
                   /// a column - holds all elements on the screen
                   child: Column(
                     children: [
+
                       /// Currency Pairs Container
                       /// - holds a gridview builder..
                       ContainerGridViewBuilder(
@@ -346,7 +389,73 @@ class HomepageState extends State<Homepage> {
                           updateGridTileClicked: updateGridTileClicked
                       ),
 
-                      /// Alerts & Other menu items
+                      /// Alerts & Other menu items - SizedBox
+                      SizedBox(
+                        height: heightAlertsAndOtherMenuItemsSizedBox,
+                        width: double.infinity,
+                        // color: Colors.green,
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                            top: marginTopAlertsAndOtherMenuItemsSizedBox,
+                            bottom: marginBottomAlertsAndOtherMenuItemsSizedBox
+                          ),
+                          child: Row(
+                            children: <Widget>[
+
+                              /// title - "Alert"
+                              Text(
+                                "Alert",
+                                style: TextStyle(
+                                  fontFamily: "PT-Mono",
+                                  fontSize: fontSizeAlertsAndOtherMenuItemsSizedBox,
+                                )
+                              ),
+
+                              /// dot divider
+                              DotDivider(
+                                  widthDotDivider: widthDotDivider,
+                                  iconSizeDotDivider: iconSizeDotDivider
+                              ),
+
+                              /// "Mute All" button
+                              CustomTextButton(
+                                text: "Mute All",
+                                fontSize: fontSizeAlertsAndOtherMenuItemsSizedBox
+                              ),
+
+                              /// Space in between - "Alerts -> Mute All" &
+                              /// Instruments Filter ("All", "Forex", "Crypto")
+                              SizedBox(
+                                width: widthSpaceInBetweenAlertsMenu,
+                              ),
+
+                            ]
+                          ),
+                        )
+                      ),
+
+                      /// Alerts' Sized Box - contains a ListView builder
+                      SizedBox(
+                        height: heightAlertsListViewBuilder,
+                        width: double.infinity,
+                        // color: Colors.yellow
+                      ),
+
+                      /// Swipe notification's Sized Box
+                      SizedBox(
+                        height: heightSwipeNotification,
+                        width: double.infinity,
+                        // color: Colors.blueAccent
+                      ),
+
+                      /// Create New Alert's Sized Box
+                      SizedBox(
+                        height: heightCreateNewAlertContainer,
+                        width: double.infinity,
+                        // color: Colors.tealAccent
+                      )
+
+
                     ],
                   ));
             }));

@@ -6,32 +6,33 @@ import "package:provider/provider.dart";
 import "package:flutter_dotenv/flutter_dotenv.dart";
 
 import "../data/data.dart";
+import '../data/enums.dart';
+
 import "all_instruments_with_fetching_notification.dart";
 
-enum UpdatePricesState {
-  isIdle,
-  isUpdating,
-  isDoneUpdating
-}
+enum UpdatePricesState { isIdle, isUpdating, isDoneUpdating }
 
 /// This class retrieves and forwards much needed data to the app..
-class DataProvider with ChangeNotifier{
-
+class DataProvider with ChangeNotifier {
   /// Data object
   Data? _data;
+
   /// A map of all forex and crypto prices
-  Map<dynamic, dynamic> allForexAndCryptoPrices =
+  Map<dynamic, dynamic> _allForexAndCryptoPrices =
       allInstrumentsWithFetchingNotification;
+
+  /// filter to apply to _allForexAndCryptoPrices
+  Filter _instrumentFilter = Filter.all;
 
   /// tracking whether prices are being updated
   bool isUpdatingPrices = false;
+
   // UpdatePricesState isUpdatingPrices = UpdatePricesState.isIdle;
 
   /// Number of times prices have been retrieved from the relevant data provider
   int _countPricesRetrieval = 0;
 
-  Future _initialDataAndDotEnv() async{
-
+  Future _initialDataAndDotEnv() async {
     /// loading configuration file
     await dotenv.load(fileName: "config.env");
 
@@ -40,27 +41,25 @@ class DataProvider with ChangeNotifier{
     await _data!.createAppFilesAndFolders();
     await _data!.updateAndSaveAllSymbolsData();
     _data!.getUriAppDirectory();
-
   }
 
-  Future allSymbolsWithFetchingNotification() async{
+  Future allSymbolsWithFetchingNotification() async {
+    /// setting an interim value for _allForexAndCryptoPrices (Map)
+    _allForexAndCryptoPrices =
+        await _data!.getMapOfAllPairsWithFetchingNotification();
 
-    /// setting an interim value for allForexAndCryptoPrices (Map)
-    allForexAndCryptoPrices = await _data!.getMapOfAllPairsWithFetchingNotification();
-
-    return allForexAndCryptoPrices;
-
+    return _allForexAndCryptoPrices;
   }
 
   /// This method retrieves the prices of forex and crypto pairs periodically
-  Future updatePrices() async{
-
+  Future updatePrices() async {
     /// signalling that updatePrices method in data provider
     /// is currently running
     isUpdatingPrices = true;
     // isUpdatingPrices = UpdatePricesState.isUpdating;
 
-    print("--------------------------------------------------------------------------------");
+    print(
+        "--------------------------------------------------------------------------------");
     print("");
     print("UPDATEPRICES METHOD - START");
 
@@ -87,15 +86,15 @@ class DataProvider with ChangeNotifier{
 
     /// setting all prices to string value - "fetching"..
     /// useful when initializing the app for the first time..
-    // if (allForexAndCryptoPrices.isEmpty && mapOfAllPrices.isEmpty){
+    // if (_allForexAndCryptoPrices.isEmpty && mapOfAllPrices.isEmpty){
     //   print("");
-    //   print("allForexAndCryptoPrices & mapOfAllPrices are both empty");
-    //   allForexAndCryptoPrices = _data!.mapOfSymbolsPreInitialPriceFetch;
+    //   print("_allForexAndCryptoPrices & mapOfAllPrices are both empty");
+    //   _allForexAndCryptoPrices = _data!.mapOfSymbolsPreInitialPriceFetch;
     // }
 
-    if (mapOfAllPrices.isNotEmpty){
+    if (mapOfAllPrices.isNotEmpty) {
       print("");
-      allForexAndCryptoPrices = mapOfAllPrices;
+      _allForexAndCryptoPrices = mapOfAllPrices;
     }
 
     /// signalling that updatePrices method in data provider
@@ -104,23 +103,62 @@ class DataProvider with ChangeNotifier{
     isUpdatingPrices = false;
     // isUpdatingPrices = UpdatePricesState.isDoneUpdating;
 
-
     print("UPDATEPRICES METHOD - END");
     print("");
-    print("--------------------------------------------------------------------------------");
+    print(
+        "--------------------------------------------------------------------------------");
     print("");
 
-    /// note: if allForexAndCryptoPrices.isNotEmpty &&
+    /// note: if _allForexAndCryptoPrices.isNotEmpty &&
     /// mapOfAllPrices.isNotEmpty, the previous value of
-    /// allForexAndCryptoPrices will be used in the homepage..
+    /// _allForexAndCryptoPrices will be used in the homepage..
 
     // print("timer: ${timer}");
     // print("timer tick: ${timer.tick}");
-
   }
 
-  Future nothingToSeeHere() async{
+  /// a (bypass) method for when a grid tile is clicked..
+  ///
+  /// prevents updatePrices from being called each time a grid tile is clicked
+  Future nothingToSeeHere() async {}
 
+  /// get instruments - can be all, forex, or crypto
+  Map<dynamic, dynamic> getInstruments() {
+
+    return _allForexAndCryptoPrices;
+
+    Map<dynamic, dynamic> mapToReturn = {};
+
+    String firstValueInMapOfAllInstrumentPrices =
+        _allForexAndCryptoPrices.values.toList()[0];
+
+    if (firstValueInMapOfAllInstrumentPrices.runtimeType == String ||
+        _instrumentFilter == Filter.all) {
+      mapToReturn = _allForexAndCryptoPrices;
+    } else {
+      if (_instrumentFilter == Filter.forex) {
+        mapToReturn = _allForexAndCryptoPrices.map((key, value) {
+          if (value['type'] == "forex") {
+            return MapEntry(key, value);
+          }
+
+          return const MapEntry(null, null);
+        });
+      } else if (_instrumentFilter == Filter.crypto) {
+        mapToReturn = _allForexAndCryptoPrices.map((key, value) {
+          if (value['type'] == "crypto") {
+            return MapEntry(key, value);
+          }
+
+          return const MapEntry(null, null);
+        });
+      }
+    }
+
+    return mapToReturn;
   }
 
+  void updateFilter(Filter filter) {
+    _instrumentFilter = filter;
+  }
 }

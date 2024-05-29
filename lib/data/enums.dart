@@ -7,3 +7,9 @@ enum DataType {
   fund,
   bond
 }
+
+enum Filter {
+  all,
+  forex,
+  crypto
+}
