@@ -125,15 +125,15 @@ class DataProvider with ChangeNotifier {
   /// get instruments - can be all, forex, or crypto
   Map<dynamic, dynamic> getInstruments() {
 
-    return _allForexAndCryptoPrices;
-
     Map<dynamic, dynamic> mapToReturn = {};
+    print("_allForexAndCryptoPrices.values.toList()[0]: ${_allForexAndCryptoPrices.values.toList()[0]}");
 
-    String firstValueInMapOfAllInstrumentPrices =
-        _allForexAndCryptoPrices.values.toList()[0];
 
-    if (firstValueInMapOfAllInstrumentPrices.runtimeType == String ||
+    if (_allForexAndCryptoPrices.values.toList()[0].runtimeType == String ||
         _instrumentFilter == Filter.all) {
+      /// adding null value to match maps that would be created by the
+      /// conditions below
+      mapToReturn[null] = null;
       mapToReturn = _allForexAndCryptoPrices;
     } else {
       if (_instrumentFilter == Filter.forex) {
@@ -154,6 +154,8 @@ class DataProvider with ChangeNotifier {
         });
       }
     }
+
+    mapToReturn.remove(null);
 
     return mapToReturn;
   }
