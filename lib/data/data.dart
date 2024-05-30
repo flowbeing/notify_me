@@ -820,10 +820,12 @@ class Data {
 
     for (var symbolData in savedListOfAllSymbolsDataMaps){
       String symbol = symbolData['symbol'];
+      String symbolType = symbolData['type'];
+
 
       /// creating a map of all symbols before any price is fetched...
       mapOfSymbolsPreInitialPriceFetch[symbol] = "fetching";
-      mapInstrumentsType[symbol] = symbolData['type'];
+      mapInstrumentsType[symbol] = symbolType;
 
       setSavedListOfAllSymbols.add(symbol);
     }
@@ -1014,6 +1016,8 @@ class Data {
           /// mapPriceOfCurrentPairResponseQuote
           if (mapPriceOfCurrentPairResponseQuote != null){
 
+            //print("symbol: $symbol, type: ${mapInstrumentsType[currentPair]}")
+
             Map currentSymbolsPriceDataToSave = {
               "old_price": mapPriceOfCurrentPairResponseQuote['close'],
               "current_price": mapPriceOfCurrentPairResponseRealTime['price'],
@@ -1042,6 +1046,8 @@ class Data {
           /// mapPriceOfCurrentPairResponseRealTime's "price" value
           ///
           else if (mapPriceOfCurrentPairResponseQuote == null){
+
+            //print("symbol: $symbol, type: ${mapInstrumentsType[currentPair]}")
 
             Map currentSymbolsPriceDataToSave = {
               "old_price": mapLastSavedPricesOneMinInterval[currentPair]!['current_price'],
@@ -1107,6 +1113,8 @@ class Data {
         }
         /// ...otherwise, setting the price to "demo"
         else if (listOfAppliedImportantPairs.contains(currentPair) == false){
+
+          //print("symbol: $symbol, type: ${mapInstrumentsType[currentPair]}")
 
           mapOfAllPrices[currentPair] = {
             "old_price": "demo",
@@ -1245,10 +1253,12 @@ class Data {
         oldPrice = double.parse(oldPrice);
         currentPrice = double.parse(currentPrice);
 
+        //print("symbol: $symbol, type: ${mapInstrumentsType[currentPair]}")
+
         MapEntry mapEntryCurrentInstrument = MapEntry(symbol, {
           "old_price": oldPrice.toString(),
           "current_price": currentPrice.toString(),
-          "type": mapInstrumentsType[currentPair]
+          "type": mapInstrumentsType[symbol]
         });
 
         listOfMapEntryAllRetrievedPrices.insert(0, mapEntryCurrentInstrument);
@@ -1261,10 +1271,13 @@ class Data {
 
         /// ... otherwise place it at the end of the listOfMapEntryAllRetrievedPrices to
         /// ensure that symbols with "demo" get displayed last
+
+        //print("symbol: $symbol, type: ${mapInstrumentsType[currentPair]}")
+
         MapEntry mapEntryCurrentInstrument = MapEntry(symbol, {
           "old_price": oldPrice,
           "current_price": currentPrice,
-          "type": mapInstrumentsType[currentPair]
+          "type": mapInstrumentsType[symbol]
         });
 
         listOfMapEntryAllRetrievedPrices.add(mapEntryCurrentInstrument);
@@ -1344,7 +1357,7 @@ class Data {
               // mapEntryCurrentInstrument = MapEntry(symbol, {
               //   "old_price": mapLastSavedPricesOneMinInterval[symbol]["old_price"],
               //   "current_price": mapLastSavedPricesOneMinInterval[symbol]["current_price"],
-              //               "type": mapInstrumentsType[currentPair]
+              //               "type": mapInstrumentsType[symbol]
               // });
               //
               // listOfMapEntryAllRetrievedPrices.insert(
@@ -1357,10 +1370,12 @@ class Data {
               // print("");
               // print('here! Refresh - 1 min');
 
+              print("symbol: $symbol, type: ${mapInstrumentsType[symbol]}");
+
               mapEntryCurrentInstrument = MapEntry(symbol, {
                 "old_price": "Refresh - 1 min",
                 "current_price": "Refresh - 1 min",
-                "type": mapInstrumentsType[currentPair]
+                "type": mapInstrumentsType[symbol]
               });
 
               /// placing all non retrieved important pairs just after the
@@ -1384,10 +1399,12 @@ class Data {
 
             // print("Unimportant Pair - Unsaved - Start");
 
+            print("symbol: $symbol, type: ${mapInstrumentsType[symbol]}");
+
             mapEntryCurrentInstrument = MapEntry(symbol, {
               "old_price": "demo",
               "current_price": "demo",
-              "type": mapInstrumentsType[currentPair]
+              "type": mapInstrumentsType[symbol]
             });
             
             listOfMapEntryAllRetrievedPrices.add(mapEntryCurrentInstrument);

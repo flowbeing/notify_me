@@ -25,9 +25,9 @@ class DataProvider with ChangeNotifier {
   Filter _instrumentFilter = Filter.all;
 
   /// tracking whether prices are being updated
-  bool isUpdatingPrices = false;
+  bool _isUpdatingPrices = false;
 
-  // UpdatePricesState isUpdatingPrices = UpdatePricesState.isIdle;
+  // UpdatePricesState _isUpdatingPrices = UpdatePricesState.isIdle;
 
   /// Number of times prices have been retrieved from the relevant data provider
   int _countPricesRetrieval = 0;
@@ -55,8 +55,8 @@ class DataProvider with ChangeNotifier {
   Future updatePrices() async {
     /// signalling that updatePrices method in data provider
     /// is currently running
-    isUpdatingPrices = true;
-    // isUpdatingPrices = UpdatePricesState.isUpdating;
+    _isUpdatingPrices = true;
+    // _isUpdatingPrices = UpdatePricesState.isUpdating;
 
     print(
         "--------------------------------------------------------------------------------");
@@ -100,8 +100,8 @@ class DataProvider with ChangeNotifier {
     /// signalling that updatePrices method in data provider
     /// is currently running
 
-    isUpdatingPrices = false;
-    // isUpdatingPrices = UpdatePricesState.isDoneUpdating;
+    _isUpdatingPrices = false;
+    // _isUpdatingPrices = UpdatePricesState.isDoneUpdating;
 
     print("UPDATEPRICES METHOD - END");
     print("");
@@ -117,6 +117,13 @@ class DataProvider with ChangeNotifier {
     // print("timer tick: ${timer.tick}");
   }
 
+  /// a method to retrieve the value of _isUpdatingPrices
+  ///
+  /// helps determine whether prices are currently being updated
+  bool getIsUpdatingPrices() {
+    return _isUpdatingPrices;
+  }
+
   /// a (bypass) method for when a grid tile is clicked..
   ///
   /// prevents updatePrices from being called each time a grid tile is clicked
@@ -124,43 +131,66 @@ class DataProvider with ChangeNotifier {
 
   /// get instruments - can be all, forex, or crypto
   Map<dynamic, dynamic> getInstruments() {
+    // print(_allForexAndCryptoPrices);
 
     Map<dynamic, dynamic> mapToReturn = {};
-    print("_allForexAndCryptoPrices.values.toList()[0]: ${_allForexAndCryptoPrices.values.toList()[0]}");
+    print(
+        "_allForexAndCryptoPrices.values.toList()[0]: ${_allForexAndCryptoPrices.values.toList()[0]}");
 
-
+    /// if no prices have not been fetched, return the default map which has the
+    /// "fetching" notification set for all instruments. However, if prices have
+    /// been fetched but "all" filter is active, show all instruments...
     if (_allForexAndCryptoPrices.values.toList()[0].runtimeType == String ||
         _instrumentFilter == Filter.all) {
       /// adding null value to match maps that would be created by the
-      /// conditions below
-      mapToReturn[null] = null;
+      /// conditions below..
       mapToReturn = _allForexAndCryptoPrices;
-    } else {
-      if (_instrumentFilter == Filter.forex) {
-        mapToReturn = _allForexAndCryptoPrices.map((key, value) {
-          if (value['type'] == "forex") {
-            return MapEntry(key, value);
-          }
+    }
 
-          return const MapEntry(null, null);
+    /// if prices have been fetched and the forex or crypto filter is active,
+    /// return forex instrument or crypto instruments
+    else {
+      /// if the forex filter has been selected, show only forex data
+      if (_instrumentFilter == Filter.forex) {
+        _allForexAndCryptoPrices.forEach((key, value) {
+          // print("value['type']: ${value['type']}");
+          if (value['type'] == "forex") {
+            mapToReturn[key] = value;
+          }
         });
       } else if (_instrumentFilter == Filter.crypto) {
-        mapToReturn = _allForexAndCryptoPrices.map((key, value) {
+        _allForexAndCryptoPrices.forEach((key, value) {
           if (value['type'] == "crypto") {
-            return MapEntry(key, value);
+            mapToReturn[key] = value;
           }
-
-          return const MapEntry(null, null);
         });
       }
     }
 
-    mapToReturn.remove(null);
+    // print("mapToReturn: $mapToReturn");
 
     return mapToReturn;
   }
 
-  void updateFilter(Filter filter) {
-    _instrumentFilter = filter;
+  /// this method help retrieve the value of the first item in the map of
+  /// all instruments i.e _allForexAndCryptoPrices
+  dynamic getTypeFirstValueInMapOfAllInstruments() {
+    String firstKeypriceAllInstruments =
+        _allForexAndCryptoPrices.keys.toList()[0];
+
+    dynamic typeFirstValueInMapOfAllInstruments =
+        _allForexAndCryptoPrices[firstKeypriceAllInstruments].runtimeType;
+
+    return typeFirstValueInMapOfAllInstruments;
+  }
+
+  /// this method helps update the instrument type that should be displayed
+  /// i.e forex, crypto, or both...
+  void updateFilter({required Filter filter}) {
+    if (_instrumentFilter != filter) {
+      _instrumentFilter = filter;
+      // notifyListeners();
+      print("current filter: $_instrumentFilter");
+    }
   }
 }

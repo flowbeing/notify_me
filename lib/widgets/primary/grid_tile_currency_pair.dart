@@ -8,6 +8,7 @@ class GridTileCurrencyPair extends StatefulWidget {
       required this.paddingTopGridTile,
       required this.gridTileColor,
       required this.gridBorderColor,
+      required this.borderWidthGridTile,
       required this.radiusGridTile,
       required this.isFetchingPrices,
       required this.heightPriceDirectionIcon,
@@ -31,6 +32,7 @@ class GridTileCurrencyPair extends StatefulWidget {
   final double paddingTopGridTile;
   final Color gridTileColor;
   final Color gridBorderColor;
+  final double borderWidthGridTile;
   final double radiusGridTile;
   final bool isFetchingPrices;
   final double heightPriceDirectionIcon;
@@ -61,7 +63,9 @@ class _GridTileCurrencyPairState extends State<GridTileCurrencyPair> {
         padding: EdgeInsets.only(top: widget.paddingTopGridTile),
         decoration: BoxDecoration(
             color: widget.gridTileColor,
-            border: Border.all(color: widget.gridBorderColor, width: 0.8),
+            border: Border.all(color: widget.gridBorderColor,
+            width: widget.borderWidthGridTile
+            ),
             borderRadius: BorderRadius.circular(widget.radiusGridTile)),
 
         /// A column containing:
@@ -100,7 +104,7 @@ class _GridTileCurrencyPairState extends State<GridTileCurrencyPair> {
             Image.asset(
               widget.isSelected
                   ? "assets/images/price_increase_white.png"
-                  : "assets/images/price_increase.png",
+                  : "assets/images/price_increase_darker_turquoise.png",
               height: widget.heightPriceDirectionIcon,
             ),
 

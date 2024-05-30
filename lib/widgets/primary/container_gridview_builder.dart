@@ -1,4 +1,7 @@
 import "package:flutter/material.dart";
+import 'package:provider/provider.dart';
+
+import '../../providers/data_provider.dart';
 
 import "./grid_tile_currency_pair.dart";
 
@@ -14,6 +17,7 @@ class ContainerGridViewBuilder extends StatefulWidget {
     required this.widthGridTile,
     required this.heightGridTile,
     required this.paddingTopGridTile,
+    required this.borderWidthGridTile,
     required this.radiusGridTile,
     required this.heightPriceDirectionIcon,
     required this.marginPriceDirectionAndCurrencyPair,
@@ -24,7 +28,7 @@ class ContainerGridViewBuilder extends StatefulWidget {
     required this.marginCurrencyPairAndCurrencyPrice,
     required this.heightPriceSizedBox,
     required this.fontSizePrices,
-    required this.updateGridTileClicked
+    required this.updateAppGridTileClicked
 
   });
 
@@ -38,6 +42,7 @@ class ContainerGridViewBuilder extends StatefulWidget {
   final double widthGridTile;
   final double heightGridTile;
   final double paddingTopGridTile;
+  final double borderWidthGridTile;
   final double radiusGridTile;
   final double heightPriceDirectionIcon;
   final double marginPriceDirectionAndCurrencyPair;
@@ -50,7 +55,7 @@ class ContainerGridViewBuilder extends StatefulWidget {
   final double fontSizePrices;
 
 
-  /// updateGridTileClicked should contain setState and the explanation below
+  /// updateAppGridTileClicked should contain setState and the explanation below
   // setState(() {
   //   print("Gesture Detector Setting State");
   // })
@@ -70,7 +75,7 @@ class ContainerGridViewBuilder extends StatefulWidget {
     required bool isGridTileClicked,
     required int indexNewSelectedGridTile
   })
-      updateGridTileClicked;
+      updateAppGridTileClicked;
 
   @override
   State<ContainerGridViewBuilder> createState() =>
@@ -78,7 +83,23 @@ class ContainerGridViewBuilder extends StatefulWidget {
 }
 
 class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
+
+  DataProvider? dataProvider;
+
+
+  @override
+  void didChangeDependencies() {
+    // TODO: implement didChangeDependencies
+
+    /// data provider
+    dataProvider = Provider.of<DataProvider>(context, listen: true);
+
+    super.didChangeDependencies();
+    
+  }
+
   Container build(BuildContext context) {
+
     return Container(
       // color: Colors.yellow,
       width: double.infinity,
@@ -178,9 +199,9 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
             gridTileColor = Colors.black.withOpacity(.01);
             gridBorderColor = gridTileColor;
           } else if (isUpwardPriceMovement) {
-            pureColorGridTile = const Color(0xFF0066FF).withOpacity(.67);
-            gridTileColor = const Color(0xFF0066FF).withOpacity(.05);
-            gridBorderColor = const Color(0xFF0066FF).withOpacity(.1);
+            pureColorGridTile = const Color(0xFF069D91).withOpacity(1); // 0xFF0066FF // .67
+            gridTileColor = const Color(0xFF069D91).withOpacity(.05);
+            gridBorderColor = const Color(0xFF069D91).withOpacity(.1);
           } else if (isDownwardPriceMovement) {
             pureColorGridTile = const Color(0xFFFC8955);
             gridTileColor = const Color(0xFFFC8955).withOpacity(0.07);
@@ -194,7 +215,7 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
               if (currentInstrumentsData.runtimeType != String &&
                   priceDifferenceIfAny != "demo")
                 {
-                  widget.updateGridTileClicked(
+                  widget.updateAppGridTileClicked(
                       indexNewSelectedGridTile: index,
                       isGridTileClicked: true
                   )
@@ -208,6 +229,7 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
                 gridTileColor:
                     isSelectedTile ? pureColorGridTile : gridTileColor!,
                 gridBorderColor: gridBorderColor!,
+                borderWidthGridTile: widget.borderWidthGridTile,
                 radiusGridTile: widget.radiusGridTile,
                 isFetchingPrices: isFetchingPrices,
                 heightPriceDirectionIcon: widget.heightPriceDirectionIcon,

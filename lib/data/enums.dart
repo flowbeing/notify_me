@@ -11,5 +11,6 @@ enum DataType {
 enum Filter {
   all,
   forex,
-  crypto
+  crypto,
+  none
 }

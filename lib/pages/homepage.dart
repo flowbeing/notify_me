@@ -5,11 +5,13 @@ import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 import "package:lottie/lottie.dart";
 
+import '../data/enums.dart';
 import "../providers/data_provider.dart";
 
 import "../widgets/primary/container_gridview_builder.dart";
 import "../widgets/secondary/custom_text_button.dart";
 import "../widgets/secondary/dot_divider.dart";
+import "../widgets/secondary/instrument_filters.dart";
 
 class Homepage extends StatefulWidget {
   State<Homepage> createState() {
@@ -36,6 +38,7 @@ class HomepageState extends State<Homepage> {
   double mainAxisSpacing = 0;
   double radiusGridTile = 0;
   double heightFirstSixGridTiles = 0;
+  double borderWidthGridTile = 0;
 
   /// price direction icon's height
   double heightPriceDirectionIcon = 0;
@@ -59,8 +62,8 @@ class HomepageState extends State<Homepage> {
   /// Provider
   DataProvider? dataProvider;
 
-  /// bool to track whether a grid tile has been clicked
-  bool isGridTileClicked = false;
+  /// bool to track whether a grid tile or filter option has been clicked
+  bool isGridTileOrFilterOptionClicked = false;
 
   /// timer - updatePrices method..
   Timer relevantTimer =
@@ -87,16 +90,19 @@ class HomepageState extends State<Homepage> {
   double iconSizeDotDivider = 0;
   double widthSpaceInBetweenAlertsMenu = 0;
 
-  /// height - alerts ListView Builder
+  /// dimensions - alerts ListView Builder
   double heightAlertsListViewBuilder = 0;
+  double radiusListViewBuilder = 0;
+  double fontSizeNoAlerts = 0; //
+  double fontSizeAlertsListTile = 0; //
+  double borderWidthListViewBuilder = 0;
 
-  /// height - swipe notification
+  /// measurements - swipe notification
   double heightSwipeNotification = 0;
+  double fontSizeSwipeNotification = 0; //
 
   /// height - create new alert container
   double heightCreateNewAlertContainer = 0;
-
-
 
   @override
   void didChangeDependencies() async {
@@ -119,6 +125,7 @@ class HomepageState extends State<Homepage> {
     mainAxisSpacing = 0.01072961373 * deviceHeight;
     radiusGridTile = 0.01162790698 * deviceWidth;
     heightFirstSixGridTiles = 0.6652360515 * deviceHeight;
+    borderWidthGridTile = 0.0008583690987 * deviceHeight;
 
     /// price direction icon's height
     heightPriceDirectionIcon = 0.02575107296 * deviceHeight;
@@ -154,28 +161,154 @@ class HomepageState extends State<Homepage> {
 
     widthSpaceInBetweenAlertsMenu = 0.2348837209 * deviceWidth;
 
-    /// height - alerts ListView Builder
+    /// dimensions - alerts ListView Builder
     heightAlertsListViewBuilder = 0.1201716738 * deviceHeight;
+    radiusListViewBuilder = 0.00643776824 * deviceHeight;
+    fontSizeNoAlerts = fontSizeSymbols; //
+    fontSizeAlertsListTile = 0.01716738197 * deviceHeight;
+    borderWidthListViewBuilder = 0.0002682403433 * deviceHeight;
 
     /// height - swipe notification
     heightSwipeNotification = 0.03004291845 * deviceHeight;
+    fontSizeSwipeNotification = 0.01072961373 * deviceHeight;
 
     /// height - create new alert container
     heightCreateNewAlertContainer = 0.05364806867 * deviceHeight;
 
     /// Data Provider
-    dataProvider = Provider.of<DataProvider>(context, listen: false);
+    dataProvider = Provider.of<DataProvider>(context, listen: true);
 
     // TODO: implement didChangeDependencies
     super.didChangeDependencies();
   }
 
-  dynamic updateGridTileClicked(
+  /// this method updates timers when prices have been fetched
+  void updateTimers({required bool isOneMin}) {
+    /// is price currently being updated
+    bool isPriceUpdating = dataProvider!.getIsUpdatingPrices();
+
+    if (isOneMin == false) {
+      /// if a previous 5 seconds timer is no longer active and it's
+      /// corresponding dataProvider!.updatePrices (Future) is has
+      /// finished running set relevantTimer to a timer that should
+      /// execute  dataProvider!.updatePrices 5 seconds in the
+      /// future
+
+      if (relevantTimer.isActive == false && isPriceUpdating == true) {
+        relevantTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+          timer.cancel();
+
+          setState(() {
+            print("Timer.periodic - 1 min: ${DateTime.now()}");
+          });
+        });
+      }
+    } else if (isOneMin == true) {
+      print('priceAllInstruments contains "prices"');
+      print("");
+      print("HOMEPAGE - END - 1min");
+      print(
+          "--------------------------------------------------------------------------------");
+      print("");
+
+      print("relevantTimer outside: $relevantTimer");
+      print(
+          "relevantTimer.isActive == false && isPriceUpdating == false in: ${relevantTimer.isActive == false && isPriceUpdating == false}");
+
+      /// If prices are currently being updated, replace current
+      /// relevantTimer with another when prices have fully been
+      /// updated..
+      ///
+      /// useful when a grid tile has been clicked but prices
+      /// are still being updated, which would normally prevent
+      /// the rebuilt version of this page that has been triggered
+      /// by the grid tile selection from reflecting the updated
+      /// prices when the prices have finished updating..
+      if (isPriceUpdating == true) {
+        /// cancel any previously set (active) price update
+        /// operation status checking timer to prevent the creation
+        /// of multiple memory hogging timers..
+        if (isPricesUpdatedCheckingTimer.isActive) {
+          isPricesUpdatedCheckingTimer.cancel();
+        }
+
+        /// create and store the new value of price update
+        /// operation status checking timer..
+        isPricesUpdatedCheckingTimer =
+            Timer.periodic(const Duration(milliseconds: 1000), (timer) {
+          // 1000
+
+          if (relevantTimer.isActive == false && isPriceUpdating == false) {
+            print("gridTile relevantTimer in: $relevantTimer");
+            print("gridTile selected: relevantTimer.isActive == false "
+                "&& isPriceUpdating == false in: ${relevantTimer.isActive == false && isPriceUpdating == false}");
+
+            // /// updating all instruments' price data
+            // priceAllInstruments = dataProvider!.getInstruments();
+
+            relevantTimer =
+                Timer.periodic(const Duration(milliseconds: 60001), (timer) {
+              timer.cancel();
+
+              setState(() {});
+            });
+
+            timer.cancel();
+
+            /// arbitrarily rebuild this FutureBuilder widget..
+            ///
+            /// Note that isGridTileOrFilterOptionClicked will be set back to
+            /// false once this FutureBuilder widget has been
+            /// rebuilt..
+            setState(() {
+              isGridTileOrFilterOptionClicked = true;
+            });
+          }
+        });
+      }
+
+      /// if a previous 1 minute timer is no longer active and it's
+      /// corresponding dataProvider!.updatePrices (Future) has
+      /// finished running i.e prices have finished updating,
+      /// set relevantTimer to a timer that should
+      /// execute dataProvider!.updatePrices one minute in the
+      /// future..
+      ///
+      /// the conditions below mean "wait until the previously set
+      /// relevant timer has done it's job.."
+      else if (relevantTimer.isActive == false && isPriceUpdating == false) {
+        print("relevantTimer in: $relevantTimer");
+        print("relevantTimer.isActive == false "
+            "&& isPriceUpdating == false in: "
+            "${relevantTimer.isActive == false && isPriceUpdating == false}");
+
+        relevantTimer =
+            Timer.periodic(const Duration(milliseconds: 60001), (timer) {
+          timer.cancel();
+
+          setState(() {});
+        });
+      }
+    }
+  }
+
+  /// this method triggers a rebuild of this homepage widget when a grid tile
+  /// is clicked..
+  void updateAppGridTileClicked(
       {required bool isGridTileClicked,
       required int indexNewSelectedGridTile}) {
     setState(() {
-      isGridTileClicked = isGridTileClicked;
+      isGridTileOrFilterOptionClicked = isGridTileClicked;
       indexSelectedGridTile = indexNewSelectedGridTile;
+    });
+  }
+
+  /// this method rebuilds the homepage state when a filter option is clicked
+  void updateAppFilterOptionClicked({required Filter selectedFilterOption}) {
+    dataProvider!.updateFilter(filter: selectedFilterOption);
+
+    setState(() {
+      isGridTileOrFilterOptionClicked = true;
     });
   }
 
@@ -192,7 +325,7 @@ class HomepageState extends State<Homepage> {
 
         /// The background
         body: FutureBuilder(
-            future: isGridTileClicked == true
+            future: isGridTileOrFilterOptionClicked == true
                 ? dataProvider!.nothingToSeeHere()
                 : dataProvider!.updatePrices(),
             builder: (ctx, snapshot) {
@@ -204,30 +337,42 @@ class HomepageState extends State<Homepage> {
               print(
                   "dataProvider!.getInstruments(): ${dataProvider!.getInstruments()}");
 
-              firstKeypriceAllInstruments =
-                  priceAllInstruments.keys.toList()[0];
+              /// determining whether instruments prices is being fetched for
+              /// the first time..
+              ///
+              /// bool isFirstValueInMapOfAllInstrumentsContainsFetching will
+              /// be true if so..
+              dynamic typeFirstValueInMapOfAllInstruments =
+                  dataProvider!.getTypeFirstValueInMapOfAllInstruments();
 
-              /// resetting isGridTileClicked
-              isGridTileClicked = false;
+              bool isFirstValueInMapOfAllInstrumentsContainsFetching =
+                  typeFirstValueInMapOfAllInstruments == String;
+
+              print(
+                  "typeFirstValueInMapOfAllInstruments: $typeFirstValueInMapOfAllInstruments");
+
+              // firstKeypriceAllInstruments =
+              //     priceAllInstruments.keys.toList()[0];
+
+              /// resetting isGridTileOrFilterOptionClicked
+              isGridTileOrFilterOptionClicked = false;
 
               /// if dataProvider!.updatePrices() (Future) has finished running,
               /// replace the current timer to reflect a price update that
               /// will take place within 5 seconds and 1 minute
               if (snapshot.connectionState == ConnectionState.done) {
-                /// bool that signal whether prices are currently being fetched.
-                /// true when:
-                /// a. the relevant timer has been cancelled &&
-                /// b. updatePrices is running
+                // /// bool that signal whether prices are currently being fetched.
+                // /// true when:
+                // /// a. the relevant timer has been cancelled &&
+                // /// b. updatePrices is running
                 // bool isUpdatingPrices = relevantTimer.isActive == false &&
-                //     dataProvider!.isUpdatingPrices == true;
+                //     isPriceUpdating == true;
 
                 /// if the values of priceAllInstruments are Strings, which
                 /// will only happen when the prices are being displayed for the
                 /// first time, rebuild the page..
 
-                if (priceAllInstruments[firstKeypriceAllInstruments]
-                        .runtimeType ==
-                    String) {
+                if (isFirstValueInMapOfAllInstrumentsContainsFetching) {
                   print('priceAllInstruments contains "fetching"');
                   print("");
                   print("HOMEPAGE - END - 5s");
@@ -235,113 +380,13 @@ class HomepageState extends State<Homepage> {
                       "--------------------------------------------------------------------------------");
                   print("");
 
-                  /// if a previous 5 seconds timer is no longer active and it's
-                  /// corresponding dataProvider!.updatePrices (Future) is has
-                  /// finished running set relevantTimer to a timer that should
-                  /// execute  dataProvider!.updatePrices one minute in the
-                  /// future
-
-                  if (relevantTimer.isActive == false &&
-                      dataProvider!.isUpdatingPrices == true) {
-                    relevantTimer =
-                        Timer.periodic(const Duration(seconds: 5), (timer) {
-                      timer.cancel();
-
-                      setState(() {
-                        print("Timer.periodic - 1 min: ${DateTime.now()}");
-                      });
-                    });
-                  }
+                  updateTimers(isOneMin: false);
                 }
 
                 /// ... otherwise, wait for 1 minute (approx) before rebuilding
                 /// this page i.e before providing new price data..
                 else {
-                  print('priceAllInstruments contains "prices"');
-                  print("");
-                  print("HOMEPAGE - END - 1min");
-                  print(
-                      "--------------------------------------------------------------------------------");
-                  print("");
-
-                  print("relevantTimer outside: $relevantTimer");
-                  print(
-                      "relevantTimer.isActive == false && dataProvider!.isUpdatingPrices == false in: ${relevantTimer.isActive == false && dataProvider!.isUpdatingPrices == false}");
-
-                  /// If prices are currently being updated, replace current
-                  /// relevantTimer with another when prices have fully been
-                  /// updated..
-                  ///
-                  /// useful when a grid tile has been clicked but prices
-                  /// are still being updated, which would normally prevent
-                  /// the rebuilt version of this page that has been triggered
-                  /// by the grid tile selection from reflecting the updated
-                  /// prices when the prices update has ended..
-                  if (dataProvider!.isUpdatingPrices == true) {
-                    /// cancel any previously set (active) price update
-                    /// operation status checking timer to prevent the creation
-                    /// of multiple memory hogging timers..
-                    if (isPricesUpdatedCheckingTimer.isActive) {
-                      isPricesUpdatedCheckingTimer.cancel();
-                    }
-
-                    /// create and store a new the value of price update
-                    /// operation status checking timer..
-                    isPricesUpdatedCheckingTimer = Timer.periodic(
-                        const Duration(milliseconds: 1000), (timer) { // 1000
-                      if (relevantTimer.isActive == false &&
-                          dataProvider!.isUpdatingPrices == false) {
-                        print("gridTile relevantTimer in: $relevantTimer");
-                        print(
-                            "gridTile selected: relevantTimer.isActive == false && dataProvider!.isUpdatingPrices == false in: ${relevantTimer.isActive == false && dataProvider!.isUpdatingPrices == false}");
-
-                        // /// updating all instruments' price data
-                        // priceAllInstruments = dataProvider!.getInstruments();
-
-                        relevantTimer = Timer.periodic(
-                            const Duration(milliseconds: 60001), (timer) { // 60001
-                          timer.cancel();
-
-                          setState(() {});
-                        });
-
-                        timer.cancel();
-
-                        /// arbitrarily rebuild this FutureBuilder widget..
-                        ///
-                        /// Note that isGridTileClicked will be set back to
-                        /// false once this FutureBuilder widget has been
-                        /// rebuilt..
-                        setState(() {
-                          isGridTileClicked = true;
-                        });
-                      }
-                    });
-                  }
-
-                  /// if a previous 1 minute timer is no longer active and it's
-                  /// corresponding dataProvider!.updatePrices (Future) has
-                  /// finished running i.e prices have finished updating,
-                  /// set relevantTimer to a timer that should
-                  /// execute dataProvider!.updatePrices one minute in the
-                  /// future..
-                  ///
-                  /// the conditions below mean "wait until the previously set
-                  /// relevant timer has done it's job.."
-                  else if (relevantTimer.isActive == false &&
-                      dataProvider!.isUpdatingPrices == false) {
-                    print("relevantTimer in: $relevantTimer");
-                    print("relevantTimer.isActive == false "
-                        "&& dataProvider!.isUpdatingPrices == false in: "
-                        "${relevantTimer.isActive == false && dataProvider!.isUpdatingPrices == false}");
-
-                    relevantTimer = Timer.periodic(
-                        const Duration(milliseconds: 60001), (timer) {
-                      timer.cancel();
-
-                      setState(() {});
-                    });
-                  }
+                  updateTimers(isOneMin: true);
                 }
               }
 
@@ -361,7 +406,6 @@ class HomepageState extends State<Homepage> {
                   /// a column - holds all elements on the screen
                   child: Column(
                     children: [
-
                       /// Currency Pairs Container
                       /// - holds a gridview builder..
                       ContainerGridViewBuilder(
@@ -374,6 +418,7 @@ class HomepageState extends State<Homepage> {
                           widthGridTile: widthGridTile,
                           heightGridTile: heightGridTile,
                           paddingTopGridTile: paddingTopGridTile,
+                          borderWidthGridTile: borderWidthGridTile,
                           radiusGridTile: radiusGridTile,
                           heightPriceDirectionIcon: heightPriceDirectionIcon,
                           marginPriceDirectionAndCurrencyPair:
@@ -386,42 +431,40 @@ class HomepageState extends State<Homepage> {
                               marginCurrencyPairAndCurrencyPrice,
                           heightPriceSizedBox: heightPriceSizedBox,
                           fontSizePrices: fontSizePrices,
-                          updateGridTileClicked: updateGridTileClicked
-                      ),
+                          updateAppGridTileClicked: updateAppGridTileClicked),
 
                       /// Alerts & Other menu items - SizedBox
                       SizedBox(
-                        height: heightAlertsAndOtherMenuItemsSizedBox,
-                        width: double.infinity,
-                        // color: Colors.green,
-                        child: Padding(
-                          padding: EdgeInsets.only(
-                            top: marginTopAlertsAndOtherMenuItemsSizedBox,
-                            bottom: marginBottomAlertsAndOtherMenuItemsSizedBox
-                          ),
-                          child: Row(
-                            children: <Widget>[
-
+                          height: heightAlertsAndOtherMenuItemsSizedBox,
+                          width: double.infinity,
+                          // color: Colors.green,
+                          child: Padding(
+                            padding: EdgeInsets.only(
+                                top: marginTopAlertsAndOtherMenuItemsSizedBox,
+                                bottom:
+                                    marginBottomAlertsAndOtherMenuItemsSizedBox),
+                            child: Row(children: <Widget>[
                               /// title - "Alert"
-                              Text(
-                                "Alert",
-                                style: TextStyle(
-                                  fontFamily: "PT-Mono",
-                                  fontSize: fontSizeAlertsAndOtherMenuItemsSizedBox,
-                                )
-                              ),
+                              Text("Alerts",
+                                  style: TextStyle(
+                                    fontFamily: "PT-Mono",
+                                    fontSize:
+                                        fontSizeAlertsAndOtherMenuItemsSizedBox,
+                                  )),
 
                               /// dot divider
                               DotDivider(
                                   widthDotDivider: widthDotDivider,
-                                  iconSizeDotDivider: iconSizeDotDivider
-                              ),
+                                  iconSizeDotDivider: iconSizeDotDivider),
 
                               /// "Mute All" button
                               CustomTextButton(
-                                text: "Mute All",
-                                fontSize: fontSizeAlertsAndOtherMenuItemsSizedBox
-                              ),
+                                  currentFilter: Filter.none,
+                                  selectedFilter: Filter.none,
+                                  fontSize:
+                                      fontSizeAlertsAndOtherMenuItemsSizedBox,
+                                  isFirstValueInMapOfAllInstrumentsContainsFetching:
+                                      isFirstValueInMapOfAllInstrumentsContainsFetching),
 
                               /// Space in between - "Alerts -> Mute All" &
                               /// Instruments Filter ("All", "Forex", "Crypto")
@@ -429,24 +472,47 @@ class HomepageState extends State<Homepage> {
                                 width: widthSpaceInBetweenAlertsMenu,
                               ),
 
-                            ]
-                          ),
-                        )
-                      ),
+                              /// Instrument Filter Options
+                              InstrumentFilters(
+                                  fontSizeAlertsAndOtherMenuItemsSizedBox:
+                                      fontSizeAlertsAndOtherMenuItemsSizedBox,
+                                  widthDotDivider: widthDotDivider,
+                                  iconSizeDotDivider: iconSizeDotDivider,
+                                  updateAppFilterClicked:
+                                      updateAppFilterOptionClicked,
+                                  isFirstValueInMapOfAllInstrumentsContainsFetching:
+                                      isFirstValueInMapOfAllInstrumentsContainsFetching)
+                            ]),
+                          )),
 
                       /// Alerts' Sized Box - contains a ListView builder
-                      SizedBox(
+                      Container(
                         height: heightAlertsListViewBuilder,
                         width: double.infinity,
+                        decoration: BoxDecoration(
+                          // color: Colors.yellow,
+                          border: Border.all(
+                            color: Colors.grey,
+                            width: borderWidthListViewBuilder
+                          ),
+                          borderRadius:
+                              BorderRadius.circular(radiusGridTile),
+                        ),
                         // color: Colors.yellow
                       ),
 
                       /// Swipe notification's Sized Box
                       SizedBox(
-                        height: heightSwipeNotification,
-                        width: double.infinity,
-                        // color: Colors.blueAccent
-                      ),
+                          height: heightSwipeNotification,
+                          width: double.infinity,
+                          // color: Colors.blueAccent
+                          child: Center(
+                            child: Text("Swipe",
+                                style: TextStyle(
+                                    fontFamily: "PT-Mono",
+                                    fontSize: fontSizeSwipeNotification,
+                                    color: Colors.black)),
+                          )),
 
                       /// Create New Alert's Sized Box
                       SizedBox(
@@ -454,8 +520,6 @@ class HomepageState extends State<Homepage> {
                         width: double.infinity,
                         // color: Colors.tealAccent
                       )
-
-
                     ],
                   ));
             }));
