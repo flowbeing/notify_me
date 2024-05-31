@@ -6,31 +6,28 @@ import '../../providers/data_provider.dart';
 import "./grid_tile_currency_pair.dart";
 
 class ContainerGridViewBuilder extends StatefulWidget {
-
-  ContainerGridViewBuilder({
-    required this.heightFirstSixGridTiles,
-    required this.crossAxisSpacing,
-    required this.mainAxisSpacing,
-    required this.listOfAllInstruments,
-    required this.priceAllInstruments,
-    required this.indexSelectedGridTile,
-    required this.widthGridTile,
-    required this.heightGridTile,
-    required this.paddingTopGridTile,
-    required this.borderWidthGridTile,
-    required this.radiusGridTile,
-    required this.heightPriceDirectionIcon,
-    required this.marginPriceDirectionAndCurrencyPair,
-    required this.heightSymbolSizedBox,
-    required this.currencyPairLazyLoading,
-    required this.currencyPairOrPrice,
-    required this.fontSizeSymbols,
-    required this.marginCurrencyPairAndCurrencyPrice,
-    required this.heightPriceSizedBox,
-    required this.fontSizePrices,
-    required this.updateAppGridTileClicked
-
-  });
+  ContainerGridViewBuilder(
+      {required this.heightFirstSixGridTiles,
+      required this.crossAxisSpacing,
+      required this.mainAxisSpacing,
+      required this.listOfAllInstruments,
+      required this.priceAllInstruments,
+      required this.indexSelectedGridTile,
+      required this.widthGridTile,
+      required this.heightGridTile,
+      required this.paddingTopGridTile,
+      required this.borderWidthGridTile,
+      required this.radiusGridTile,
+      required this.heightPriceDirectionIcon,
+      required this.marginPriceDirectionAndCurrencyPair,
+      required this.heightSymbolSizedBox,
+      required this.currencyPairLazyLoading,
+      required this.currencyPairOrPrice,
+      required this.fontSizeSymbols,
+      required this.marginCurrencyPairAndCurrencyPrice,
+      required this.heightPriceSizedBox,
+      required this.fontSizePrices,
+      required this.updateAppGridTileClicked});
 
   final double heightFirstSixGridTiles;
 
@@ -54,7 +51,6 @@ class ContainerGridViewBuilder extends StatefulWidget {
   final double heightPriceSizedBox;
   final double fontSizePrices;
 
-
   /// updateAppGridTileClicked should contain setState and the explanation below
   // setState(() {
   //   print("Gesture Detector Setting State");
@@ -71,11 +67,9 @@ class ContainerGridViewBuilder extends StatefulWidget {
   /// ensure that a selected grid tile is
   /// colored and a timer is set ...
   // isGridTileClicked = true;
-  final Function({
-    required bool isGridTileClicked,
-    required int indexNewSelectedGridTile
-  })
-      updateAppGridTileClicked;
+  final Function(
+      {required bool isGridTileClicked,
+      required int indexNewSelectedGridTile}) updateAppGridTileClicked;
 
   @override
   State<ContainerGridViewBuilder> createState() =>
@@ -83,9 +77,7 @@ class ContainerGridViewBuilder extends StatefulWidget {
 }
 
 class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
-
   DataProvider? dataProvider;
-
 
   @override
   void didChangeDependencies() {
@@ -95,11 +87,9 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
     dataProvider = Provider.of<DataProvider>(context, listen: true);
 
     super.didChangeDependencies();
-    
   }
 
   Container build(BuildContext context) {
-
     return Container(
       // color: Colors.yellow,
       width: double.infinity,
@@ -199,7 +189,8 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
             gridTileColor = Colors.black.withOpacity(.01);
             gridBorderColor = gridTileColor;
           } else if (isUpwardPriceMovement) {
-            pureColorGridTile = const Color(0xFF069D91).withOpacity(1); // 0xFF0066FF // .67
+            pureColorGridTile =
+                const Color(0xFF069D91).withOpacity(1); // 0xFF0066FF // .67
             gridTileColor = const Color(0xFF069D91).withOpacity(.05);
             gridBorderColor = const Color(0xFF069D91).withOpacity(.1);
           } else if (isDownwardPriceMovement) {
@@ -213,12 +204,11 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
             /// select the current grid tile when it's tapped
             onTap: () => {
               if (currentInstrumentsData.runtimeType != String &&
-                  priceDifferenceIfAny != "demo")
+                  priceDifferenceIfAny != "demo" &&
+                  widget.indexSelectedGridTile != index)
                 {
                   widget.updateAppGridTileClicked(
-                      indexNewSelectedGridTile: index,
-                      isGridTileClicked: true
-                  )
+                      indexNewSelectedGridTile: index, isGridTileClicked: true)
                 }
             },
             child: GridTileCurrencyPair(
@@ -238,18 +228,17 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
                 isNotDisplayedPriceOrNoPriceMovement:
                     isNotDisplayedPriceOrNoPriceMovement,
                 marginPriceDirectionAndCurrencyPair:
-                  widget.marginPriceDirectionAndCurrencyPair,
+                    widget.marginPriceDirectionAndCurrencyPair,
                 heightSymbolSizedBox: widget.heightSymbolSizedBox,
                 currencyPairLazyLoading: widget.currencyPairLazyLoading,
                 currencyPairOrPrice: widget.currencyPairOrPrice,
                 currentSymbolOrInstrument: currentSymbolOrInstrument,
                 fontSizeSymbols: widget.fontSizeSymbols,
                 marginCurrencyPairAndCurrencyPrice:
-                  widget.marginCurrencyPairAndCurrencyPrice,
+                    widget.marginCurrencyPairAndCurrencyPrice,
                 heightPriceSizedBox: widget.heightPriceSizedBox,
                 priceAllInstruments: widget.priceAllInstruments,
-                fontSizePrices: widget.fontSizePrices
-            ),
+                fontSizePrices: widget.fontSizePrices),
           );
         },
       ),
