@@ -127,7 +127,11 @@ class DataProvider with ChangeNotifier {
   /// a (bypass) method for when a grid tile is clicked..
   ///
   /// prevents updatePrices from being called each time a grid tile is clicked
-  Future nothingToSeeHere() async {}
+  ///
+  /// helps rebuild the homepage widget without triggering updatePrices method
+  Future nothingToSeeHere() async {
+    print("Nothing to see here");
+  }
 
   /// get instruments - can be all, forex, or crypto
   Map<dynamic, dynamic> getInstruments() {

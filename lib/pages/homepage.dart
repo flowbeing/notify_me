@@ -64,7 +64,7 @@ class HomepageState extends State<Homepage> {
   DataProvider? dataProvider;
 
   /// bool to track whether a grid tile or filter option has been clicked
-  bool isGridTileOrFilterOptionClicked = false;
+  bool isGridTileOrFilterOptionClickedOrKeyboardVisible = false;
 
   /// timer - updatePrices method..
   Timer relevantTimer =
@@ -112,8 +112,8 @@ class HomepageState extends State<Homepage> {
   double borderTopLeftOrRightRadiusCreateAlert = 0;
   double borderBottomLeftOrRightRadiusCreateAlert = 0;
 
-  /// keyboard visibility signalling bool
-  bool isKeyboardVisible = false;
+  // /// keyboard visibility signalling bool
+  // bool isKeyboardVisible = false;
 
   @override
   void didChangeDependencies() async {
@@ -257,14 +257,16 @@ class HomepageState extends State<Homepage> {
         isPricesUpdatedCheckingTimer =
             Timer.periodic(const Duration(milliseconds: 1000), (timer) {
           // 1000
-            print("Duration(milliseconds: 1000)");
-            print("2. relevantTimer.isActive == false && isPriceUpdating == false: ${relevantTimer.isActive == false && isPriceUpdating == false}");
+          print("Duration(milliseconds: 1000)");
+          print(
+              "2. relevantTimer.isActive == false && isPriceUpdating == false: ${relevantTimer.isActive == false && isPriceUpdating == false}");
 
-            /// dataProvider!.getIsUpdatingPrices() is used below instead of
-            /// "updatingPrices" variable to ensure that the latest state prices
-            /// update state is obtained directly from dataProvider...
+          /// dataProvider!.getIsUpdatingPrices() is used below instead of
+          /// "updatingPrices" variable to ensure that the latest state prices
+          /// update state is obtained directly from dataProvider...
 
-          if (relevantTimer.isActive == false && dataProvider!.getIsUpdatingPrices() == false) {
+          if (relevantTimer.isActive == false &&
+              dataProvider!.getIsUpdatingPrices() == false) {
             print("gridTile relevantTimer in: $relevantTimer");
             print("gridTile selected: relevantTimer.isActive == false "
                 "&& isPriceUpdating == false in: ${relevantTimer.isActive == false && isPriceUpdating == false}");
@@ -283,18 +285,15 @@ class HomepageState extends State<Homepage> {
 
             /// arbitrarily rebuild this FutureBuilder widget..
             ///
-            /// Note that isGridTileOrFilterOptionClicked will be set back to
+            /// Note that isGridTileOrFilterOptionClickedOrKeyboardVisible will be set back to
             /// false once this FutureBuilder widget has been
             /// rebuilt..
             setState(() {
-              isGridTileOrFilterOptionClicked = true;
+              isGridTileOrFilterOptionClickedOrKeyboardVisible = true;
             });
-
           }
         });
       }
-
-
 
       /// if a previous 1 minute timer is no longer active and it's
       /// corresponding dataProvider!.updatePrices (Future) has
@@ -327,7 +326,7 @@ class HomepageState extends State<Homepage> {
       {required bool isGridTileClicked,
       required int indexNewSelectedGridTile}) {
     setState(() {
-      isGridTileOrFilterOptionClicked = isGridTileClicked;
+      isGridTileOrFilterOptionClickedOrKeyboardVisible = isGridTileClicked;
       indexSelectedGridTile = indexNewSelectedGridTile;
     });
   }
@@ -337,7 +336,7 @@ class HomepageState extends State<Homepage> {
     dataProvider!.updateFilter(filter: selectedFilterOption);
 
     setState(() {
-      isGridTileOrFilterOptionClicked = true;
+      isGridTileOrFilterOptionClickedOrKeyboardVisible = true;
     });
   }
 
@@ -349,29 +348,35 @@ class HomepageState extends State<Homepage> {
     print("");
     print("HOMEPAGE - BEGINNING (BUILT HOMEPAGE!)");
 
+    KeyboardDetectionController keyboardDetectionController;
     bool? isKeyboardVisible;
 
     return KeyboardDetection(
-      controller: KeyboardDetectionController(
-        onChanged: (isKeyBoardVisibleVal){
-          print('isKeyBoardVisibleVal');
-          print("isKeyboardVisible 1: $isKeyboardVisible");
-          // KeyboardDetectionController keyboardDetectionController = KeyboardDetectionController();
+      controller:
+          KeyboardDetectionController(onChanged: (isKeyBoardVisibleVal) {
+        print('isKeyBoardVisibleVal: $isKeyBoardVisibleVal');
 
-          print("keyboardDetectionController.onChanged: ${KeyboardDetectionController().state}");
-
-          print("isKeyboardVisible 2: $isKeyboardVisible");
-
+        if (isKeyBoardVisibleVal == KeyboardState.visibling ||
+            isKeyBoardVisibleVal == KeyboardState.visible ||
+            isKeyBoardVisibleVal == KeyboardState.hiding ||
+            isKeyBoardVisibleVal == KeyboardState.hidden) {
+          /// this will help prevent a price update loop -
+          /// dataProvider!.updatePrices()
+          print("isKeyBoardVisibleVal in");
+          isGridTileOrFilterOptionClickedOrKeyboardVisible = true;
         }
-      ),
+      }),
       child: Scaffold(
           appBar: null,
           resizeToAvoidBottomInset: false,
+
           /// The background
           body: FutureBuilder(
-              future: isGridTileOrFilterOptionClicked == true
-                  ? dataProvider!.nothingToSeeHere()
-                  : dataProvider!.updatePrices(),
+              future:
+                  isGridTileOrFilterOptionClickedOrKeyboardVisible == true ||
+                          dataProvider!.getIsUpdatingPrices() == true
+                      ? dataProvider!.nothingToSeeHere()
+                      : dataProvider!.updatePrices(),
               builder: (ctx, snapshot) {
                 /// Prices - all instruments / symbols
                 Map<dynamic, dynamic> priceAllInstruments =
@@ -398,8 +403,8 @@ class HomepageState extends State<Homepage> {
                 // firstKeypriceAllInstruments =
                 //     priceAllInstruments.keys.toList()[0];
 
-                /// resetting isGridTileOrFilterOptionClicked
-                isGridTileOrFilterOptionClicked = false;
+                /// resetting isGridTileOrFilterOptionClickedOrKeyboardVisible
+                isGridTileOrFilterOptionClickedOrKeyboardVisible = false;
 
                 /// if dataProvider!.updatePrices() (Future) has finished running,
                 /// replace the current timer to reflect a price update that
@@ -589,7 +594,8 @@ class HomepageState extends State<Homepage> {
                                   borderWidthGridTile: borderWidthGridTile,
                                   fontSizeCurrencyPairAndPrice:
                                       fontSizeAlertsListTile,
-                                  selectedInstrument: currentlySelectedInstrument,
+                                  selectedInstrument:
+                                      currentlySelectedInstrument,
                                 ),
 
                                 /// spacing - currency pair text-field & currency
@@ -666,12 +672,11 @@ class CurrencyPairTextFieldOrCreateAlertButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     Widget? currencyPairOrTextButtonWidget;
 
     /// Selected Currency Pair Or Currency Pair To Select
     Widget currencyPairTextField = Container(
-      color: Colors.blue,
+      // color: Colors.blue,
       child: TextFormField(
         key: ValueKey(selectedInstrument),
         initialValue: selectedInstrument,
@@ -681,7 +686,7 @@ class CurrencyPairTextFieldOrCreateAlertButton extends StatelessWidget {
             fontSize: fontSizeCurrencyPairAndPrice,
             fontWeight: FontWeight.bold),
         decoration: InputDecoration(
-          // contentPadding: EdgeInsets.only(left: 5),
+            // contentPadding: EdgeInsets.only(left: 5),
             enabledBorder: OutlineInputBorder(
                 borderSide: BorderSide(width: borderWidthGridTile / 4),
                 borderRadius: BorderRadius.only(
@@ -709,7 +714,7 @@ class CurrencyPairTextFieldOrCreateAlertButton extends StatelessWidget {
           color: Colors.white),
     );
 
-    if (isCurrencyPairTextField){
+    if (isCurrencyPairTextField) {
       currencyPairOrTextButtonWidget = currencyPairTextField;
     } else {
       currencyPairOrTextButtonWidget = addAlertButtonText;
@@ -741,8 +746,7 @@ class CurrencyPairTextFieldOrCreateAlertButton extends StatelessWidget {
                 color: isCurrencyPairTextField
                     ? Colors.transparent
                     : Colors.black)),
-        child: currencyPairOrTextButtonWidget
-    );
+        child: currencyPairOrTextButtonWidget);
   }
 }
 
