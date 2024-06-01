@@ -79,8 +79,10 @@ class ContainerGridViewBuilder extends StatefulWidget {
 class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
   DataProvider? dataProvider;
 
+  GridView? gridView;
+
   @override
-  void didChangeDependencies() {
+  didChangeDependencies() {
     // TODO: implement didChangeDependencies
 
     /// data provider
@@ -89,7 +91,16 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
     super.didChangeDependencies();
   }
 
+
   Container build(BuildContext context) {
+
+
+
+    /// GridViewBuilder
+
+
+    // print("GridViewBuilder key: ${gridView!.anchor}");
+
     return Container(
       // color: Colors.yellow,
       width: double.infinity,
@@ -99,18 +110,24 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
 
       /// A GridView Builder - contains all currency pairs
       child: GridView.builder(
+
+        controller: ScrollController(
+            initialScrollOffset: 300,
+            keepScrollOffset: true
+        ),
         padding: const EdgeInsets.all(0),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
             crossAxisSpacing: widget.crossAxisSpacing,
-            mainAxisSpacing: widget.mainAxisSpacing),
+            mainAxisSpacing: widget.mainAxisSpacing
+        ),
         itemCount: widget.listOfAllInstruments.isEmpty
             ? 6
             :
 
-            /// a minimum of six instruments will be
-            /// displayed post fetch operation
-            widget.listOfAllInstruments.length,
+        /// a minimum of six instruments will be
+        /// displayed post fetch operation
+        widget.listOfAllInstruments.length,
         itemBuilder: (context, index) {
           String currentSymbolOrInstrument = widget.listOfAllInstruments[index];
 
@@ -119,7 +136,7 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
           /// (actual prices or "demo") or
           /// "fetching"
           dynamic currentInstrumentsData =
-              widget.priceAllInstruments[currentSymbolOrInstrument];
+          widget.priceAllInstruments[currentSymbolOrInstrument];
 
           /// checking whether the current instrument's price
           /// is being fetched..
@@ -217,7 +234,7 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
                 heightGridTile: widget.heightGridTile,
                 paddingTopGridTile: widget.paddingTopGridTile,
                 gridTileColor:
-                    isSelectedTile ? pureColorGridTile : gridTileColor!,
+                isSelectedTile ? pureColorGridTile : gridTileColor!,
                 gridBorderColor: gridBorderColor!,
                 borderWidthGridTile: widget.borderWidthGridTile,
                 radiusGridTile: widget.radiusGridTile,
@@ -226,16 +243,16 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
                 isDownwardPriceMovement: isDownwardPriceMovement,
                 isUpwardPriceMovement: isUpwardPriceMovement,
                 isNotDisplayedPriceOrNoPriceMovement:
-                    isNotDisplayedPriceOrNoPriceMovement,
+                isNotDisplayedPriceOrNoPriceMovement,
                 marginPriceDirectionAndCurrencyPair:
-                    widget.marginPriceDirectionAndCurrencyPair,
+                widget.marginPriceDirectionAndCurrencyPair,
                 heightSymbolSizedBox: widget.heightSymbolSizedBox,
                 currencyPairLazyLoading: widget.currencyPairLazyLoading,
                 currencyPairOrPrice: widget.currencyPairOrPrice,
                 currentSymbolOrInstrument: currentSymbolOrInstrument,
                 fontSizeSymbols: widget.fontSizeSymbols,
                 marginCurrencyPairAndCurrencyPrice:
-                    widget.marginCurrencyPairAndCurrencyPrice,
+                widget.marginCurrencyPairAndCurrencyPrice,
                 heightPriceSizedBox: widget.heightPriceSizedBox,
                 priceAllInstruments: widget.priceAllInstruments,
                 fontSizePrices: widget.fontSizePrices),

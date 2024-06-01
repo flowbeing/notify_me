@@ -32,6 +32,7 @@ class DataProvider with ChangeNotifier {
   /// Number of times prices have been retrieved from the relevant data provider
   int _countPricesRetrieval = 0;
 
+  /// loads this app's configuration file and creates all relevant File objects
   Future _initialDataAndDotEnv() async {
     /// loading configuration file
     await dotenv.load(fileName: "config.env");
@@ -43,12 +44,20 @@ class DataProvider with ChangeNotifier {
     _data!.getUriAppDirectory();
   }
 
+  /// returns a map of all instrument with all values set to "fetching"
   Future allSymbolsWithFetchingNotification() async {
     /// setting an interim value for _allForexAndCryptoPrices (Map)
     _allForexAndCryptoPrices =
         await _data!.getMapOfAllPairsWithFetchingNotification();
 
     return _allForexAndCryptoPrices;
+  }
+
+  /// returns the number of times updatePrices has been called
+  int countPriceRetrieval(){
+
+    return _countPricesRetrieval;
+
   }
 
   /// This method retrieves the prices of forex and crypto pairs periodically
@@ -138,8 +147,8 @@ class DataProvider with ChangeNotifier {
     // print(_allForexAndCryptoPrices);
 
     Map<dynamic, dynamic> mapToReturn = {};
-    print(
-        "_allForexAndCryptoPrices.values.toList()[0]: ${_allForexAndCryptoPrices.values.toList()[0]}");
+    // print(
+        // "_allForexAndCryptoPrices.values.toList()[0]: ${_allForexAndCryptoPrices.values.toList()[0]}");
 
     /// if no prices have not been fetched, return the default map which has the
     /// "fetching" notification set for all instruments. However, if prices have
@@ -197,4 +206,10 @@ class DataProvider with ChangeNotifier {
       print("current filter: $_instrumentFilter");
     }
   }
+
+  /// this method calculates the row number of a currency pair within this app's
+  /// GridView builder..
+  // int getInstrumentGridViewRowNumber({required String instrument}){
+  //
+  // }
 }

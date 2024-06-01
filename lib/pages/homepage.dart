@@ -78,6 +78,12 @@ class HomepageState extends State<Homepage> {
     timer.cancel();
   });
 
+  /// timer - relevantTimerTickTracker
+  // Timer relevantTimerTickTracker =
+  // Timer.periodic(const Duration(microseconds: 1), (timer) {
+  //   timer.cancel();
+  // });
+
   /// Index of selected grid tile
   int indexSelectedGridTile = 3;
 
@@ -112,18 +118,22 @@ class HomepageState extends State<Homepage> {
   double borderTopLeftOrRightRadiusCreateAlert = 0;
   double borderBottomLeftOrRightRadiusCreateAlert = 0;
 
-  // /// keyboard visibility signalling bool
-  // bool isKeyboardVisible = false;
+  /// keyboard visibility signalling bool
+  double previousKeyboardValue = -1;
+  bool isKeyboardVisible = false;
 
   @override
   void didChangeDependencies() async {
     print("");
     print("within didChangeDependencies");
 
-    paddingTop = MediaQuery.of(context).padding.top;
-    paddingBottom = MediaQuery.of(context).padding.bottom;
-    deviceWidth = MediaQuery.of(context).size.width;
-    deviceHeight = MediaQuery.of(context).size.height;
+    /// media query
+    MediaQueryData mediaQuery = MediaQuery.of(context);
+
+    paddingTop = mediaQuery.padding.top;
+    paddingBottom = mediaQuery.padding.bottom;
+    deviceWidth = mediaQuery.size.width;
+    deviceHeight = mediaQuery.size.height;
 
     paddingTopScreen = paddingTop + (0.00321888412 * deviceHeight);
     paddingLeftAndRightScreen = 0.02325581395 * deviceWidth;
@@ -196,13 +206,45 @@ class HomepageState extends State<Homepage> {
     /// Data Provider
     dataProvider = Provider.of<DataProvider>(context, listen: true);
 
+    /// REGISTERING WHETHER THE KEYBOARD IS VISIBLE
+    print("");
+    print("Registering Keyboard's visibility");
+    double bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+    /// if a bottom inset becomes visible i.e a keyboard is being displayed,
+    /// signal that the keyboard has been toggled...
+    if (bottomInset > 0) {
+      isGridTileOrFilterOptionClickedOrKeyboardVisible = true;
+      print("Keyboard is visible");
+
+      /// ...otherwise if the keyboard is being hidden, signal that the keyboard
+      /// is still visible..
+    } else if (bottomInset == 0 && previousKeyboardValue > 0) {
+      isGridTileOrFilterOptionClickedOrKeyboardVisible = true;
+      print("Keyboard is visible");
+    }
+
+    previousKeyboardValue = bottomInset;
+
     // TODO: implement didChangeDependencies
     super.didChangeDependencies();
+  }
+
+  @override
+  void didUpdateWidget(covariant Homepage oldWidget) {
+    // relevantTimerTickTracker.cancel();
+
+    // TODO: implement didUpdateWidget
+    super.didUpdateWidget(oldWidget);
   }
 
   /// this method updates timers when prices have been fetched
   void updateTimers({required bool isOneMin}) {
     /// is price currently being updated
+    ///
+    /// dataProvider!.getIsUpdatingPrices() is used below instead of
+    /// "updatingPrices" variable to ensure that the latest state prices
+    /// update state is obtained directly from dataProvider...
     bool isPriceUpdating = dataProvider!.getIsUpdatingPrices();
 
     if (isOneMin == false) {
@@ -212,7 +254,8 @@ class HomepageState extends State<Homepage> {
       /// execute  dataProvider!.updatePrices 5 seconds in the
       /// future
 
-      if (relevantTimer.isActive == false && isPriceUpdating == true) {
+      if (relevantTimer.isActive == false &&
+          dataProvider!.getIsUpdatingPrices() == true) {
         relevantTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
           timer.cancel();
 
@@ -231,7 +274,7 @@ class HomepageState extends State<Homepage> {
 
       print("relevantTimer outside: $relevantTimer");
       print(
-          "relevantTimer.isActive == false && isPriceUpdating == false in: ${relevantTimer.isActive == false && isPriceUpdating == false}");
+          "relevantTimer.isActive == false && isPriceUpdating == false in: ${relevantTimer.isActive == false && dataProvider!.getIsUpdatingPrices() == false}");
 
       /// If prices are currently being updated, replace current
       /// relevantTimer with another when prices have fully been
@@ -242,7 +285,7 @@ class HomepageState extends State<Homepage> {
       /// the rebuilt version of this page that has been triggered
       /// by the grid tile selection from reflecting the updated
       /// prices when the prices have finished updating..
-      if (isPriceUpdating == true) {
+      if (dataProvider!.getIsUpdatingPrices() == true) {
         /// cancel any previously set (active) price update
         /// operation status checking timer to prevent the creation
         /// of multiple memory hogging timers..
@@ -260,6 +303,10 @@ class HomepageState extends State<Homepage> {
           print("Duration(milliseconds: 1000)");
           print(
               "2. relevantTimer.isActive == false && isPriceUpdating == false: ${relevantTimer.isActive == false && isPriceUpdating == false}");
+          print(
+              "2. relevantTimer.isActive == false: ${relevantTimer.isActive == false}");
+          print("2. isPriceUpdating == false: ${isPriceUpdating == false}");
+          print("");
 
           /// dataProvider!.getIsUpdatingPrices() is used below instead of
           /// "updatingPrices" variable to ensure that the latest state prices
@@ -269,7 +316,7 @@ class HomepageState extends State<Homepage> {
               dataProvider!.getIsUpdatingPrices() == false) {
             print("gridTile relevantTimer in: $relevantTimer");
             print("gridTile selected: relevantTimer.isActive == false "
-                "&& isPriceUpdating == false in: ${relevantTimer.isActive == false && isPriceUpdating == false}");
+                "&& isPriceUpdating == false in: ${relevantTimer.isActive == false && dataProvider!.getIsUpdatingPrices() == false}");
 
             // /// updating all instruments' price data
             // priceAllInstruments = dataProvider!.getInstruments();
@@ -304,11 +351,12 @@ class HomepageState extends State<Homepage> {
       ///
       /// the conditions below mean "wait until the previously set
       /// relevant timer has done it's job.."
-      else if (relevantTimer.isActive == false && isPriceUpdating == false) {
+      else if (relevantTimer.isActive == false &&
+          dataProvider!.getIsUpdatingPrices() == false) {
         print("3. relevantTimer in: $relevantTimer");
         print("3. relevantTimer.isActive == false "
             "&& isPriceUpdating == false in: "
-            "${relevantTimer.isActive == false && isPriceUpdating == false}");
+            "${relevantTimer.isActive == false && dataProvider!.getIsUpdatingPrices() == false}");
 
         relevantTimer =
             Timer.periodic(const Duration(milliseconds: 60001), (timer) {
@@ -347,40 +395,33 @@ class HomepageState extends State<Homepage> {
         "--------------------------------------------------------------------------------");
     print("");
     print("HOMEPAGE - BEGINNING (BUILT HOMEPAGE!)");
+    print("");
 
-    KeyboardDetectionController keyboardDetectionController;
-    bool? isKeyboardVisible;
+    return Scaffold(
+        // key: ValueKey("$indexSelectedGridTile$indexSelectedGridTile$indexSelectedGridTile"),
+        appBar: null,
+        resizeToAvoidBottomInset: true,
 
-    return KeyboardDetection(
-      controller:
-          KeyboardDetectionController(onChanged: (isKeyBoardVisibleVal) {
-        print('isKeyBoardVisibleVal: $isKeyBoardVisibleVal');
-
-        if (isKeyBoardVisibleVal == KeyboardState.visibling ||
-            isKeyBoardVisibleVal == KeyboardState.visible ||
-            isKeyBoardVisibleVal == KeyboardState.hiding ||
-            isKeyBoardVisibleVal == KeyboardState.hidden) {
-          /// this will help prevent a price update loop -
-          /// dataProvider!.updatePrices()
-          print("isKeyBoardVisibleVal in");
-          isGridTileOrFilterOptionClickedOrKeyboardVisible = true;
-        }
-      }),
-      child: Scaffold(
-          appBar: null,
-          resizeToAvoidBottomInset: false,
-
-          /// The background
-          body: FutureBuilder(
+        /// The background
+        body: SingleChildScrollView(
+          child: FutureBuilder(
               future:
-                  isGridTileOrFilterOptionClickedOrKeyboardVisible == true ||
-                          dataProvider!.getIsUpdatingPrices() == true
-                      ? dataProvider!.nothingToSeeHere()
-                      : dataProvider!.updatePrices(),
+                  // isGridTileOrFilterOptionClickedOrKeyboardVisible == true ||
+                  //         dataProvider!.getIsUpdatingPrices() == true
+                  dataProvider!.countPriceRetrieval() == 0 ||
+                          dataProvider!.getIsUpdatingPrices() == false &&
+                              isGridTileOrFilterOptionClickedOrKeyboardVisible ==
+                                  false
+                      ? dataProvider!.updatePrices()
+                      : dataProvider!.nothingToSeeHere(),
               builder: (ctx, snapshot) {
+                /// resetting isGridTileOrFilterOptionClickedOrKeyboardVisible
+                isGridTileOrFilterOptionClickedOrKeyboardVisible = false;
+
                 /// Prices - all instruments / symbols
                 Map<dynamic, dynamic> priceAllInstruments =
                     dataProvider!.getInstruments();
+
                 dynamic firstKeypriceAllInstruments;
 
                 print(
@@ -402,9 +443,6 @@ class HomepageState extends State<Homepage> {
 
                 // firstKeypriceAllInstruments =
                 //     priceAllInstruments.keys.toList()[0];
-
-                /// resetting isGridTileOrFilterOptionClickedOrKeyboardVisible
-                isGridTileOrFilterOptionClickedOrKeyboardVisible = false;
 
                 /// if dataProvider!.updatePrices() (Future) has finished running,
                 /// replace the current timer to reflect a price update that
@@ -582,21 +620,22 @@ class HomepageState extends State<Homepage> {
                               children: [
                                 /// currency pair text-field..
                                 CurrencyPairTextFieldOrCreateAlertButton(
-                                  isCurrencyPairTextField: true,
-                                  heightCreateNewAlertContainer:
-                                      heightCreateNewAlertContainer,
-                                  widthCurrencyPairTextField:
-                                      widthCurrencyPairTextField,
-                                  borderTopLeftOrRightRadiusCreateAlert:
-                                      borderTopLeftOrRightRadiusCreateAlert,
-                                  borderBottomLeftOrRightRadiusCreateAlert:
-                                      borderBottomLeftOrRightRadiusCreateAlert,
-                                  borderWidthGridTile: borderWidthGridTile,
-                                  fontSizeCurrencyPairAndPrice:
-                                      fontSizeAlertsListTile,
-                                  selectedInstrument:
-                                      currentlySelectedInstrument,
-                                ),
+                                    isCurrencyPairTextField: true,
+                                    heightCreateNewAlertContainer:
+                                        heightCreateNewAlertContainer,
+                                    widthCurrencyPairTextField:
+                                        widthCurrencyPairTextField,
+                                    borderTopLeftOrRightRadiusCreateAlert:
+                                        borderTopLeftOrRightRadiusCreateAlert,
+                                    borderBottomLeftOrRightRadiusCreateAlert:
+                                        borderBottomLeftOrRightRadiusCreateAlert,
+                                    borderWidthGridTile: borderWidthGridTile,
+                                    fontSizeCurrencyPairAndPrice:
+                                        fontSizeAlertsListTile,
+                                    selectedInstrument:
+                                        currentlySelectedInstrument,
+                                    isFetching:
+                                        isFirstValueInMapOfAllInstrumentsContainsFetching),
 
                                 /// spacing - currency pair text-field & currency
                                 /// price adjustment container..
@@ -622,26 +661,26 @@ class HomepageState extends State<Homepage> {
                                     ),
 
                                 /// add alert button..
-                                // CurrencyPairTextFieldOrCreateAlertButton(
-                                //   isCurrencyPairTextField: false,
-                                //   heightCreateNewAlertContainer:
-                                //       heightCreateNewAlertContainer,
-                                //   widthCurrencyPairTextField:
-                                //       widthCurrencyPairTextField,
-                                //   borderTopLeftOrRightRadiusCreateAlert:
-                                //       borderTopLeftOrRightRadiusCreateAlert,
-                                //   borderBottomLeftOrRightRadiusCreateAlert:
-                                //       borderBottomLeftOrRightRadiusCreateAlert,
-                                //   borderWidthGridTile: borderWidthGridTile,
-                                //   fontSizeAlertButton:
-                                //       fontSizeAlertsAndOtherMenuItemsSizedBox,
-                                // )
+                                CurrencyPairTextFieldOrCreateAlertButton(
+                                  isCurrencyPairTextField: false,
+                                  heightCreateNewAlertContainer:
+                                      heightCreateNewAlertContainer,
+                                  widthCurrencyPairTextField:
+                                      widthCurrencyPairTextField,
+                                  borderTopLeftOrRightRadiusCreateAlert:
+                                      borderTopLeftOrRightRadiusCreateAlert,
+                                  borderBottomLeftOrRightRadiusCreateAlert:
+                                      borderBottomLeftOrRightRadiusCreateAlert,
+                                  borderWidthGridTile: borderWidthGridTile,
+                                  fontSizeAlertButton:
+                                      fontSizeAlertsAndOtherMenuItemsSizedBox,
+                                )
                               ],
                             ))
                       ],
                     ));
-              })),
-    );
+              }),
+        ));
   }
 }
 
@@ -655,6 +694,7 @@ class CurrencyPairTextFieldOrCreateAlertButton extends StatelessWidget {
       required this.borderTopLeftOrRightRadiusCreateAlert,
       required this.borderBottomLeftOrRightRadiusCreateAlert,
       required this.borderWidthGridTile,
+      this.isFetching = false,
       this.fontSizeAlertButton = 0,
       this.fontSizeCurrencyPairAndPrice = 0,
       this.selectedInstrument = "None"})
@@ -666,6 +706,7 @@ class CurrencyPairTextFieldOrCreateAlertButton extends StatelessWidget {
   final double borderTopLeftOrRightRadiusCreateAlert;
   final double borderBottomLeftOrRightRadiusCreateAlert;
   final double borderWidthGridTile;
+  final bool isFetching;
   final double fontSizeCurrencyPairAndPrice;
   final double fontSizeAlertButton;
   final String selectedInstrument;
@@ -674,34 +715,44 @@ class CurrencyPairTextFieldOrCreateAlertButton extends StatelessWidget {
   Widget build(BuildContext context) {
     Widget? currencyPairOrTextButtonWidget;
 
+    print("selectedInstrument: $selectedInstrument");
+
     /// Selected Currency Pair Or Currency Pair To Select
-    Widget currencyPairTextField = Container(
-      // color: Colors.blue,
-      child: TextFormField(
-        key: ValueKey(selectedInstrument),
-        initialValue: selectedInstrument,
-        keyboardType: TextInputType.text,
-        style: TextStyle(
-            fontFamily: "PT-Mono",
-            fontSize: fontSizeCurrencyPairAndPrice,
-            fontWeight: FontWeight.bold),
-        decoration: InputDecoration(
-            // contentPadding: EdgeInsets.only(left: 5),
-            enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(width: borderWidthGridTile / 4),
-                borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(
-                        borderBottomLeftOrRightRadiusCreateAlert),
-                    topLeft: Radius.circular(
-                        borderTopLeftOrRightRadiusCreateAlert))),
-            focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(width: borderWidthGridTile / 4),
-                borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(
-                        borderBottomLeftOrRightRadiusCreateAlert),
-                    topLeft: Radius.circular(
-                        borderTopLeftOrRightRadiusCreateAlert)))),
+    Widget currencyPairTextField = TextFormField(
+      key: ValueKey(selectedInstrument),
+      // enabled: isFetching ? false : true,
+      // focusNode: focusNode,
+      initialValue: selectedInstrument,
+      keyboardType: TextInputType.text,
+      style: TextStyle(
+        fontFamily: "PT-Mono",
+        fontSize: fontSizeCurrencyPairAndPrice,
+        fontWeight: FontWeight.bold,
+        color: isFetching ? Colors.grey : Colors.black
       ),
+      decoration: InputDecoration(
+          // contentPadding: EdgeInsets.only(left: 5),
+          enabledBorder: OutlineInputBorder(
+              borderSide: BorderSide(width: borderWidthGridTile / 4),
+              borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(
+                      borderBottomLeftOrRightRadiusCreateAlert),
+                  topLeft: Radius.circular(
+                      borderTopLeftOrRightRadiusCreateAlert))),
+          focusedBorder: OutlineInputBorder(
+              borderSide: BorderSide(width: borderWidthGridTile / 4),
+              borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(
+                      borderBottomLeftOrRightRadiusCreateAlert),
+                  topLeft: Radius.circular(
+                      borderTopLeftOrRightRadiusCreateAlert))),
+          disabledBorder: OutlineInputBorder(
+              borderSide: BorderSide(width: borderWidthGridTile / 4),
+              borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(
+                      borderBottomLeftOrRightRadiusCreateAlert),
+                  topLeft: Radius.circular(
+                      borderTopLeftOrRightRadiusCreateAlert)))),
     );
 
     /// "Add Alert" Button Text
@@ -719,8 +770,6 @@ class CurrencyPairTextFieldOrCreateAlertButton extends StatelessWidget {
     } else {
       currencyPairOrTextButtonWidget = addAlertButtonText;
     }
-
-    print("selectedInstrument: $selectedInstrument");
 
     return Container(
         alignment: Alignment.center,
@@ -746,7 +795,8 @@ class CurrencyPairTextFieldOrCreateAlertButton extends StatelessWidget {
                 color: isCurrencyPairTextField
                     ? Colors.transparent
                     : Colors.black)),
-        child: currencyPairOrTextButtonWidget);
+        child: currencyPairOrTextButtonWidget
+    );
   }
 }
 
