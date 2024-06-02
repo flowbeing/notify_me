@@ -27,7 +27,7 @@ class ContainerGridViewBuilder extends StatefulWidget {
       required this.marginCurrencyPairAndCurrencyPrice,
       required this.heightPriceSizedBox,
       required this.fontSizePrices,
-      required this.updateAppGridTileClicked});
+      required this.updateHomepageGridTileClicked});
 
   final double heightFirstSixGridTiles;
 
@@ -69,7 +69,7 @@ class ContainerGridViewBuilder extends StatefulWidget {
   // isGridTileClicked = true;
   final Function(
       {required bool isGridTileClicked,
-      required int indexNewSelectedGridTile}) updateAppGridTileClicked;
+      required int indexNewSelectedGridTile}) updateHomepageGridTileClicked;
 
   @override
   State<ContainerGridViewBuilder> createState() =>
@@ -81,24 +81,30 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
 
   GridView? gridView;
 
+  /// currently selected instrument and it's row number
+  String? currentlySelectedInstrument;
+  int? currentlySelectedInstrumentRowNumber;
+
   @override
   didChangeDependencies() {
     // TODO: implement didChangeDependencies
 
     /// data provider
-    dataProvider = Provider.of<DataProvider>(context, listen: true);
+    dataProvider = Provider.of<DataProvider>(context, listen: false);
+
+    currentlySelectedInstrument =
+        widget.listOfAllInstruments[widget.indexSelectedGridTile];
+    currentlySelectedInstrumentRowNumber = dataProvider!
+        .getInstrumentGridViewRowNumber(
+            instrument: currentlySelectedInstrument!
+    );
+    print(
+        "currently selected instrument's row number: ${currentlySelectedInstrumentRowNumber}");
 
     super.didChangeDependencies();
   }
 
-
   Container build(BuildContext context) {
-
-
-
-    /// GridViewBuilder
-
-
     // print("GridViewBuilder key: ${gridView!.anchor}");
 
     return Container(
@@ -110,24 +116,22 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
 
       /// A GridView Builder - contains all currency pairs
       child: GridView.builder(
-
         controller: ScrollController(
-            initialScrollOffset: 300,
-            keepScrollOffset: true
-        ),
+            initialScrollOffset: currentlySelectedInstrumentRowNumber! <= 6 ? 0 : currentlySelectedInstrumentRowNumber! *
+                (widget.heightGridTile + widget.mainAxisSpacing),
+            keepScrollOffset: true),
         padding: const EdgeInsets.all(0),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
             crossAxisSpacing: widget.crossAxisSpacing,
-            mainAxisSpacing: widget.mainAxisSpacing
-        ),
+            mainAxisSpacing: widget.mainAxisSpacing),
         itemCount: widget.listOfAllInstruments.isEmpty
             ? 6
             :
 
-        /// a minimum of six instruments will be
-        /// displayed post fetch operation
-        widget.listOfAllInstruments.length,
+            /// a minimum of six instruments will be
+            /// displayed post fetch operation
+            widget.listOfAllInstruments.length,
         itemBuilder: (context, index) {
           String currentSymbolOrInstrument = widget.listOfAllInstruments[index];
 
@@ -136,7 +140,7 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
           /// (actual prices or "demo") or
           /// "fetching"
           dynamic currentInstrumentsData =
-          widget.priceAllInstruments[currentSymbolOrInstrument];
+              widget.priceAllInstruments[currentSymbolOrInstrument];
 
           /// checking whether the current instrument's price
           /// is being fetched..
@@ -224,7 +228,7 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
                   priceDifferenceIfAny != "demo" &&
                   widget.indexSelectedGridTile != index)
                 {
-                  widget.updateAppGridTileClicked(
+                  widget.updateHomepageGridTileClicked(
                       indexNewSelectedGridTile: index, isGridTileClicked: true)
                 }
             },
@@ -234,7 +238,7 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
                 heightGridTile: widget.heightGridTile,
                 paddingTopGridTile: widget.paddingTopGridTile,
                 gridTileColor:
-                isSelectedTile ? pureColorGridTile : gridTileColor!,
+                    isSelectedTile ? pureColorGridTile : gridTileColor!,
                 gridBorderColor: gridBorderColor!,
                 borderWidthGridTile: widget.borderWidthGridTile,
                 radiusGridTile: widget.radiusGridTile,
@@ -243,16 +247,16 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
                 isDownwardPriceMovement: isDownwardPriceMovement,
                 isUpwardPriceMovement: isUpwardPriceMovement,
                 isNotDisplayedPriceOrNoPriceMovement:
-                isNotDisplayedPriceOrNoPriceMovement,
+                    isNotDisplayedPriceOrNoPriceMovement,
                 marginPriceDirectionAndCurrencyPair:
-                widget.marginPriceDirectionAndCurrencyPair,
+                    widget.marginPriceDirectionAndCurrencyPair,
                 heightSymbolSizedBox: widget.heightSymbolSizedBox,
                 currencyPairLazyLoading: widget.currencyPairLazyLoading,
                 currencyPairOrPrice: widget.currencyPairOrPrice,
                 currentSymbolOrInstrument: currentSymbolOrInstrument,
                 fontSizeSymbols: widget.fontSizeSymbols,
                 marginCurrencyPairAndCurrencyPrice:
-                widget.marginCurrencyPairAndCurrencyPrice,
+                    widget.marginCurrencyPairAndCurrencyPrice,
                 heightPriceSizedBox: widget.heightPriceSizedBox,
                 priceAllInstruments: widget.priceAllInstruments,
                 fontSizePrices: widget.fontSizePrices),

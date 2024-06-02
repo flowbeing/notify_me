@@ -11,7 +11,7 @@ class InstrumentFilters extends StatefulWidget {
       {required this.fontSizeAlertsAndOtherMenuItemsSizedBox,
       required this.widthDotDivider,
       required this.iconSizeDotDivider,
-      required this.updateAppFilterClicked,
+      required this.updateHomepageFilterClicked,
       required this.isFirstValueInMapOfAllInstrumentsContainsFetching});
 
   final double fontSizeAlertsAndOtherMenuItemsSizedBox;
@@ -20,7 +20,7 @@ class InstrumentFilters extends StatefulWidget {
   /// helps reflect the selected filter option and its corresponding data
   /// on the UI..
   final void Function({required Filter selectedFilterOption})
-      updateAppFilterClicked;
+  updateHomepageFilterClicked;
   /// helps determine whether instruments prices' are still being fetched..
   final bool isFirstValueInMapOfAllInstrumentsContainsFetching;
 
@@ -42,7 +42,7 @@ class _InstrumentFiltersState extends State<InstrumentFilters> {
 
     /// rebuilds the homepage to reflect prices data that match the selected
     /// filter..
-    widget.updateAppFilterClicked(selectedFilterOption: selectedFilter);
+    widget.updateHomepageFilterClicked(selectedFilterOption: selectedFilter);
 
   }
 

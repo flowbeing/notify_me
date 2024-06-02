@@ -21,6 +21,9 @@ class DataProvider with ChangeNotifier {
   Map<dynamic, dynamic> _allForexAndCryptoPrices =
       allInstrumentsWithFetchingNotification;
 
+  /// list of all forex instruments
+  List<dynamic> _listOfAllInstruments = [];
+
   /// filter to apply to _allForexAndCryptoPrices
   Filter _instrumentFilter = Filter.all;
 
@@ -54,10 +57,8 @@ class DataProvider with ChangeNotifier {
   }
 
   /// returns the number of times updatePrices has been called
-  int countPriceRetrieval(){
-
+  int countPriceRetrieval() {
     return _countPricesRetrieval;
-
   }
 
   /// This method retrieves the prices of forex and crypto pairs periodically
@@ -104,6 +105,7 @@ class DataProvider with ChangeNotifier {
     if (mapOfAllPrices.isNotEmpty) {
       print("");
       _allForexAndCryptoPrices = mapOfAllPrices;
+      _listOfAllInstruments = mapOfAllPrices.keys.toList();
     }
 
     /// signalling that updatePrices method in data provider
@@ -148,7 +150,7 @@ class DataProvider with ChangeNotifier {
 
     Map<dynamic, dynamic> mapToReturn = {};
     // print(
-        // "_allForexAndCryptoPrices.values.toList()[0]: ${_allForexAndCryptoPrices.values.toList()[0]}");
+    // "_allForexAndCryptoPrices.values.toList()[0]: ${_allForexAndCryptoPrices.values.toList()[0]}");
 
     /// if no prices have not been fetched, return the default map which has the
     /// "fetching" notification set for all instruments. However, if prices have
@@ -158,25 +160,38 @@ class DataProvider with ChangeNotifier {
       /// adding null value to match maps that would be created by the
       /// conditions below..
       mapToReturn = _allForexAndCryptoPrices;
+
+      /// setting _listOfAllInstruments variable
+      _listOfAllInstruments = _allForexAndCryptoPrices.keys.toList();
     }
 
     /// if prices have been fetched and the forex or crypto filter is active,
     /// return forex instrument or crypto instruments
     else {
+
       /// if the forex filter has been selected, show only forex data
       if (_instrumentFilter == Filter.forex) {
+
         _allForexAndCryptoPrices.forEach((key, value) {
           // print("value['type']: ${value['type']}");
           if (value['type'] == "forex") {
             mapToReturn[key] = value;
           }
         });
+
+        /// setting _listOfAllInstruments variable
+        _listOfAllInstruments = mapToReturn.keys.toList();
+
       } else if (_instrumentFilter == Filter.crypto) {
+
         _allForexAndCryptoPrices.forEach((key, value) {
           if (value['type'] == "crypto") {
             mapToReturn[key] = value;
           }
         });
+
+        /// setting _listOfAllInstruments variable
+        _listOfAllInstruments = mapToReturn.keys.toList();
       }
     }
 
@@ -185,16 +200,25 @@ class DataProvider with ChangeNotifier {
     return mapToReturn;
   }
 
+  /// this method returns a list of all instruments (strings) - List<String>
+  List<dynamic> getListOfAllInstruments(){
+
+    return _listOfAllInstruments;
+
+  }
+
   /// this method help retrieve the value of the first item in the map of
   /// all instruments i.e _allForexAndCryptoPrices
   dynamic getTypeFirstValueInMapOfAllInstruments() {
-    String firstKeypriceAllInstruments =
+
+    String firstKeyPriceAllInstruments =
         _allForexAndCryptoPrices.keys.toList()[0];
 
     dynamic typeFirstValueInMapOfAllInstruments =
-        _allForexAndCryptoPrices[firstKeypriceAllInstruments].runtimeType;
+        _allForexAndCryptoPrices[firstKeyPriceAllInstruments].runtimeType;
 
     return typeFirstValueInMapOfAllInstruments;
+
   }
 
   /// this method helps update the instrument type that should be displayed
@@ -209,7 +233,30 @@ class DataProvider with ChangeNotifier {
 
   /// this method calculates the row number of a currency pair within this app's
   /// GridView builder..
-  // int getInstrumentGridViewRowNumber({required String instrument}){
-  //
-  // }
+  int getInstrumentGridViewRowNumber({required String instrument}) {
+    Map filteredAllInstruments = getInstruments();
+
+    List<dynamic> listOfAllKeys = filteredAllInstruments.keys.toList();
+    int indexOfInstrumentInMapOfAllInstruments =
+        listOfAllKeys.indexOf(instrument);
+
+    print("indexOfInstrumentInMapOfAllInstruments: ${indexOfInstrumentInMapOfAllInstruments}");
+
+    /// checking whether the index is an odd number
+    // bool isOddNumber = indexOfInstrumentInMapOfAllInstruments % 2 != 0;
+
+    // int numberToCalcRowOn = isOddNumber
+    //     ? indexOfInstrumentInMapOfAllInstruments - 1
+    //     : indexOfInstrumentInMapOfAllInstruments;
+
+    /// instrument's row number within app's gridview
+    int instrumentRowNum =  (indexOfInstrumentInMapOfAllInstruments / 2).round() - 1;
+
+    print("instrumentRowNum: ${instrumentRowNum}");
+
+    return instrumentRowNum;
+
+  }
+
+
 }

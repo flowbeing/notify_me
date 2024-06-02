@@ -84,6 +84,17 @@ class HomepageState extends State<Homepage> {
   //   timer.cancel();
   // });
 
+  /// MAPS, LISTS & OTHER VALUES
+  ///
+  /// Prices - all instruments / symbols
+  Map<dynamic, dynamic> priceAllInstruments = {};
+
+  /// list of all instruments
+  List<dynamic> listOfAllInstruments = [];
+
+  /// the currently selected instrument
+  String currentlySelectedInstrument = "";
+
   /// Index of selected grid tile
   int indexSelectedGridTile = 3;
 
@@ -120,7 +131,7 @@ class HomepageState extends State<Homepage> {
 
   /// keyboard visibility signalling bool
   double previousKeyboardValue = -1;
-  bool isKeyboardVisible = false;
+  bool isKeyboardVisible = true;
 
   @override
   void didChangeDependencies() async {
@@ -215,16 +226,24 @@ class HomepageState extends State<Homepage> {
     /// signal that the keyboard has been toggled...
     if (bottomInset > 0) {
       isGridTileOrFilterOptionClickedOrKeyboardVisible = true;
+      isKeyboardVisible = true;
       print("Keyboard is visible");
 
       /// ...otherwise if the keyboard is being hidden, signal that the keyboard
       /// is still visible..
     } else if (bottomInset == 0 && previousKeyboardValue > 0) {
       isGridTileOrFilterOptionClickedOrKeyboardVisible = true;
+      isKeyboardVisible = true;
       print("Keyboard is visible");
     }
 
+    /// updating previousKeyboardValue
     previousKeyboardValue = bottomInset;
+
+    /// if keyboard has been hidden, log that it is no longer visible
+    if (bottomInset == 0 && previousKeyboardValue == 0){
+      isKeyboardVisible = false;
+    }
 
     // TODO: implement didChangeDependencies
     super.didChangeDependencies();
@@ -370,7 +389,7 @@ class HomepageState extends State<Homepage> {
 
   /// this method triggers a rebuild of this homepage widget when a grid tile
   /// is clicked..
-  void updateAppGridTileClicked(
+  void updateHomepageGridTileClicked(
       {required bool isGridTileClicked,
       required int indexNewSelectedGridTile}) {
     setState(() {
@@ -380,12 +399,27 @@ class HomepageState extends State<Homepage> {
   }
 
   /// this method rebuilds the homepage state when a filter option is clicked
-  void updateAppFilterOptionClicked({required Filter selectedFilterOption}) {
+  void updateHomepageFilterOptionClicked({required Filter selectedFilterOption}) {
     dataProvider!.updateFilter(filter: selectedFilterOption);
 
     setState(() {
       isGridTileOrFilterOptionClickedOrKeyboardVisible = true;
     });
+  }
+
+  /// this method rebuilds the app when the user enters a valid instrument
+  /// string within the add instrument's alert text field (bottom left)
+  void updateHomepageNewInstrumentTextEntered(
+      {required int indexEnteredInstrument}) {
+    /// bypass updatePrices
+    isGridTileOrFilterOptionClickedOrKeyboardVisible = true;
+
+    /// set state...
+    if (!isKeyboardVisible){
+      setState(() {
+        indexSelectedGridTile = indexEnteredInstrument;
+      });
+    }
   }
 
   Widget build(BuildContext context) {
@@ -418,9 +452,7 @@ class HomepageState extends State<Homepage> {
                 /// resetting isGridTileOrFilterOptionClickedOrKeyboardVisible
                 isGridTileOrFilterOptionClickedOrKeyboardVisible = false;
 
-                /// Prices - all instruments / symbols
-                Map<dynamic, dynamic> priceAllInstruments =
-                    dataProvider!.getInstruments();
+                priceAllInstruments = dataProvider!.getInstruments();
 
                 dynamic firstKeypriceAllInstruments;
 
@@ -477,17 +509,20 @@ class HomepageState extends State<Homepage> {
                   }
                 }
 
-                List<dynamic> listOfAllInstruments =
-                    priceAllInstruments.keys.toList();
-                List<dynamic> listOfAllInstrumentsValues =
-                    priceAllInstruments.values.toList();
+                listOfAllInstruments = dataProvider!.getListOfAllInstruments();
 
-                String currentlySelectedInstrument =
+                // priceAllInstruments.keys.toList();
+                // List<dynamic> listOfAllInstrumentsValues =
+                //     priceAllInstruments.values.toList();
+
+                currentlySelectedInstrument =
                     listOfAllInstruments[indexSelectedGridTile];
 
                 print("");
                 print(
                     "currentlySelectedInstrument: ${currentlySelectedInstrument}");
+                print(
+                    "isFirstValueInMapOfAllInstrumentsContainsFetching: $isFirstValueInMapOfAllInstrumentsContainsFetching");
 
                 /// main background
                 return Container(
@@ -525,7 +560,7 @@ class HomepageState extends State<Homepage> {
                                 marginCurrencyPairAndCurrencyPrice,
                             heightPriceSizedBox: heightPriceSizedBox,
                             fontSizePrices: fontSizePrices,
-                            updateAppGridTileClicked: updateAppGridTileClicked),
+                            updateHomepageGridTileClicked: updateHomepageGridTileClicked),
 
                         /// Alerts & Other menu items - SizedBox
                         SizedBox(
@@ -572,8 +607,8 @@ class HomepageState extends State<Homepage> {
                                         fontSizeAlertsAndOtherMenuItemsSizedBox,
                                     widthDotDivider: widthDotDivider,
                                     iconSizeDotDivider: iconSizeDotDivider,
-                                    updateAppFilterClicked:
-                                        updateAppFilterOptionClicked,
+                                    updateHomepageFilterClicked:
+                                        updateHomepageFilterOptionClicked,
                                     isFirstValueInMapOfAllInstrumentsContainsFetching:
                                         isFirstValueInMapOfAllInstrumentsContainsFetching)
                               ]),
@@ -617,25 +652,29 @@ class HomepageState extends State<Homepage> {
                             width: double.infinity,
                             // color: Colors.tealAccent
                             child: Row(
-                              children: [
+                              children: <Widget>[
                                 /// currency pair text-field..
                                 CurrencyPairTextFieldOrCreateAlertButton(
-                                    isCurrencyPairTextField: true,
-                                    heightCreateNewAlertContainer:
-                                        heightCreateNewAlertContainer,
-                                    widthCurrencyPairTextField:
-                                        widthCurrencyPairTextField,
-                                    borderTopLeftOrRightRadiusCreateAlert:
-                                        borderTopLeftOrRightRadiusCreateAlert,
-                                    borderBottomLeftOrRightRadiusCreateAlert:
-                                        borderBottomLeftOrRightRadiusCreateAlert,
-                                    borderWidthGridTile: borderWidthGridTile,
-                                    fontSizeCurrencyPairAndPrice:
-                                        fontSizeAlertsListTile,
-                                    selectedInstrument:
-                                        currentlySelectedInstrument,
-                                    isFetching:
-                                        isFirstValueInMapOfAllInstrumentsContainsFetching),
+                                  isCurrencyPairTextField: true,
+                                  heightCreateNewAlertContainer:
+                                      heightCreateNewAlertContainer,
+                                  widthCurrencyPairTextField:
+                                      widthCurrencyPairTextField,
+                                  borderTopLeftOrRightRadiusCreateAlert:
+                                      borderTopLeftOrRightRadiusCreateAlert,
+                                  borderBottomLeftOrRightRadiusCreateAlert:
+                                      borderBottomLeftOrRightRadiusCreateAlert,
+                                  borderWidthGridTile: borderWidthGridTile,
+                                  fontSizeCurrencyPairAndPrice:
+                                      fontSizeAlertsListTile,
+                                  selectedInstrument:
+                                      currentlySelectedInstrument,
+                                  isFetching:
+                                      isFirstValueInMapOfAllInstrumentsContainsFetching,
+                                  dataProvider: dataProvider!,
+                                  updateHomepageNewInstrumentTextEntered:
+                                      updateHomepageNewInstrumentTextEntered,
+                                ),
 
                                 /// spacing - currency pair text-field & currency
                                 /// price adjustment container..
@@ -685,7 +724,7 @@ class HomepageState extends State<Homepage> {
 }
 
 /// Currency Pair TextField or Create Alert Button..
-class CurrencyPairTextFieldOrCreateAlertButton extends StatelessWidget {
+class CurrencyPairTextFieldOrCreateAlertButton extends StatefulWidget {
   const CurrencyPairTextFieldOrCreateAlertButton(
       {Key? key,
       required this.isCurrencyPairTextField,
@@ -694,10 +733,16 @@ class CurrencyPairTextFieldOrCreateAlertButton extends StatelessWidget {
       required this.borderTopLeftOrRightRadiusCreateAlert,
       required this.borderBottomLeftOrRightRadiusCreateAlert,
       required this.borderWidthGridTile,
-      this.isFetching = false,
+      this.isFetching = true,
       this.fontSizeAlertButton = 0,
       this.fontSizeCurrencyPairAndPrice = 0,
-      this.selectedInstrument = "None"})
+      this.selectedInstrument = "None",
+      this.dataProvider,
+      this.updateHomepageNewInstrumentTextEntered,
+      /// helps manage the multiple widget rebuilds caused by a device's
+      /// keyboard getting toggled..
+      this.isKeyBoardStillVisible = true
+      })
       : super(key: key);
 
   final bool isCurrencyPairTextField;
@@ -706,66 +751,224 @@ class CurrencyPairTextFieldOrCreateAlertButton extends StatelessWidget {
   final double borderTopLeftOrRightRadiusCreateAlert;
   final double borderBottomLeftOrRightRadiusCreateAlert;
   final double borderWidthGridTile;
+  final Function({required int indexEnteredInstrument})?
+      updateHomepageNewInstrumentTextEntered;
   final bool isFetching;
   final double fontSizeCurrencyPairAndPrice;
   final double fontSizeAlertButton;
   final String selectedInstrument;
+  final DataProvider? dataProvider;
+  final bool isKeyBoardStillVisible;
+
+  @override
+  State<CurrencyPairTextFieldOrCreateAlertButton> createState() =>
+      _CurrencyPairTextFieldOrCreateAlertButtonState();
+}
+
+/// CurrencyPairTextFieldOrCreateAlertButton's state
+class _CurrencyPairTextFieldOrCreateAlertButtonState
+    extends State<CurrencyPairTextFieldOrCreateAlertButton> {
+  String? initialValue;
+  Color? textColor;
+
+  Widget? currencyPairOrTextButtonWidget;
+
+  /// bool that tracks whether setState within the text form field's
+  /// 'onChanged' function below is running..
+  bool isRunningOnChangedSetState = false;
+
+  /// bool to track whether a build was caused by keyboard toggle
+  bool isKeyboardToggled = false;
+
+  void updateInitialValue(String newInitialValue) {
+    initialValue = newInitialValue;
+  }
+
+  // @override
+  // void initState() {
+  //
+  //   initialValue = widget.selectedInstrument;
+  //
+  //   // TODO: implement initState
+  //   super.initState();
+  // }
+
+  @override
+  void didChangeDependencies() {
+    // textColor = widget.isFetching == true ? Colors.grey : Colors.black;
+    /// the initial color of the text form field's initialValue
+    textColor ??= Colors.grey;
+
+    /// the first value of the text form field's
+    /// Note: keyboard toggle will make it null due to multiple rebuilds
+    initialValue ??= widget.selectedInstrument;
+    print("initialValue: $initialValue");
+
+    print("textColorDidChangeDependencies: $textColor");
+    print("textColor!.value: ${textColor!.value}");
+
+    // TODO: implement didChangeDependencies
+    super.didChangeDependencies();
+  }
+
+  @override
+  void didUpdateWidget(
+      covariant CurrencyPairTextFieldOrCreateAlertButton oldWidget) {
+
+    print("textColor: didUpdateWidget: $textColor, int: ${textColor!.value}");
+    int colorGreyInt = 4288585374;
+    if (textColor!.value == colorGreyInt && widget.isFetching == false){
+      print("color changed to black");
+      textColor = Colors.black;
+    }
+
+    /// ensuring
+
+    print("isKeyboardToggled: ${isKeyboardToggled}");
+
+    if (!isRunningOnChangedSetState && !isKeyboardToggled){
+      print("initial value before change: ${initialValue}");
+      initialValue = widget.selectedInstrument;
+      print("initial value after change: ${initialValue}");
+
+    }
+
+    print("initialValue didUpdateWidget: ${initialValue}");
+
+    /// resetting isRanDisChangeDependencies
+    isKeyboardToggled = false;
+
+
+    // TODO: implement didUpdateWidget
+    super.didUpdateWidget(oldWidget);
+  }
 
   @override
   Widget build(BuildContext context) {
-    Widget? currencyPairOrTextButtonWidget;
+    print("textColor: $textColor");
+    print("initialValue build: ${initialValue}");
 
-    print("selectedInstrument: $selectedInstrument");
+    print("selectedInstrument: ${widget.selectedInstrument}");
 
     /// Selected Currency Pair Or Currency Pair To Select
     Widget currencyPairTextField = TextFormField(
-      key: ValueKey(selectedInstrument),
-      // enabled: isFetching ? false : true,
-      // focusNode: focusNode,
-      initialValue: selectedInstrument,
-      keyboardType: TextInputType.text,
-      style: TextStyle(
-        fontFamily: "PT-Mono",
-        fontSize: fontSizeCurrencyPairAndPrice,
-        fontWeight: FontWeight.bold,
-        color: isFetching ? Colors.grey : Colors.black
-      ),
-      decoration: InputDecoration(
-          // contentPadding: EdgeInsets.only(left: 5),
-          enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(width: borderWidthGridTile / 4),
-              borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(
-                      borderBottomLeftOrRightRadiusCreateAlert),
-                  topLeft: Radius.circular(
-                      borderTopLeftOrRightRadiusCreateAlert))),
-          focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(width: borderWidthGridTile / 4),
-              borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(
-                      borderBottomLeftOrRightRadiusCreateAlert),
-                  topLeft: Radius.circular(
-                      borderTopLeftOrRightRadiusCreateAlert))),
-          disabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(width: borderWidthGridTile / 4),
-              borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(
-                      borderBottomLeftOrRightRadiusCreateAlert),
-                  topLeft: Radius.circular(
-                      borderTopLeftOrRightRadiusCreateAlert)))),
-    );
+        key: ValueKey(widget.selectedInstrument),
+        // enabled: isFetching ? false : true,
+        // focusNode: focusNode,
+        initialValue: initialValue,
+        keyboardType: TextInputType.text,
+        onFieldSubmitted: (string) {
+          /// calculating the indexOfTheSelectedGridTile
+          // Map<dynamic, dynamic> mapOfAllInstruments = dataPr
+        },
+        onChanged: (string) {
+          print("within onChanged");
+
+          /// entered text if any
+          // String enteredTextUpper = string == null ? "" : string.toUpperCase();
+          String enteredTextUpper = string.toUpperCase();
+
+          print("enteredTextUpper: ${enteredTextUpper}");
+
+          /// checking whether the entered text is a valid instrument
+          List<dynamic> listOfAllInstruments =
+              widget.dataProvider!.getListOfAllInstruments();
+          bool isValidInstrument = true;
+
+          /// if the entered instrument is not valid, display the entered text
+          /// with an error color - red
+          if (!listOfAllInstruments.contains(enteredTextUpper)) {
+            print('does not contain: ${enteredTextUpper}');
+
+            // if (widget.isKeyBoardStillVisible == false){
+
+
+              setState(() {
+                isRunningOnChangedSetState = true;
+                isKeyboardToggled = true;
+
+                initialValue = enteredTextUpper;
+                textColor = Colors.red;
+                isRunningOnChangedSetState = false;
+                isKeyboardToggled = false;
+              });
+
+            // }
+
+            /// ... otherwise, display the entered text with the default black
+            /// color
+            ///
+            // update the app and scroll to the entered instrument's
+            // row within the app's gridview builder
+            // show the focusedBorder
+          } else {
+            int indexEnteredInstrument =
+                listOfAllInstruments.indexOf(enteredTextUpper);
+
+            if (widget.isKeyBoardStillVisible == false){
+              print('contains: ${enteredTextUpper}');
+
+              // setState(() {
+              initialValue = enteredTextUpper;
+              textColor = Colors.black;
+              // });
+
+              /// update the this app's homepage widget
+              // widget.updateHomepageNewInstrumentTextEntered!(
+              //     indexEnteredInstrument: indexEnteredInstrument
+              // );
+            }
+
+            print('contains: ${enteredTextUpper}');
+
+          }
+        },
+        style: TextStyle(
+            fontFamily: "PT-Mono",
+            fontSize: widget.fontSizeCurrencyPairAndPrice,
+            fontWeight: FontWeight.bold,
+            color: textColor),
+        decoration: InputDecoration(
+            // contentPadding: EdgeInsets.only(left: 5),
+            enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(width: widget.borderWidthGridTile / 4),
+                borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(
+                        widget.borderBottomLeftOrRightRadiusCreateAlert),
+                    topLeft: Radius.circular(
+                        widget.borderTopLeftOrRightRadiusCreateAlert))),
+            focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(width: widget.borderWidthGridTile / 4),
+                borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(
+                        widget.borderBottomLeftOrRightRadiusCreateAlert),
+                    topLeft: Radius.circular(
+                        widget.borderTopLeftOrRightRadiusCreateAlert))),
+            disabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(width: widget.borderWidthGridTile / 4),
+                borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(
+                        widget.borderBottomLeftOrRightRadiusCreateAlert),
+                    topLeft: Radius.circular(
+                        widget.borderTopLeftOrRightRadiusCreateAlert))),
+            errorBorder: OutlineInputBorder(
+                borderSide: BorderSide(
+                    width: widget.borderWidthGridTile / 4, color: Colors.red),
+                borderRadius:
+                    BorderRadius.only(bottomLeft: Radius.circular(widget.borderBottomLeftOrRightRadiusCreateAlert), topLeft: Radius.circular(widget.borderTopLeftOrRightRadiusCreateAlert)))),
+      );
 
     /// "Add Alert" Button Text
     Widget addAlertButtonText = Text(
       'Add Alert',
       style: TextStyle(
           fontFamily: "PT-Mono",
-          fontSize: fontSizeAlertButton,
+          fontSize: widget.fontSizeAlertButton,
           fontWeight: FontWeight.bold,
           color: Colors.white),
     );
 
-    if (isCurrencyPairTextField) {
+    if (widget.isCurrencyPairTextField) {
       currencyPairOrTextButtonWidget = currencyPairTextField;
     } else {
       currencyPairOrTextButtonWidget = addAlertButtonText;
@@ -773,30 +976,33 @@ class CurrencyPairTextFieldOrCreateAlertButton extends StatelessWidget {
 
     return Container(
         alignment: Alignment.center,
-        height: heightCreateNewAlertContainer,
-        width: widthCurrencyPairTextField,
+        height: widget.heightCreateNewAlertContainer,
+        width: widget.widthCurrencyPairTextField,
         decoration: BoxDecoration(
-            color: isCurrencyPairTextField ? Colors.transparent : Colors.black,
+            color: widget.isCurrencyPairTextField
+                ? Colors.transparent
+                : Colors.black,
             borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(isCurrencyPairTextField
-                    ? borderTopLeftOrRightRadiusCreateAlert
+                topLeft: Radius.circular(widget.isCurrencyPairTextField
+                    ? widget.borderTopLeftOrRightRadiusCreateAlert
                     : 0),
-                bottomLeft: Radius.circular(isCurrencyPairTextField
-                    ? borderBottomLeftOrRightRadiusCreateAlert
+                bottomLeft: Radius.circular(widget.isCurrencyPairTextField
+                    ? widget.borderBottomLeftOrRightRadiusCreateAlert
                     : 0),
-                topRight: Radius.circular(isCurrencyPairTextField == false
-                    ? borderTopLeftOrRightRadiusCreateAlert
-                    : 0),
-                bottomRight: Radius.circular(isCurrencyPairTextField == false
-                    ? borderBottomLeftOrRightRadiusCreateAlert
-                    : 0)),
+                topRight: Radius.circular(
+                    widget.isCurrencyPairTextField == false
+                        ? widget.borderTopLeftOrRightRadiusCreateAlert
+                        : 0),
+                bottomRight: Radius.circular(
+                    widget.isCurrencyPairTextField == false
+                        ? widget.borderBottomLeftOrRightRadiusCreateAlert
+                        : 0)),
             border: Border.all(
-                width: borderWidthGridTile / 4,
-                color: isCurrencyPairTextField
+                width: widget.borderWidthGridTile / 4,
+                color: widget.isCurrencyPairTextField
                     ? Colors.transparent
                     : Colors.black)),
-        child: currencyPairOrTextButtonWidget
-    );
+        child: currencyPairOrTextButtonWidget);
   }
 }
 
