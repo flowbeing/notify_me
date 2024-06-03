@@ -27,7 +27,9 @@ class ContainerGridViewBuilder extends StatefulWidget {
       required this.marginCurrencyPairAndCurrencyPrice,
       required this.heightPriceSizedBox,
       required this.fontSizePrices,
-      required this.updateHomepageGridTileClicked});
+      required this.updateHomepageGridTileClicked,
+      required this.updateHomepageNewInstrumentTextEntered
+      });
 
   final double heightFirstSixGridTiles;
 
@@ -50,6 +52,7 @@ class ContainerGridViewBuilder extends StatefulWidget {
   final double marginCurrencyPairAndCurrencyPrice;
   final double heightPriceSizedBox;
   final double fontSizePrices;
+  final Function({required String? enteredText}) updateHomepageNewInstrumentTextEntered;
 
   /// updateAppGridTileClicked should contain setState and the explanation below
   // setState(() {
@@ -223,13 +226,18 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
           /// Grid Tile - custom template
           return GestureDetector(
             /// select the current grid tile when it's tapped
-            onTap: () => {
+            onTap: () {
               if (currentInstrumentsData.runtimeType != String &&
                   priceDifferenceIfAny != "demo" &&
-                  widget.indexSelectedGridTile != index)
-                {
+                  widget.indexSelectedGridTile != index){
+
+                  widget.updateHomepageNewInstrumentTextEntered(
+                      enteredText: null
+                  );
+
                   widget.updateHomepageGridTileClicked(
-                      indexNewSelectedGridTile: index, isGridTileClicked: true)
+                      indexNewSelectedGridTile: index, isGridTileClicked: true
+                  );
                 }
             },
             child: GridTileCurrencyPair(
