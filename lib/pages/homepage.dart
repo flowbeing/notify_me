@@ -133,8 +133,13 @@ class HomepageState extends State<Homepage> {
   double previousKeyboardValue = -1;
   bool isKeyboardVisible = true;
 
-  /// entered text - currency pair text form widget
+  /// entered text and whether it's valid - currency pair text form widget
   String? enteredTextCurrencyPairTextFormFieldWidget;
+  bool isErrorEnteredTextCurrencyPairTextFormFieldWidget = false;
+  
+  /// a boolean that tracks whether a build has been triggered but not after
+  /// a text has been entered into a textformfield
+  bool isNonTextFormFieldTriggeredBuild = false;
 
   @override
   void didChangeDependencies() async {
@@ -256,6 +261,8 @@ class HomepageState extends State<Homepage> {
   void didUpdateWidget(covariant Homepage oldWidget) {
     // relevantTimerTickTracker.cancel();
 
+    FocusScope.of(context).
+
     // TODO: implement didUpdateWidget
     super.didUpdateWidget(oldWidget);
   }
@@ -283,6 +290,7 @@ class HomepageState extends State<Homepage> {
 
           setState(() {
             print("Timer.periodic - 1 min: ${DateTime.now()}");
+            isNonTextFormFieldTriggeredBuild = true;
           });
         });
       }
@@ -347,7 +355,9 @@ class HomepageState extends State<Homepage> {
                 Timer.periodic(const Duration(milliseconds: 60001), (timer) {
               timer.cancel();
 
-              setState(() {});
+              setState(() {
+                isNonTextFormFieldTriggeredBuild = true;
+              });
             });
 
             timer.cancel();
@@ -384,7 +394,9 @@ class HomepageState extends State<Homepage> {
             Timer.periodic(const Duration(milliseconds: 60001), (timer) {
           timer.cancel();
 
-          setState(() {});
+          setState(() {
+            isNonTextFormFieldTriggeredBuild = true;
+          });
         });
       }
     }
@@ -415,9 +427,19 @@ class HomepageState extends State<Homepage> {
   /// string within the add instrument's alert text field (bottom left)
   void updateHomepageNewInstrumentTextEntered({
     required String? enteredText,
-    int indexEnteredInstrument = 0,
+    bool isErrorEnteredText = false,
+    int? indexEnteredInstrument,
   }) {
+    ///
     enteredTextCurrencyPairTextFormFieldWidget = enteredText;
+    isErrorEnteredTextCurrencyPairTextFormFieldWidget = isErrorEnteredText;
+
+    /// if the currency pair that's been entered into the
+    /// CurrencyPairTextFormFieldWidget is valid, update the selected tile's
+    /// index
+    if (indexEnteredInstrument != null){
+      indexSelectedGridTile = indexEnteredInstrument;
+    }
 
     // /// bypass updatePrices
     // isGridTileOrFilterOptionClickedOrKeyboardVisible = true;
@@ -444,7 +466,7 @@ class HomepageState extends State<Homepage> {
         appBar: null,
         resizeToAvoidBottomInset: true,
 
-        /// The background
+
         body: SingleChildScrollView(
           child: FutureBuilder(
               future:
@@ -572,6 +594,10 @@ class HomepageState extends State<Homepage> {
                               updateHomepageGridTileClicked,
                           updateHomepageNewInstrumentTextEntered:
                               updateHomepageNewInstrumentTextEntered,
+                          // enteredTextCurrencyPairTextFormFieldWidget:
+                          //     enteredTextCurrencyPairTextFormFieldWidget,
+                          // isErrorEnteredTextCurrencyPairTextFormFieldWidget:
+                              // isErrorEnteredTextCurrencyPairTextFormFieldWidget
                         ),
 
                         /// Alerts & Other menu items - SizedBox
@@ -684,13 +710,14 @@ class HomepageState extends State<Homepage> {
                                             currentlySelectedInstrument,
                                     previouslyEnteredTextFieldValue:
                                         enteredTextCurrencyPairTextFormFieldWidget,
-                                    //
                                     isFetching:
                                         isFirstValueInMapOfAllInstrumentsContainsFetching,
                                     dataProvider: dataProvider!,
                                     updateHomepageNewInstrumentTextEntered:
                                         updateHomepageNewInstrumentTextEntered,
-                                    isKeyBoardStillVisible: isKeyboardVisible),
+                                    isKeyBoardStillVisible: isKeyboardVisible,
+                                    isNonTextFormFieldTriggeredBuild: isNonTextFormFieldTriggeredBuild
+                                ),
 
                                 /// spacing - currency pair text-field & currency
                                 /// price adjustment container..
@@ -759,7 +786,9 @@ class CurrencyPairTextFieldOrCreateAlertButton extends StatefulWidget {
 
       /// helps manage the multiple widget rebuilds caused by a device's
       /// keyboard getting toggled..
-      this.isKeyBoardStillVisible = false})
+      this.isKeyBoardStillVisible = false,
+      this.isNonTextFormFieldTriggeredBuild = false
+      })
       : super(key: key);
 
   final bool isCurrencyPairTextField;
@@ -768,7 +797,12 @@ class CurrencyPairTextFieldOrCreateAlertButton extends StatefulWidget {
   final double borderTopLeftOrRightRadiusCreateAlert;
   final double borderBottomLeftOrRightRadiusCreateAlert;
   final double borderWidthGridTile;
-  final Function({required String? enteredText, int indexEnteredInstrument})?
+  final Function({
+    required String? enteredText,
+    bool isErrorEnteredText,
+    int indexEnteredInstrument,
+
+  })?
       updateHomepageNewInstrumentTextEntered;
   final bool isFetching;
   final double fontSizeCurrencyPairAndPrice;
@@ -777,6 +811,7 @@ class CurrencyPairTextFieldOrCreateAlertButton extends StatefulWidget {
   final DataProvider? dataProvider;
   final bool isKeyBoardStillVisible;
   final String? previouslyEnteredTextFieldValue;
+  final bool isNonTextFormFieldTriggeredBuild;
 
   @override
   State<CurrencyPairTextFieldOrCreateAlertButton> createState() =>
@@ -786,8 +821,6 @@ class CurrencyPairTextFieldOrCreateAlertButton extends StatefulWidget {
 /// CurrencyPairTextFieldOrCreateAlertButton's state
 class _CurrencyPairTextFieldOrCreateAlertButtonState
     extends State<CurrencyPairTextFieldOrCreateAlertButton> {
-  /// text entered into textfied
-  String? enteredText;
 
   /// initial text form field's value
   String? initialValue;
@@ -806,6 +839,9 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
   /// bool that tracks whether setState within the text form field's
   /// 'onChanged' function below is running..
   bool isRunningErrorOnChangedSetState = false;
+
+  /// focus node
+  FocusNode focusNode = FocusNode();
 
   void updateInitialValue(String newInitialValue) {
     initialValue = newInitialValue;
@@ -840,6 +876,17 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
   @override
   void didUpdateWidget(
       covariant CurrencyPairTextFieldOrCreateAlertButton oldWidget) {
+
+    print("focusNode.hasFocus: ${focusNode.hasFocus}");
+
+    /// ensures that the keyboard stays if this widget gets rebuilt because
+    /// prices' data have been updated and not because a user submits their
+    /// text entry
+    if (widget.isNonTextFormFieldTriggeredBuild == true && focusNode.hasFocus){
+      print("requesting focus");
+      focusNode.requestFocus();
+    }
+
     print("textColor: didUpdateWidget: $textColor, int: ${textColor!.value}");
     int colorGreyInt = 4288585374;
 
@@ -856,20 +903,24 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
       textColor = Colors.black;
     }
 
-    initialValue = widget.selectedInstrument;
-
     print("isKeyBoardStillVisible: ${widget.isKeyBoardStillVisible}");
     print("isRunningErrorOnChangedSetState: $isRunningErrorOnChangedSetState");
 
-    /// change the text form field's text to the selected grid tile's currency
-    /// pair and its color to black if:
-    /// 1. An invalid currency pair has not been entered
+    /// Change the text form field's text to the selected grid tile's currency
+    /// pair and its color to black when a user selects a valid currency
+    /// pair or when the app is running for the first time since
+    /// previouslyEnteredTextFieldValue will be valid in such a situation:
+    ///
     ///    a. !isRunningErrorOnChangedSetState - true for the first of many
     ///       setState functions that'd be triggered when the software
     ///       keyboard is disappearing or when the user clicks "done"
     ///    b. previouslyEnteredTextFieldValue - not null when an invalid
     ///       currency pair is entered into the text form field..
     ///
+    /// This helps to ensure that when a grid tile is clicked even after an
+    /// invalid currency pair has been entered into the text form field,
+    /// the selected grid tile's currency pair will still get displayed and
+    /// with the right color (Colors.black)..
     if (!isRunningErrorOnChangedSetState // && widget.isKeyBoardStillVisible == false
         &&
         widget.previouslyEnteredTextFieldValue == null) {
@@ -879,8 +930,16 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
       //   print("initial value after change: ${initialValue}");
     }
 
+    /// ensures that any text that's been entered into the text form field
+    /// manually will get displayed regardless of the numerous set states that
+    /// would be called after "done" on the software keyboard gets clicked..
     ///
+    /// Note: once "done" gets clicked on the software keyboard,
+    /// previouslyEnteredTextFieldValue will be set to a string value and will
+    /// only be set back to null when a grid tile gets clicked (within
+    /// ContainerGridViewBuilder)..
     else if (widget.previouslyEnteredTextFieldValue != null) {
+
       print(
           "previouslyEnteredTextFieldValue: "
               "${widget.previouslyEnteredTextFieldValue}"
@@ -889,6 +948,7 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
           initialValue = widget.selectedInstrument;
 
     }
+
 
     print("initialValue didUpdateWidget: ${initialValue}");
 
@@ -907,14 +967,10 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
     /// Selected Currency Pair Or Currency Pair To Select
     Widget currencyPairTextField = TextFormField(
       key: ValueKey(widget.selectedInstrument),
-      // enabled: isFetching ? false : true,
-      // focusNode: focusNode,
+      // enabled: widget.isFetching ? false : true,
+      focusNode: focusNode,
       initialValue: initialValue,
       keyboardType: TextInputType.text,
-      onFieldSubmitted: (string) {
-        /// calculating the indexOfTheSelectedGridTile
-        // Map<dynamic, dynamic> mapOfAllInstruments = dataPr
-      },
       onChanged: (string) {
         print("within onChanged");
 
@@ -927,7 +983,6 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
         /// checking whether the entered text is a valid instrument
         List<dynamic> listOfAllInstruments =
             widget.dataProvider!.getListOfAllInstruments();
-        bool isValidInstrument = true;
 
         /// if the entered instrument is not valid, display the entered text
         /// with an error color - red
@@ -937,13 +992,18 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
           // if (widget.isKeyBoardStillVisible == false){
 
           setState(() {
+            /// this variable will allow 'enteredText' and color red to be
+            /// set on the first set state execution despite the numerous
+            /// set states the keyboard getting toggled will cause to be
+            /// executed..
             isRunningErrorOnChangedSetState = true;
 
-            enteredText = enteredTextUpper;
             textColor = Colors.red;
 
             widget.updateHomepageNewInstrumentTextEntered!(
-                enteredText: enteredTextUpper);
+                enteredText: enteredTextUpper,
+                isErrorEnteredText: true,
+            );
 
             isRunningErrorOnChangedSetState = false;
           });
@@ -952,7 +1012,6 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
 
           /// ... otherwise, display the entered text with the default black
           /// color
-          ///
           // update the app and scroll to the entered instrument's
           // row within the app's gridview builder
           // show the focusedBorder
@@ -968,23 +1027,14 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
             textColor = Colors.black;
 
             widget.updateHomepageNewInstrumentTextEntered!(
-                enteredText: enteredTextUpper);
+                enteredText: enteredTextUpper,
+                indexEnteredInstrument: indexEnteredInstrument
+            );
           });
-
-          /// update the this app's homepage widget
-          // widget.updateHomepageNewInstrumentTextEntered!(
-          //     indexEnteredInstrument: indexEnteredInstrument
-          // );
-          // }
 
           print('contains: ${enteredTextUpper}');
         }
       },
-      // onEditingComplete: (){
-      //
-      //   FocusScope.of(context).unfocus();
-      //
-      // },
       style: TextStyle(
           fontFamily: "PT-Mono",
           fontSize: widget.fontSizeCurrencyPairAndPrice,
@@ -1036,16 +1086,7 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
       currencyPairOrTextButtonWidget = addAlertButtonText;
     }
 
-    return GestureDetector(
-      // onTap: () {
-      //
-      //     setState(() {
-      //       widget.updateHomepageNewInstrumentTextEntered!(
-      //           enteredText: initialValue
-      //       );
-      //     });
-      // },
-      child: Container(
+    return Container(
           alignment: Alignment.center,
           height: widget.heightCreateNewAlertContainer,
           width: widget.widthCurrencyPairTextField,
@@ -1071,8 +1112,7 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
               border: Border.all(
                   width: widget.borderWidthGridTile / 4,
                   color: widget.isCurrencyPairTextField ? Colors.transparent : Colors.black)),
-          child: currencyPairOrTextButtonWidget),
-    );
+          child: currencyPairOrTextButtonWidget);
   }
 }
 

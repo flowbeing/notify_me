@@ -28,7 +28,13 @@ class ContainerGridViewBuilder extends StatefulWidget {
       required this.heightPriceSizedBox,
       required this.fontSizePrices,
       required this.updateHomepageGridTileClicked,
-      required this.updateHomepageNewInstrumentTextEntered
+      /// function to reset the lower left corner's text to null if any has
+      /// previously been entered, so that
+      /// CurrencyPairTextFieldOrCreateAlertButton can update correctly with a
+      /// selected grid tile's currency pair..
+      required this.updateHomepageNewInstrumentTextEntered,
+      // required this.enteredTextCurrencyPairTextFormFieldWidget,
+      // required this.isErrorEnteredTextCurrencyPairTextFormFieldWidget
       });
 
   final double heightFirstSixGridTiles;
@@ -53,6 +59,8 @@ class ContainerGridViewBuilder extends StatefulWidget {
   final double heightPriceSizedBox;
   final double fontSizePrices;
   final Function({required String? enteredText}) updateHomepageNewInstrumentTextEntered;
+  // final String? enteredTextCurrencyPairTextFormFieldWidget;
+  // final bool isErrorEnteredTextCurrencyPairTextFormFieldWidget;
 
   /// updateAppGridTileClicked should contain setState and the explanation below
   // setState(() {
@@ -95,16 +103,56 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
     /// data provider
     dataProvider = Provider.of<DataProvider>(context, listen: false);
 
-    currentlySelectedInstrument =
-        widget.listOfAllInstruments[widget.indexSelectedGridTile];
+    /// setting the value of the currently selected currency pair
+      currentlySelectedInstrument =
+      widget.listOfAllInstruments[widget.indexSelectedGridTile];
+
+    /// determining the currently selected currency pair's row
     currentlySelectedInstrumentRowNumber = dataProvider!
         .getInstrumentGridViewRowNumber(
             instrument: currentlySelectedInstrument!
     );
+
     print(
         "currently selected instrument's row number: ${currentlySelectedInstrumentRowNumber}");
 
     super.didChangeDependencies();
+  }
+
+  @override
+  void didUpdateWidget(covariant ContainerGridViewBuilder oldWidget) {
+
+    /// obtaining the currently selected instrument's row number..
+    ///
+    /// 1. if a valid currency pair has been entered into the
+    ///    CurrencyPairTextFieldOrCreateAlertButton, set
+    ///    currentSelectedInstrument to the content of
+    ///    CurrencyPairTextFieldOrCreateAlertButton..
+    // if (
+    // widget.enteredTextCurrencyPairTextFormFieldWidget != null &&
+    //     widget.isErrorEnteredTextCurrencyPairTextFormFieldWidget == false
+    // ){
+    //   currentlySelectedInstrument =
+    //       widget.enteredTextCurrencyPairTextFormFieldWidget;
+    // }
+    /// if no valid text or any text has been entered into the
+    /// CurrencyPairTextFieldOrCreateAlertButton, set currentSelectedInstrument
+    /// to the currently or previously selected grid tile's currency pair..
+    // if{
+      currentlySelectedInstrument =
+      widget.listOfAllInstruments[widget.indexSelectedGridTile];
+    // }
+
+    currentlySelectedInstrumentRowNumber = dataProvider!
+        .getInstrumentGridViewRowNumber(
+        instrument: currentlySelectedInstrument!
+    );
+
+    print(
+        "currently selected instrument's row number: ${currentlySelectedInstrumentRowNumber}");
+
+    // TODO: implement didUpdateWidget
+    super.didUpdateWidget(oldWidget);
   }
 
   Container build(BuildContext context) {
@@ -129,11 +177,9 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
             crossAxisSpacing: widget.crossAxisSpacing,
             mainAxisSpacing: widget.mainAxisSpacing),
         itemCount: widget.listOfAllInstruments.isEmpty
+            /// a minimum of six instruments will be displayed
             ? 6
             :
-
-            /// a minimum of six instruments will be
-            /// displayed post fetch operation
             widget.listOfAllInstruments.length,
         itemBuilder: (context, index) {
           String currentSymbolOrInstrument = widget.listOfAllInstruments[index];
@@ -197,9 +243,15 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
 
           /// determining whether the current tile has been or
           /// should be selected
-          bool isSelectedTile = index == widget.indexSelectedGridTile &&
+          bool isSelectedTile = false;
+
+          if (index == widget.indexSelectedGridTile &&
               isFetchingPrices == false &&
-              priceDifferenceIfAny != "demo";
+              priceDifferenceIfAny != "demo"){
+
+            isSelectedTile = true;
+
+          }
 
           /// defining each grid tile's colors
           Color pureColorGridTile = const Color(0xFF0066FF);
@@ -225,7 +277,11 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
 
           /// Grid Tile - custom template
           return GestureDetector(
-            /// select the current grid tile when it's tapped
+            /// select the current grid tile when it's tapped if
+            ///
+            /// a. prices' data is being fetched
+            /// b. the clicked grid tile is not the currently selected grid
+            ///    tile..
             onTap: () {
               if (currentInstrumentsData.runtimeType != String &&
                   priceDifferenceIfAny != "demo" &&
@@ -236,7 +292,8 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
                   );
 
                   widget.updateHomepageGridTileClicked(
-                      indexNewSelectedGridTile: index, isGridTileClicked: true
+                      indexNewSelectedGridTile: index,
+                      isGridTileClicked: true
                   );
                 }
             },
