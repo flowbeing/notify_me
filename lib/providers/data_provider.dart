@@ -35,6 +35,32 @@ class DataProvider with ChangeNotifier {
   /// Number of times prices have been retrieved from the relevant data provider
   int _countPricesRetrieval = 0;
 
+  /// determine whether the prices data have not been fetched
+  bool _isFirstValueInMapOfAllInstrumentsContainsFetching = true;
+
+  /// timer - updatePrices method..
+  Timer _relevantTimer =
+  Timer.periodic(const Duration(microseconds: 1), (timer) {
+    timer.cancel();
+  });
+
+  /// timer - check if prices have finished updating
+  Timer _isPricesUpdatedCheckingTimer =
+  Timer.periodic(const Duration(microseconds: 1), (timer) {
+    timer.cancel();
+  });
+
+  /// timer to set manually entered currency pair, if any
+  Timer _updateCurrencyPairManually =
+  Timer.periodic(const Duration(microseconds: 1), (timer) {
+    timer.cancel();
+  });
+
+  /// text that's been entered into the currency pair text form field -
+  /// CurrencyPairTextFieldOrCreateAlertButton
+  String? _enteredCurrencyPair;
+  bool? _isErrorEnteredText;
+
   /// loads this app's configuration file and creates all relevant File objects
   Future _initialDataAndDotEnv() async {
     /// loading configuration file
@@ -46,6 +72,9 @@ class DataProvider with ChangeNotifier {
     await _data!.updateAndSaveAllSymbolsData();
     _data!.getUriAppDirectory();
   }
+
+  /// WIDGET VARIABLES
+  int _indexSelectedGridTile = 3;
 
   /// returns a map of all instrument with all values set to "fetching"
   Future allSymbolsWithFetchingNotification() async {
@@ -126,6 +155,33 @@ class DataProvider with ChangeNotifier {
 
     // print("timer: ${timer}");
     // print("timer tick: ${timer.tick}");
+
+
+    /// if the values of mapOfAllPrices are Strings, which
+    /// will only happen when the prices are being displayed for the
+    /// first time or have not been fetched, create future timers and
+    /// notify listeners..
+    defineIsFirstValueInMapOfAllInstrumentsContainsFetching();
+
+    if (_isFirstValueInMapOfAllInstrumentsContainsFetching) {
+      print('priceAllInstruments contains "fetching"');
+      print("");
+      print("HOMEPAGE - END - 5s");
+      print(
+          "--------------------------------------------------------------------------------");
+      print("");
+
+      updateTimers(isOneMin: false);
+      notifyListeners();
+    }
+
+    /// ... otherwise, wait for 1 minute (approx) future timers and notify
+    /// listeners
+    else {
+      updateTimers(isOneMin: true);
+      notifyListeners();
+    }
+  
   }
 
   /// a method to retrieve the value of _isUpdatingPrices
@@ -221,24 +277,142 @@ class DataProvider with ChangeNotifier {
 
   }
 
+  /// this method helps determine whether prices have been fetched
+  void defineIsFirstValueInMapOfAllInstrumentsContainsFetching(){
+
+    if (getTypeFirstValueInMapOfAllInstruments() != String){
+      _isFirstValueInMapOfAllInstrumentsContainsFetching = false;
+    }
+
+  }
+
+  /// this method helps get the value of
+  /// defineIsFirstValueInMapOfAllInstrumentsContainsFetching
+  bool getIsFirstValueInMapOfAllInstrumentsContainsFetching(){
+
+    return _isFirstValueInMapOfAllInstrumentsContainsFetching;
+
+  }
+
+  /// updates the selected grid tile's index
+  void updateIndexSelectedGridTile({required int newIndexSelectedGridTile}){
+
+    _indexSelectedGridTile = newIndexSelectedGridTile;
+    notifyListeners(); /// affect didChangeDependencies of listening widgets
+
+  }
+
+  /// retrieves the index of the selected grid tile
+  int getIndexSelectedGridTile(){
+    return _indexSelectedGridTile;
+  }
+
+  /// retrieves the currently selected pair
+  String getCurrentlySelectedInstrument(){
+    return _listOfAllInstruments[_indexSelectedGridTile];
+  }
+
+  /// update entered currency pair text ->
+  /// CurrencyPairTextFieldOrCreateAlertButton
+  ///
+  /// When the entered text is a valid currency pair, this method will help to
+  /// update the grid view widget with the currently selected (entered) pair
+  void updateEnteredTextCurrencyPair({
+    required String? enteredText,
+    bool? isErrorEnteredText,
+    FocusNode? focusNode
+  }){
+
+
+    print("focusNode updateEnteredTextCurrencyPair: ${focusNode!.hasFocus}");
+
+
+    // _enteredCurrencyPair = enteredText;
+    // _isErrorEnteredText = isErrorEnteredText;
+
+    /// if the entered currency pair is valid, update the index of the selected
+    /// grid tile..
+    // if (_isErrorEnteredText == null) {
+    //   int indexOfEnteredValidCurrencyPair =
+    //   _listOfAllInstruments.indexOf(_enteredCurrencyPair);
+    //
+    //   _indexSelectedGridTile = indexOfEnteredValidCurrencyPair;
+    //   // notifyListeners();
+    //
+    // }
+
+      /// if the "done" button gets clicked by the user for the text field
+      /// in CurrencyPairTextFieldOrCreateAlertButton, reload all listening
+      /// widgets including the ContainerGridViewBuilder custom widget
+      /// to reflect the currently selected currency pair..
+      if (focusNode != null){
+
+          _updateCurrencyPairManually.cancel();
+
+          _updateCurrencyPairManually = Timer.periodic(Duration(milliseconds: 250), (timer) {
+
+            print("timer: $timer");
+
+            if (focusNode.hasFocus == false){
+
+              _enteredCurrencyPair = enteredText;
+              _isErrorEnteredText = isErrorEnteredText;
+
+              /// if the entered currency pair is valid, update the index of the selected
+              /// grid tile..
+              if (_isErrorEnteredText == null) {
+                int indexOfEnteredValidCurrencyPair =
+                _listOfAllInstruments.indexOf(_enteredCurrencyPair);
+
+                _indexSelectedGridTile = indexOfEnteredValidCurrencyPair;
+                // notifyListeners();
+
+              }
+
+              timer.cancel();
+
+              notifyListeners();
+
+            }
+
+          });
+
+      }
+
+
+  }
+
+  /// retrieves manually entered currency pair text and its error if any
+  Map<String, dynamic> getEnteredTextCurrencyPair(){
+
+    return {
+      "enteredCurrencyPair": _enteredCurrencyPair,
+      "isErrorEnteredText": _isErrorEnteredText
+    };
+
+  }
+
+
   /// this method helps update the instrument type that should be displayed
   /// i.e forex, crypto, or both...
   void updateFilter({required Filter filter}) {
     if (_instrumentFilter != filter) {
       _instrumentFilter = filter;
-      // notifyListeners();
+      notifyListeners();
       print("current filter: $_instrumentFilter");
     }
   }
 
-  /// this method calculates the row number of a currency pair within this app's
-  /// GridView builder..
-  int getInstrumentGridViewRowNumber({required String instrument}) {
+  /// this method calculates the row number of the selected currency pair within
+  /// this app's GridView builder..
+  int getCurrentlySelectedInstrumentRowNumber() {
     Map filteredAllInstruments = getInstruments();
+
+    String currentlySelectedInstrument = getCurrentlySelectedInstrument();
 
     List<dynamic> listOfAllKeys = filteredAllInstruments.keys.toList();
     int indexOfInstrumentInMapOfAllInstruments =
-        listOfAllKeys.indexOf(instrument);
+        listOfAllKeys.indexOf(currentlySelectedInstrument);
 
     print("indexOfInstrumentInMapOfAllInstruments: ${indexOfInstrumentInMapOfAllInstruments}");
 
@@ -250,12 +424,154 @@ class DataProvider with ChangeNotifier {
     //     : indexOfInstrumentInMapOfAllInstruments;
 
     /// instrument's row number within app's gridview
-    int instrumentRowNum =  (indexOfInstrumentInMapOfAllInstruments / 2).round() - 1;
+    int instrumentRowNum =  ((indexOfInstrumentInMapOfAllInstruments + 1) / 2).round();
 
     print("instrumentRowNum: ${instrumentRowNum}");
 
     return instrumentRowNum;
 
+  }
+
+  /// this method updates timers when prices have been fetched
+  void updateTimers({required bool isOneMin}) {
+    /// is price currently being updated
+    ///
+    /// dataProvider!.getIsUpdatingPrices() is used below instead of
+    /// "updatingPrices" variable to ensure that the latest state prices
+    /// update state is obtained directly from dataProvider...
+    // bool isPriceUpdating = dataProvider!.getIsUpdatingPrices();
+
+    if (isOneMin == false) {
+      /// if a previous 5 seconds timer is no longer active and it's
+      /// corresponding dataProvider!.updatePrices (Future) is has
+      /// finished running set _relevantTimer to a timer that should
+      /// execute  dataProvider!.updatePrices 5 seconds in the
+      /// future
+
+      if (_relevantTimer.isActive == false &&
+          _isUpdatingPrices == true) {
+        _relevantTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+          timer.cancel();
+
+          // setState(() {
+          //   print("Timer.periodic - 1 min: ${DateTime.now()}");
+          //   isNonTextFormFieldTriggeredBuild = true;
+          // });
+
+          updatePrices();
+
+        });
+      }
+    } else if (isOneMin == true) {
+      print('priceAllInstruments contains "prices"');
+      print("");
+      print("HOMEPAGE - END - 1min");
+      print(
+          "--------------------------------------------------------------------------------");
+      print("");
+
+      print("_relevantTimer outside: $_relevantTimer");
+      print(
+          "_relevantTimer.isActive == false && isPriceUpdating == false in: ${_relevantTimer.isActive == false && _isUpdatingPrices == false}");
+
+      /// If prices are currently being updated, replace current
+      /// _relevantTimer with another when prices have fully been
+      /// updated..
+      ///
+      /// useful when a grid tile has been clicked but prices
+      /// are still being updated, which would normally prevent
+      /// the rebuilt version of this page that has been triggered
+      /// by the grid tile selection from reflecting the updated
+      /// prices when the prices have finished updating..
+      if (_isUpdatingPrices == true) {
+        /// cancel any previously set (active) price update
+        /// operation status checking timer to prevent the creation
+        /// of multiple memory hogging timers..
+        if (_isPricesUpdatedCheckingTimer.isActive) {
+          _isPricesUpdatedCheckingTimer.cancel();
+        }
+
+        print("isPriceUpdating == true");
+
+        /// create and store the new value of price update
+        /// operation status checking timer..
+        _isPricesUpdatedCheckingTimer =
+            Timer.periodic(const Duration(milliseconds: 1000), (timer) {
+              // 1000
+              print("Duration(milliseconds: 1000)");
+              print(
+                  "2. _relevantTimer.isActive == false && isPriceUpdating == false: ${_relevantTimer.isActive == false && _isUpdatingPrices == false}");
+              print(
+                  "2. _relevantTimer.isActive == false: ${_relevantTimer.isActive == false}");
+              print("2. isPriceUpdating == false: ${_isUpdatingPrices == false}");
+              print("");
+
+              /// dataProvider!.getIsUpdatingPrices() is used below instead of
+              /// "updatingPrices" variable to ensure that the latest state prices
+              /// update state is obtained directly from dataProvider...
+
+              if (_relevantTimer.isActive == false &&
+                  _isUpdatingPrices == false) {
+                print("gridTile _relevantTimer in: $_relevantTimer");
+                print("gridTile selected: _relevantTimer.isActive == false "
+                    "&& isPriceUpdating == false in: ${_relevantTimer.isActive == false && _isUpdatingPrices == false}");
+
+                // /// updating all instruments' price data
+                // priceAllInstruments = dataProvider!.getInstruments();
+
+                _relevantTimer =
+                    Timer.periodic(const Duration(milliseconds: 60001), (timer) {
+                      timer.cancel();
+
+                      // setState(() {
+                      //   isNonTextFormFieldTriggeredBuild = true;
+                      // });
+                      
+                      updatePrices();
+                    });
+
+                timer.cancel();
+
+                /// arbitrarily rebuild this FutureBuilder widget..
+                ///
+                /// Note that isGridTileOrFilterOptionClickedOrKeyboardVisible will be set back to
+                /// false once this FutureBuilder widget has been
+                /// rebuilt..
+                // setState(() {
+                //   isGridTileOrFilterOptionClickedOrKeyboardVisible = true;
+                // });
+              }
+            });
+      }
+
+      /// if a previous 1 minute timer is no longer active and it's
+      /// corresponding dataProvider!.updatePrices (Future) has
+      /// finished running i.e prices have finished updating,
+      /// set _relevantTimer to a timer that should
+      /// execute dataProvider!.updatePrices one minute in the
+      /// future..
+      ///
+      /// the conditions below mean "wait until the previously set
+      /// relevant timer has done it's job.."
+      else if (_relevantTimer.isActive == false &&
+          _isUpdatingPrices == false) {
+        print("3. _relevantTimer in: $_relevantTimer");
+        print("3. _relevantTimer.isActive == false "
+            "&& isPriceUpdating == false in: "
+            "${_relevantTimer.isActive == false && _isUpdatingPrices == false}");
+
+        _relevantTimer =
+            Timer.periodic(const Duration(milliseconds: 60001), (timer) {
+              timer.cancel();
+
+              // setState(() {
+              //   isNonTextFormFieldTriggeredBuild = true;
+              // });
+              
+              updatePrices();
+            });
+      }
+    }
   }
 
 

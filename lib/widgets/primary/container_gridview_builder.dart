@@ -10,9 +10,6 @@ class ContainerGridViewBuilder extends StatefulWidget {
       {required this.heightFirstSixGridTiles,
       required this.crossAxisSpacing,
       required this.mainAxisSpacing,
-      required this.listOfAllInstruments,
-      required this.priceAllInstruments,
-      required this.indexSelectedGridTile,
       required this.widthGridTile,
       required this.heightGridTile,
       required this.paddingTopGridTile,
@@ -27,12 +24,12 @@ class ContainerGridViewBuilder extends StatefulWidget {
       required this.marginCurrencyPairAndCurrencyPrice,
       required this.heightPriceSizedBox,
       required this.fontSizePrices,
-      required this.updateHomepageGridTileClicked,
+      // required this.updateHomepageGridTileClicked,
       /// function to reset the lower left corner's text to null if any has
       /// previously been entered, so that
       /// CurrencyPairTextFieldOrCreateAlertButton can update correctly with a
       /// selected grid tile's currency pair..
-      required this.updateHomepageNewInstrumentTextEntered,
+      // required this.updateHomepageNewInstrumentTextEntered,
       // required this.enteredTextCurrencyPairTextFormFieldWidget,
       // required this.isErrorEnteredTextCurrencyPairTextFormFieldWidget
       });
@@ -41,9 +38,6 @@ class ContainerGridViewBuilder extends StatefulWidget {
 
   final double crossAxisSpacing;
   final double mainAxisSpacing;
-  final List listOfAllInstruments;
-  final Map priceAllInstruments;
-  final int indexSelectedGridTile;
   final double widthGridTile;
   final double heightGridTile;
   final double paddingTopGridTile;
@@ -58,7 +52,7 @@ class ContainerGridViewBuilder extends StatefulWidget {
   final double marginCurrencyPairAndCurrencyPrice;
   final double heightPriceSizedBox;
   final double fontSizePrices;
-  final Function({required String? enteredText}) updateHomepageNewInstrumentTextEntered;
+  // final Function({required String? enteredText}) updateHomepageNewInstrumentTextEntered;
   // final String? enteredTextCurrencyPairTextFormFieldWidget;
   // final bool isErrorEnteredTextCurrencyPairTextFormFieldWidget;
 
@@ -78,9 +72,9 @@ class ContainerGridViewBuilder extends StatefulWidget {
   /// ensure that a selected grid tile is
   /// colored and a timer is set ...
   // isGridTileClicked = true;
-  final Function(
-      {required bool isGridTileClicked,
-      required int indexNewSelectedGridTile}) updateHomepageGridTileClicked;
+  // final Function(
+  //     {required bool isGridTileClicked,
+  //     required int indexNewSelectedGridTile}) updateHomepageGridTileClicked;
 
   @override
   State<ContainerGridViewBuilder> createState() =>
@@ -96,22 +90,50 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
   String? currentlySelectedInstrument;
   int? currentlySelectedInstrumentRowNumber;
 
+  /// map of all instruments
+  Map<dynamic, dynamic> mapOfAllInstruments = {};
+
+  /// list of all instruments
+  List<dynamic> listOfAllInstruments = [];
+
+  /// index of the selected grid tile
+  int? indexSelectedGridTile;
+
+  /// map of entered currency pair map
+  Map<String,dynamic> enteredCurrencyPairMap = {};
+  String? manuallyEnteredCurrencyPair;
+  bool? isErrorManuallyEnteredCurrencyPair;
+
+  /// value keys
+  Key? currentValueKeyBackup;
+  Key? currentValueKey;
+
   @override
   didChangeDependencies() {
     // TODO: implement didChangeDependencies
 
     /// data provider
-    dataProvider = Provider.of<DataProvider>(context, listen: false);
+    dataProvider = Provider.of<DataProvider>(context, listen: true);
 
     /// setting the value of the currently selected currency pair
-      currentlySelectedInstrument =
-      widget.listOfAllInstruments[widget.indexSelectedGridTile];
+    indexSelectedGridTile = dataProvider!.getIndexSelectedGridTile();
+
+
+
+    /// map of all instruments
+    mapOfAllInstruments = dataProvider!.getInstruments();
+
+    /// list of all instruments
+    listOfAllInstruments = dataProvider!.getListOfAllInstruments();
 
     /// determining the currently selected currency pair's row
     currentlySelectedInstrumentRowNumber = dataProvider!
-        .getInstrumentGridViewRowNumber(
-            instrument: currentlySelectedInstrument!
-    );
+        .getCurrentlySelectedInstrumentRowNumber();
+
+    /// map of entered currency pair map
+    enteredCurrencyPairMap = dataProvider!.getEnteredTextCurrencyPair();
+    manuallyEnteredCurrencyPair = enteredCurrencyPairMap['enteredCurrencyPair'];
+    isErrorManuallyEnteredCurrencyPair = enteredCurrencyPairMap['isErrorEnteredText'];
 
     print(
         "currently selected instrument's row number: ${currentlySelectedInstrumentRowNumber}");
@@ -121,6 +143,28 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
 
   @override
   void didUpdateWidget(covariant ContainerGridViewBuilder oldWidget) {
+
+    /// setting the value of the currently selected currency pair
+    indexSelectedGridTile = dataProvider!.getIndexSelectedGridTile();
+
+    currentValueKey = ValueKey("$indexSelectedGridTile");
+
+    /// to ensure that the gridview will not be rebuilt when the grid tile gets
+    /// clicked post deletion of a previous manually entered currency pair text
+    if (
+    currentValueKeyBackup != null
+        && manuallyEnteredCurrencyPair==null
+        && isErrorManuallyEnteredCurrencyPair==null
+    ){
+      currentValueKey = currentValueKeyBackup;
+    }
+
+    /// determining the currently selected currency pair's row
+    currentlySelectedInstrumentRowNumber = dataProvider!
+        .getCurrentlySelectedInstrumentRowNumber();
+
+    print(
+        "currently selected instrument's row number: ${currentlySelectedInstrumentRowNumber}");
 
     /// obtaining the currently selected instrument's row number..
     ///
@@ -139,14 +183,23 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
     /// CurrencyPairTextFieldOrCreateAlertButton, set currentSelectedInstrument
     /// to the currently or previously selected grid tile's currency pair..
     // if{
-      currentlySelectedInstrument =
-      widget.listOfAllInstruments[widget.indexSelectedGridTile];
+    //   currentlySelectedInstrument = dataProvider!.getCurrentlySelectedInstrument();
     // }
 
-    currentlySelectedInstrumentRowNumber = dataProvider!
-        .getInstrumentGridViewRowNumber(
-        instrument: currentlySelectedInstrument!
-    );
+    /// map of entered currency pair map
+    enteredCurrencyPairMap = dataProvider!.getEnteredTextCurrencyPair();
+    manuallyEnteredCurrencyPair = enteredCurrencyPairMap['enteredCurrencyPair'];
+    isErrorManuallyEnteredCurrencyPair = enteredCurrencyPairMap['isErrorEnteredText'];
+
+    /// to ensure that the gridview will not be rebuilt when the grid tile gets
+    /// clicked post deletion of a previous manually entered currency pair text
+    if (
+          currentValueKeyBackup != null
+          && manuallyEnteredCurrencyPair==null
+          && isErrorManuallyEnteredCurrencyPair==null
+    ){
+      currentValueKey = currentValueKeyBackup;
+    }
 
     print(
         "currently selected instrument's row number: ${currentlySelectedInstrumentRowNumber}");
@@ -155,10 +208,53 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
     super.didUpdateWidget(oldWidget);
   }
 
+  /// this method gets the initial scroll offset
+  double getInitialScrollOffset(){
+    
+    Map<String,dynamic> enteredCurrencyPairMap = dataProvider!.getEnteredTextCurrencyPair();
+
+    String? manuallyEnteredCurrencyPair = enteredCurrencyPairMap['enteredCurrencyPair'];
+    bool? isErrorManuallyEnteredCurrencyPair = enteredCurrencyPairMap['isErrorEnteredText'];
+
+    print("manuallyEnteredCurrencyPair: $manuallyEnteredCurrencyPair");
+    print("isErrorManuallyEnteredCurrencyPair: $isErrorManuallyEnteredCurrencyPair");
+
+    /// if a valid currency pair text exists, apply a proper scroll offset
+    if (
+      manuallyEnteredCurrencyPair != null && isErrorManuallyEnteredCurrencyPair == null) {
+
+      double scaleOffset =
+          (dataProvider!.getCurrentlySelectedInstrumentRowNumber() - 1) *
+              (widget.heightGridTile + widget.mainAxisSpacing);
+
+      print("scaleOffset: $scaleOffset");
+      return scaleOffset;
+
+    } else {
+
+      return 0;
+
+    }
+
+  }
+
+
+
   Container build(BuildContext context) {
     // print("GridViewBuilder key: ${gridView!.anchor}");
 
+    // double initialScrollOffset = currentlySelectedInstrumentRowNumber! <= 3 ?
+    // 0 : getInitialScrollOffset();
+
+    ScrollController? scrollController;
+
+    print("initialScrollOffset: ${getInitialScrollOffset()}");
+
+    print("manuallyEnteredCurrencyPair: ${manuallyEnteredCurrencyPair}, isErrorManuallyEnteredCurrencyPair: $isErrorManuallyEnteredCurrencyPair");
+
+
     return Container(
+      // key: ValueKey("gridViewBuilderContainer$indexSelectedGridTile"),
       // color: Colors.yellow,
       width: double.infinity,
       height: widget.heightFirstSixGridTiles,
@@ -167,29 +263,42 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
 
       /// A GridView Builder - contains all currency pairs
       child: GridView.builder(
-        controller: ScrollController(
-            initialScrollOffset: currentlySelectedInstrumentRowNumber! <= 6 ? 0 : currentlySelectedInstrumentRowNumber! *
-                (widget.heightGridTile + widget.mainAxisSpacing),
-            keepScrollOffset: true),
+        /// currentValueKey will be equal to the previous key when a previous
+        /// manually entered currency pair text gets reset.
+        ///
+        /// That will ensure that this grid view builder will not get rebuilt..
+        /// if it gets rebuilt, this grid view builder will scroll back to the
+        /// top which would contribute to a pretty nasty user experience
+        key: currentValueKey,
+        /// the scroll controller will have a zero value offset when the grid
+        /// tile gets tapped or when the index of the selected grid tile does
+        /// not exceed 5, and will have a properly calculated offset when
+        /// the a manually entered currency pair exists
+        controller: manuallyEnteredCurrencyPair == null
+            && isErrorManuallyEnteredCurrencyPair == null ?
+            ScrollController() :
+            ScrollController(
+                initialScrollOffset: indexSelectedGridTile! <= 6 ?
+                0 : getInitialScrollOffset(),
+                keepScrollOffset: true
+            ),
         padding: const EdgeInsets.all(0),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
             crossAxisSpacing: widget.crossAxisSpacing,
             mainAxisSpacing: widget.mainAxisSpacing),
-        itemCount: widget.listOfAllInstruments.isEmpty
+        itemCount: listOfAllInstruments.isEmpty
             /// a minimum of six instruments will be displayed
-            ? 6
-            :
-            widget.listOfAllInstruments.length,
+            ? 6 : listOfAllInstruments.length,
         itemBuilder: (context, index) {
-          String currentSymbolOrInstrument = widget.listOfAllInstruments[index];
+          String currentSymbolOrInstrument = listOfAllInstruments[index];
 
           /// Current instrument's data - could contain both
           /// the old and current prices of the instrument
           /// (actual prices or "demo") or
           /// "fetching"
           dynamic currentInstrumentsData =
-              widget.priceAllInstruments[currentSymbolOrInstrument];
+              mapOfAllInstruments[currentSymbolOrInstrument];
 
           /// checking whether the current instrument's price
           /// is being fetched..
@@ -245,7 +354,7 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
           /// should be selected
           bool isSelectedTile = false;
 
-          if (index == widget.indexSelectedGridTile &&
+          if (index == indexSelectedGridTile &&
               isFetchingPrices == false &&
               priceDifferenceIfAny != "demo"){
 
@@ -285,16 +394,27 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
             onTap: () {
               if (currentInstrumentsData.runtimeType != String &&
                   priceDifferenceIfAny != "demo" &&
-                  widget.indexSelectedGridTile != index){
+                  indexSelectedGridTile != index
+              ){
 
-                  widget.updateHomepageNewInstrumentTextEntered(
-                      enteredText: null
+                  // widget.updateHomepageNewInstrumentTextEntered(
+                  //     enteredText: null
+                  // );
+
+                  /// resetting any previous manually entered currency pair text
+                  currentValueKeyBackup = currentValueKey;
+                  if (manuallyEnteredCurrencyPair != null){
+                    dataProvider!.updateEnteredTextCurrencyPair(
+                        enteredText: null
+                    );
+                  }
+
+                  /// updating the selected grid tile's index and calling
+                  /// notifyListeners
+                  dataProvider!.updateIndexSelectedGridTile(
+                      newIndexSelectedGridTile: index
                   );
 
-                  widget.updateHomepageGridTileClicked(
-                      indexNewSelectedGridTile: index,
-                      isGridTileClicked: true
-                  );
                 }
             },
             child: GridTileCurrencyPair(
@@ -323,7 +443,7 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
                 marginCurrencyPairAndCurrencyPrice:
                     widget.marginCurrencyPairAndCurrencyPrice,
                 heightPriceSizedBox: widget.heightPriceSizedBox,
-                priceAllInstruments: widget.priceAllInstruments,
+                mapOfAllInstruments: mapOfAllInstruments,
                 fontSizePrices: widget.fontSizePrices),
           );
         },

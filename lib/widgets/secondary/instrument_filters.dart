@@ -1,4 +1,7 @@
 import "package:flutter/material.dart";
+import "package:provider/provider.dart";
+
+import '../../providers/data_provider.dart';
 
 import "./custom_text_button.dart";
 import "./dot_divider.dart";
@@ -11,18 +14,11 @@ class InstrumentFilters extends StatefulWidget {
       {required this.fontSizeAlertsAndOtherMenuItemsSizedBox,
       required this.widthDotDivider,
       required this.iconSizeDotDivider,
-      required this.updateHomepageFilterClicked,
-      required this.isFirstValueInMapOfAllInstrumentsContainsFetching});
+      });
 
   final double fontSizeAlertsAndOtherMenuItemsSizedBox;
   final double widthDotDivider;
   final double iconSizeDotDivider;
-  /// helps reflect the selected filter option and its corresponding data
-  /// on the UI..
-  final void Function({required Filter selectedFilterOption})
-  updateHomepageFilterClicked;
-  /// helps determine whether instruments prices' are still being fetched..
-  final bool isFirstValueInMapOfAllInstrumentsContainsFetching;
 
   @override
   State<InstrumentFilters> createState() => _InstrumentFiltersState();
@@ -30,6 +26,25 @@ class InstrumentFilters extends StatefulWidget {
 
 /// Instrument Filters' State
 class _InstrumentFiltersState extends State<InstrumentFilters> {
+
+  DataProvider? dataProvider;
+
+  @override
+  void didChangeDependencies() {
+
+    dataProvider = Provider.of<DataProvider>(context, listen:true);
+
+    // TODO: implement didChangeDependencies
+    super.didChangeDependencies();
+  }
+
+  @override
+  void didUpdateWidget(covariant InstrumentFilters oldWidget) {
+
+    // TODO: implement didUpdateWidget
+    super.didUpdateWidget(oldWidget);
+  }
+
   Filter selectedFilterOption = Filter.all;
 
   void updateInstrumentFilter({required Filter selectedFilter}) {
@@ -42,7 +57,8 @@ class _InstrumentFiltersState extends State<InstrumentFilters> {
 
     /// rebuilds the homepage to reflect prices data that match the selected
     /// filter..
-    widget.updateHomepageFilterClicked(selectedFilterOption: selectedFilter);
+    dataProvider!.updateFilter(filter: selectedFilterOption);
+
 
   }
 
@@ -57,8 +73,6 @@ class _InstrumentFiltersState extends State<InstrumentFilters> {
           selectedFilter: selectedFilterOption,
           fontSize: widget.fontSizeAlertsAndOtherMenuItemsSizedBox,
           functionUpdateSelectedFilter: updateInstrumentFilter,
-          isFirstValueInMapOfAllInstrumentsContainsFetching:
-              widget.isFirstValueInMapOfAllInstrumentsContainsFetching,
         ),
 
         /// dot divider
@@ -71,9 +85,8 @@ class _InstrumentFiltersState extends State<InstrumentFilters> {
             currentFilter: Filter.forex,
             selectedFilter: selectedFilterOption,
             fontSize: widget.fontSizeAlertsAndOtherMenuItemsSizedBox,
-            functionUpdateSelectedFilter: updateInstrumentFilter,
-            isFirstValueInMapOfAllInstrumentsContainsFetching:
-                widget.isFirstValueInMapOfAllInstrumentsContainsFetching),
+            functionUpdateSelectedFilter: updateInstrumentFilter
+        ),
 
         /// dot divider
         DotDivider(
@@ -85,9 +98,8 @@ class _InstrumentFiltersState extends State<InstrumentFilters> {
             currentFilter: Filter.crypto,
             selectedFilter: selectedFilterOption,
             fontSize: widget.fontSizeAlertsAndOtherMenuItemsSizedBox,
-            functionUpdateSelectedFilter: updateInstrumentFilter,
-            isFirstValueInMapOfAllInstrumentsContainsFetching:
-                widget.isFirstValueInMapOfAllInstrumentsContainsFetching)
+            functionUpdateSelectedFilter: updateInstrumentFilter
+        )
       ],
     );
   }

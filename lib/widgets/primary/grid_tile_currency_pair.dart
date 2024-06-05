@@ -23,7 +23,7 @@ class GridTileCurrencyPair extends StatefulWidget {
       required this.fontSizeSymbols,
       required this.marginCurrencyPairAndCurrencyPrice,
       required this.heightPriceSizedBox,
-      required this.priceAllInstruments,
+      required this.mapOfAllInstruments,
       required this.fontSizePrices});
 
   final bool isSelected;
@@ -47,7 +47,7 @@ class GridTileCurrencyPair extends StatefulWidget {
   final double fontSizeSymbols;
   final double marginCurrencyPairAndCurrencyPrice;
   final double heightPriceSizedBox;
-  final Map priceAllInstruments;
+  final Map mapOfAllInstruments;
   final double fontSizePrices;
 
   @override
@@ -160,7 +160,7 @@ class _GridTileCurrencyPairState extends State<GridTileCurrencyPair> {
                 isFetching: widget.isFetchingPrices,
                 currentSymbolOrInstrumentOrPrice: widget.isFetchingPrices
                     ? "fetching"
-                    : widget.priceAllInstruments[widget.currentSymbolOrInstrument]
+                    : widget.mapOfAllInstruments[widget.currentSymbolOrInstrument]
                             ["current_price"]
                         .toString(),
                 fontWeight: FontWeight.w300,

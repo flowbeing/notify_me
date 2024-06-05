@@ -1,25 +1,26 @@
 import "package:flutter/material.dart";
+import "package:provider/provider.dart";
+
+import "../../providers/data_provider.dart";
 
 import '../../data/enums.dart';
 
 class CustomTextButton extends StatefulWidget {
   CustomTextButton(
-      {required this.fontSize,
-      required this.currentFilter,
-      required this.selectedFilter,
-
-      /// helps determine whether instruments prices' are still being fetched..
-      /// if so, this button will be deactivated..
-      this.isFirstValueInMapOfAllInstrumentsContainsFetching = false,
-
-      /// helps reflect the selected filter option and its corresponding data
-      /// on the UI..
-      this.functionUpdateSelectedFilter});
+      {
+        required this.fontSize,
+        required this.currentFilter,
+        required this.selectedFilter,
+        this.functionUpdateSelectedFilter
+      });
 
   final double fontSize;
+  /// used to identify when the custom text button is for the Mute all button
   final Filter currentFilter;
+  /// used to identify when the custom text button is for the Mute all button
   final Filter selectedFilter;
-  final bool isFirstValueInMapOfAllInstrumentsContainsFetching;
+  /// helps reflect the selected filter option and its corresponding data
+  /// on the UI..
   final Function({required Filter selectedFilter})?
       functionUpdateSelectedFilter;
 
@@ -29,11 +30,18 @@ class CustomTextButton extends StatefulWidget {
 
 /// CustomTextButton's state
 class _CustomTextButtonState extends State<CustomTextButton> {
+
+  DataProvider? dataProvider;
+
   String text = "";
+
 
   @override
   void didChangeDependencies() {
-    // TODO: implement didChangeDependencies
+
+    dataProvider = Provider.of(context, listen: true);
+
+    /// defining filters
     if (widget.currentFilter == Filter.all) {
       text = "All";
     } else if (widget.currentFilter == Filter.forex) {
@@ -46,7 +54,15 @@ class _CustomTextButtonState extends State<CustomTextButton> {
       text = "Mute All";
     }
 
+    // TODO: implement didChangeDependencies
     super.didChangeDependencies();
+  }
+
+  @override
+  void didUpdateWidget(covariant CustomTextButton oldWidget) {
+
+    // TODO: implement didUpdateWidget
+    super.didUpdateWidget(oldWidget);
   }
 
   // FontWeight fontWeight = FontWeight.normal;
@@ -65,7 +81,7 @@ class _CustomTextButtonState extends State<CustomTextButton> {
         /// be displayed as the selected filter option on-screen..
         if (widget.selectedFilter != widget.currentFilter &&
             widget.functionUpdateSelectedFilter != null  &&
-            widget.isFirstValueInMapOfAllInstrumentsContainsFetching == false) {
+            dataProvider!.getIsFirstValueInMapOfAllInstrumentsContainsFetching() == false) {
           print("reflecting this");
           widget.functionUpdateSelectedFilter!(
               selectedFilter: widget.currentFilter);
@@ -97,7 +113,7 @@ class _CustomTextButtonState extends State<CustomTextButton> {
                   /// --
                   ? FontWeight.w700
                   : FontWeight.normal,
-              color: widget.isFirstValueInMapOfAllInstrumentsContainsFetching
+              color: dataProvider!.getIsFirstValueInMapOfAllInstrumentsContainsFetching()
                   ? Colors.grey
                   : Colors.black)),
     );
