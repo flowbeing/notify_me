@@ -63,8 +63,9 @@ class _GridTileCurrencyPairState extends State<GridTileCurrencyPair> {
         padding: EdgeInsets.only(top: widget.paddingTopGridTile),
         decoration: BoxDecoration(
             color: widget.gridTileColor,
-            border: Border.all(color: widget.gridBorderColor,
-            width: widget.borderWidthGridTile
+            border: Border.all(
+              color: widget.gridBorderColor,
+              width: widget.isFetchingPrices ? 0.2 : widget.borderWidthGridTile
             ),
             borderRadius: BorderRadius.circular(widget.radiusGridTile)),
 

@@ -61,6 +61,9 @@ class DataProvider with ChangeNotifier {
   String? _enteredCurrencyPair;
   bool? _isErrorEnteredText;
 
+  /// CurrencyPairTextFieldOrCreateAlertButton's focus if any
+  bool _hasFocusCurrencyPairTextField=false;
+
   /// loads this app's configuration file and creates all relevant File objects
   Future _initialDataAndDotEnv() async {
     /// loading configuration file
@@ -312,6 +315,20 @@ class DataProvider with ChangeNotifier {
     return _listOfAllInstruments[_indexSelectedGridTile];
   }
 
+  /// helps signal that the keyboard (currency pair text form field) is
+  /// visible
+  void updateHasFocusCurrencyPairTextField({
+    required bool hasFocus
+  }){
+    _hasFocusCurrencyPairTextField=hasFocus;
+    notifyListeners();
+  }
+
+  /// retrieves hasFocusCurrencyPairTextField
+  bool getHasFocusCurrencyPairTextField(){
+    return _hasFocusCurrencyPairTextField;
+  }
+
   /// update entered currency pair text ->
   /// CurrencyPairTextFieldOrCreateAlertButton
   ///
@@ -323,8 +340,25 @@ class DataProvider with ChangeNotifier {
     FocusNode? focusNode
   }){
 
+    /// when grid tile gets tapped, reset the manually entered tell by setting
+    /// it to null. enteredText will be null
+    if (focusNode==null){
+      _enteredCurrencyPair = enteredText;
+      _isErrorEnteredText = null;
+    }
 
-    print("focusNode updateEnteredTextCurrencyPair: ${focusNode!.hasFocus}");
+    /// reset _updateCurrencyPairManually timer, if any, when an invalid
+    /// currency pair text is entered
+    if (
+      enteredText==null
+          && isErrorEnteredText==null
+          && focusNode!=null
+          && _updateCurrencyPairManually.isActive
+    ){
+      _updateCurrencyPairManually.cancel();
+      _enteredCurrencyPair=null;
+      _isErrorEnteredText=null;
+    }
 
 
     // _enteredCurrencyPair = enteredText;
@@ -341,11 +375,22 @@ class DataProvider with ChangeNotifier {
     //
     // }
 
+    // /// signalling that the keyboard is visible
+    // ///
+    // /// may not be necessary
+    // if (focusNode != null){
+    //   if (focusNode.hasFocus){
+    //     _hasFocusCurrencyPairTextField=true;
+    //   }
+    // }
+
       /// if the "done" button gets clicked by the user for the text field
       /// in CurrencyPairTextFieldOrCreateAlertButton, reload all listening
       /// widgets including the ContainerGridViewBuilder custom widget
       /// to reflect the currently selected currency pair..
-      if (focusNode != null){
+      if (enteredText!=null && focusNode != null){
+
+        print("focusNode updateEnteredTextCurrencyPair: ${focusNode.hasFocus}");
 
           _updateCurrencyPairManually.cancel();
 
@@ -353,7 +398,10 @@ class DataProvider with ChangeNotifier {
 
             print("timer: $timer");
 
+
             if (focusNode.hasFocus == false){
+
+              _hasFocusCurrencyPairTextField=false;
 
               _enteredCurrencyPair = enteredText;
               _isErrorEnteredText = isErrorEnteredText;
@@ -361,6 +409,7 @@ class DataProvider with ChangeNotifier {
               /// if the entered currency pair is valid, update the index of the selected
               /// grid tile..
               if (_isErrorEnteredText == null) {
+
                 int indexOfEnteredValidCurrencyPair =
                 _listOfAllInstruments.indexOf(_enteredCurrencyPair);
 

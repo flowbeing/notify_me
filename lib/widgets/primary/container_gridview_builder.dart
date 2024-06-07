@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import "package:flutter/material.dart";
 import 'package:provider/provider.dart';
 
@@ -257,12 +259,18 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
       // key: ValueKey("gridViewBuilderContainer$indexSelectedGridTile"),
       // color: Colors.yellow,
       width: double.infinity,
-      height: widget.heightFirstSixGridTiles,
-      margin: const EdgeInsets.all(0),
+      height: widget.heightFirstSixGridTiles + widget.mainAxisSpacing + .1,
+      // margin: const EdgeInsets.all(0),
       padding: const EdgeInsets.all(0),
 
       /// A GridView Builder - contains all currency pairs
       child: GridView.builder(
+        // clipBehavior: Clip.none,
+        // addRepaintBoundaries: true,
+        // addAutomaticKeepAlives: false,
+        // addSemanticIndexes: false,
+        // cacheExtent: 10,
+        // semanticChildCount: 10,
         /// currentValueKey will be equal to the previous key when a previous
         /// manually entered currency pair text gets reset.
         ///
@@ -282,14 +290,15 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
                 0 : getInitialScrollOffset(),
                 keepScrollOffset: true
             ),
+        addRepaintBoundaries: true,
         padding: const EdgeInsets.all(0),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
             crossAxisSpacing: widget.crossAxisSpacing,
             mainAxisSpacing: widget.mainAxisSpacing),
-        itemCount: listOfAllInstruments.isEmpty
-            /// a minimum of six instruments will be displayed
-            ? 6 : listOfAllInstruments.length,
+        itemCount:
+        // listOfAllInstruments.isEmpty ? 6 :
+        listOfAllInstruments.length,
         itemBuilder: (context, index) {
           String currentSymbolOrInstrument = listOfAllInstruments[index];
 
@@ -368,8 +377,9 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
           Color? gridBorderColor;
 
           if (isFetchingPrices == true) {
-            gridTileColor = Colors.white;
-            gridBorderColor = gridTileColor;
+            gridTileColor = Colors.black.withOpacity(.02); //  Colors.white
+            // gridTileColor = Colors.white;
+            gridBorderColor = Colors.black.withOpacity(0.1); //gridTileColor
           } else if (isNotDisplayedPriceOrNoPriceMovement) {
             gridTileColor = Colors.black.withOpacity(.01);
             gridBorderColor = gridTileColor;
@@ -392,9 +402,10 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
             /// b. the clicked grid tile is not the currently selected grid
             ///    tile..
             onTap: () {
-              if (currentInstrumentsData.runtimeType != String &&
-                  priceDifferenceIfAny != "demo" &&
-                  indexSelectedGridTile != index
+              if (currentInstrumentsData.runtimeType != String
+                  && priceDifferenceIfAny != "demo"
+                  && indexSelectedGridTile != index
+                  && dataProvider!.getHasFocusCurrencyPairTextField()==false
               ){
 
                   // widget.updateHomepageNewInstrumentTextEntered(
@@ -417,34 +428,35 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
 
                 }
             },
-            child: GridTileCurrencyPair(
-                isSelected: isSelectedTile,
-                widthGridTile: widget.widthGridTile,
-                heightGridTile: widget.heightGridTile,
-                paddingTopGridTile: widget.paddingTopGridTile,
-                gridTileColor:
-                    isSelectedTile ? pureColorGridTile : gridTileColor!,
-                gridBorderColor: gridBorderColor!,
-                borderWidthGridTile: widget.borderWidthGridTile,
-                radiusGridTile: widget.radiusGridTile,
-                isFetchingPrices: isFetchingPrices,
-                heightPriceDirectionIcon: widget.heightPriceDirectionIcon,
-                isDownwardPriceMovement: isDownwardPriceMovement,
-                isUpwardPriceMovement: isUpwardPriceMovement,
-                isNotDisplayedPriceOrNoPriceMovement:
-                    isNotDisplayedPriceOrNoPriceMovement,
-                marginPriceDirectionAndCurrencyPair:
-                    widget.marginPriceDirectionAndCurrencyPair,
-                heightSymbolSizedBox: widget.heightSymbolSizedBox,
-                currencyPairLazyLoading: widget.currencyPairLazyLoading,
-                currencyPairOrPrice: widget.currencyPairOrPrice,
-                currentSymbolOrInstrument: currentSymbolOrInstrument,
-                fontSizeSymbols: widget.fontSizeSymbols,
-                marginCurrencyPairAndCurrencyPrice:
-                    widget.marginCurrencyPairAndCurrencyPrice,
-                heightPriceSizedBox: widget.heightPriceSizedBox,
-                mapOfAllInstruments: mapOfAllInstruments,
-                fontSizePrices: widget.fontSizePrices),
+              child: GridTileCurrencyPair(
+                    isSelected: isSelectedTile,
+                    widthGridTile: widget.widthGridTile,
+                    heightGridTile: widget.heightGridTile,
+                    paddingTopGridTile: widget.paddingTopGridTile,
+                    gridTileColor:
+                        isSelectedTile ? pureColorGridTile : gridTileColor!,
+                    gridBorderColor: gridBorderColor!,
+                    borderWidthGridTile: widget.borderWidthGridTile,
+                    radiusGridTile: widget.radiusGridTile,
+                    isFetchingPrices: isFetchingPrices,
+                    heightPriceDirectionIcon: widget.heightPriceDirectionIcon,
+                    isDownwardPriceMovement: isDownwardPriceMovement,
+                    isUpwardPriceMovement: isUpwardPriceMovement,
+                    isNotDisplayedPriceOrNoPriceMovement:
+                        isNotDisplayedPriceOrNoPriceMovement,
+                    marginPriceDirectionAndCurrencyPair:
+                        widget.marginPriceDirectionAndCurrencyPair,
+                    heightSymbolSizedBox: widget.heightSymbolSizedBox,
+                    currencyPairLazyLoading: widget.currencyPairLazyLoading,
+                    currencyPairOrPrice: widget.currencyPairOrPrice,
+                    currentSymbolOrInstrument: currentSymbolOrInstrument,
+                    fontSizeSymbols: widget.fontSizeSymbols,
+                    marginCurrencyPairAndCurrencyPrice:
+                        widget.marginCurrencyPairAndCurrencyPrice,
+                    heightPriceSizedBox: widget.heightPriceSizedBox,
+                    mapOfAllInstruments: mapOfAllInstruments,
+                    fontSizePrices: widget.fontSizePrices
+                ),
           );
         },
       ),

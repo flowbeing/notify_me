@@ -94,9 +94,11 @@ class _CustomTextButtonState extends State<CustomTextButton> {
         else if (widget.currentFilter == Filter.none &&
             widget.selectedFilter == Filter.none) {
           print("reflecting this 2");
-          setState(() {
-            isCustomTextButtonClicked = !isCustomTextButtonClicked;
-          });
+          if (dataProvider!.getIsFirstValueInMapOfAllInstrumentsContainsFetching() == false){
+            setState(() {
+              isCustomTextButtonClicked = !isCustomTextButtonClicked;
+            });
+          }
         }
       },
       child: Text(text,
