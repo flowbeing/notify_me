@@ -37,6 +37,9 @@ dependencies:
   http: ^0.13.5
   path_provider: ^2.1.0
   device_frame: ^1.1.0
+  lottie: ^2.3.2
+  keyboard_detection: ^0.6.3
+  flutter_keyboard_visibility: ^6.0.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -65,7 +68,38 @@ flutter:
   uses-material-design: true
 
   assets:
+    # dotenv
     - config.env
+
+    # images
+    - assets/images/price_decrease.png
+    - assets/images/price_decrease_white.png
+    - assets/images/price_increase.png
+    - assets/images/price_increase_white.png
+    - assets/images/price_increase_turquoise.png
+    - assets/images/price_increase_darker_turquoise.png
+    - assets/images/price_fetching.png
+    - assets/images/price_decrease_alert.png
+    - assets/images/price_increase_alert.png
+    - assets/images/no_alerts.png
+
+    # lottie animation assets
+    - assets/lottie_animations/loading_price.json
+    - assets/lottie_animations/loading_symbol.json
+    - assets/lottie_animations/no_alerts.json
+    - assets/lottie_animations/no_alerts.lottie
+
+  fonts:
+    - family: PT-Mono
+      fonts:
+#        - asset: assets/fonts/pt-mono_regular.ttf
+#          weight: 300
+#        - asset: assets/fonts/pt-mono_bold.ttf
+#          weight: 700
+         - asset: assets/fonts/pt-mono_regular.otf
+           weight: 300
+         - asset: assets/fonts/pt-mono_bold.otf
+           weight: 700
 
   # To add assets to your application, add an assets section, like this:
   # assets:
