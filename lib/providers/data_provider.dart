@@ -64,6 +64,13 @@ class DataProvider with ChangeNotifier {
   /// CurrencyPairTextFieldOrCreateAlertButton's focus if any
   bool _hasFocusCurrencyPairTextField=false;
 
+  /// bool that signals whether the keyboard is visible as a result of clicking
+  /// the currency price text form field widget
+  bool _hasFocusCurrencyPriceTextField = false;
+
+  /// registers the price of the alert that will be added
+  String _alertPriceCurrencyPriceTextField = "";
+
   /// loads this app's configuration file and creates all relevant File objects
   Future _initialDataAndDotEnv() async {
     /// loading configuration file
@@ -174,6 +181,11 @@ class DataProvider with ChangeNotifier {
           "--------------------------------------------------------------------------------");
       print("");
 
+      /// setting a dummy alert price for the initially selected currency pair
+      /// (4th pair) in the map of all prices when prices are being fetched for
+      /// the first time..
+      setAlertPriceCurrencyPriceTextField();
+      /// updating timers
       updateTimers(isOneMin: false);
       notifyListeners();
     }
@@ -181,6 +193,10 @@ class DataProvider with ChangeNotifier {
     /// ... otherwise, wait for 1 minute (approx) future timers and notify
     /// listeners
     else {
+      /// setting the alert price for the currently selected currency pair
+      /// after prices have been fetched at least once
+      setAlertPriceCurrencyPriceTextField();
+      /// updating timers
       updateTimers(isOneMin: true);
       notifyListeners();
     }
@@ -301,6 +317,12 @@ class DataProvider with ChangeNotifier {
   void updateIndexSelectedGridTile({required int newIndexSelectedGridTile}){
 
     _indexSelectedGridTile = newIndexSelectedGridTile;
+
+    /// update the alert price to reflect the newly selected grid tile's
+    /// price..
+    setAlertPriceCurrencyPriceTextField();
+
+    /// notifyListeners
     notifyListeners(); /// affect didChangeDependencies of listening widgets
 
   }
@@ -327,6 +349,57 @@ class DataProvider with ChangeNotifier {
   /// retrieves hasFocusCurrencyPairTextField
   bool getHasFocusCurrencyPairTextField(){
     return _hasFocusCurrencyPairTextField;
+  }
+
+  /// helps signal that the keyboard (currency price text form field) is
+  /// visible
+  void updateHasFocusCurrencyPriceTextField({required bool hasFocus}){
+    _hasFocusCurrencyPriceTextField=hasFocus;
+  }
+
+  /// retrieves the currently selected pair's price if any (i.e if prices have
+  /// been fetched..
+  ///
+  /// a helper function for setAlertPriceCurrencyPriceTextField
+  String getCurrentlySelectedInstrumentPrice(){
+
+    bool isFetchingPrices = getIsFirstValueInMapOfAllInstrumentsContainsFetching();
+
+    String currentlySelectCurrencyPair=_listOfAllInstruments[_indexSelectedGridTile];
+
+    return isFetchingPrices ? "0.00000" : _allForexAndCryptoPrices[currentlySelectCurrencyPair]['current_price'];
+
+  }
+
+  /// sets the alert price of the currently selected currency pair when
+  void setAlertPriceCurrencyPriceTextField(){
+
+    /// bool to signal that prices are being fetched for the first time..
+    bool isFetchingPrices = getIsFirstValueInMapOfAllInstrumentsContainsFetching();
+
+    if (isFetchingPrices){
+      _alertPriceCurrencyPriceTextField = "0.00000";
+    } else {
+      String currentlySelectedInstrumentPrice=getCurrentlySelectedInstrumentPrice();
+
+      if (currentlySelectedInstrumentPrice=="demo"){
+        _alertPriceCurrencyPriceTextField="0.00000";
+      } else {
+        _alertPriceCurrencyPriceTextField=currentlySelectedInstrumentPrice;
+      }
+    }
+
+  }
+
+  /// updates the alert price of the currently selected currency pair
+  void updateAlertPriceCurrencyPriceTextField({required String alertPrice}){
+    _alertPriceCurrencyPriceTextField=alertPrice;
+  }
+
+  /// gets the price of the currency pair that should be added to the currency
+  /// pair..
+  String getAlertPriceCurrencyPriceTextField(){
+    return _alertPriceCurrencyPriceTextField;
   }
 
   /// update entered currency pair text ->
