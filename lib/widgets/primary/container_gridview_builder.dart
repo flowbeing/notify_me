@@ -405,7 +405,7 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
               if (currentInstrumentsData.runtimeType != String
                   && priceDifferenceIfAny != "demo"
                   && indexSelectedGridTile != index
-                  && dataProvider!.getHasFocusCurrencyPairTextField()==false
+                  && dataProvider!.getHasFocusCurrencyPairOrAlertPriceTextField()==false
               ){
 
                   // widget.updateHomepageNewInstrumentTextEntered(
