@@ -530,7 +530,7 @@ class _CurrencyPriceAdjustmentContainerState
   int flexPriceContainer = 0;
 
   /// Have prices been fetched for the first time or not..
-  bool isFirstTimeFetching=true;
+  bool isFirstTimeFetching = true;
 
   /// bool to signal whether the alert price has been edited at least once
   bool hasEditedAlertPriceAtLeastOnce = false;
@@ -540,7 +540,7 @@ class _CurrencyPriceAdjustmentContainerState
   String? initialValuePrice;
 
   /// alert price text form field's focus node
-  FocusNode focusNode = FocusNode();
+  FocusNode? focusNodeAlertPrice;
 
   /// alert price (currently selected currency price's) text color
   Color? textColor;
@@ -555,6 +555,27 @@ class _CurrencyPriceAdjustmentContainerState
   Timer correctEnteredErrorTextTimer =
       Timer(const Duration(microseconds: 1), () {});
 
+  /// bool that signals whether the current alert price is valid or not
+  bool isValidCurrentAlertPrice = true;
+
+  /// the currently selected pair's price structure
+  String currentPairPriceStructure = "";
+
+  /// setting the current entered alert price text, whether valid or not,
+  /// selected, updated, or entered
+  String enteredPriceAlertText = "";
+
+  // final _formKey = GlobalKey<FormState>();
+
+  // @override
+  // void initState() {
+  //
+  //   print("initializedState focusNode");
+  //   focusNodeAlertPrice = FocusNode(debugLabel: "alertPrice$selectedInstrument");
+  //
+  //   // TODO: implement initState
+  //   super.initState();
+  // }
 
   @override
   didChangeDependencies() {
@@ -562,7 +583,6 @@ class _CurrencyPriceAdjustmentContainerState
     /// notifyListeners gets called, since selectedInstrument (valueKey) will
     /// change with every execution of notifyListeners()
     if (dataProvider == null) {
-
       dataProvider = Provider.of<DataProvider>(context, listen: true);
 
       /// setting the currently selected currency pair's price text form
@@ -571,17 +591,28 @@ class _CurrencyPriceAdjustmentContainerState
 
       initialValuePrice = dataProvider!.getAlertPriceCurrencyPriceTextField();
 
+      print("initializedState focusNode");
+      focusNodeAlertPrice = FocusNode(debugLabel: "alertPrice$selectedInstrument");
+
+      /// setting the currently selected pair's price structure - whether
+      /// selected, updated, or entered..
+      currentPairPriceStructure = initialValuePrice!;
+
+      /// setting the current entered alert price text, whether selected,
+      /// updated, or entered
+      enteredPriceAlertText = currentPairPriceStructure;
+
       flexPlusAndMinusButtons = (0.1761363636 * 100).round();
       flexPriceContainer = 100 - (flexPlusAndMinusButtons * 2);
 
       print("flexPlusAndMinusButtons: $flexPlusAndMinusButtons");
       print("flexPriceContainer: $flexPriceContainer");
-
     }
 
     /// setting alert price string's color depending on whether prices have
     /// been fetched for the first time or not..
-    isFirstTimeFetching = dataProvider!.getIsFirstValueInMapOfAllInstrumentsContainsFetching();
+    isFirstTimeFetching =
+        dataProvider!.getIsFirstValueInMapOfAllInstrumentsContainsFetching();
 
     /// so far the alert price's text form field's initial value has not been
     /// edited or a new grid tile has been selected, update the alert price's
@@ -593,15 +624,14 @@ class _CurrencyPriceAdjustmentContainerState
 
     if (currentSelectedInstrument.toLowerCase() ==
             selectedInstrument.toLowerCase() &&
-        focusNode.hasFocus == false) {
+        focusNodeAlertPrice!.hasFocus == false) {
       print(
           "hasEditedAlertPriceAtLeastOnce: ${hasEditedAlertPriceAtLeastOnce}");
       if (hasEditedAlertPriceAtLeastOnce == false) {
-
-        if (isFirstTimeFetching){
-          textColor=Colors.grey;
+        if (isFirstTimeFetching) {
+          textColor = Colors.grey;
         } else {
-          textColor=Colors.black;
+          textColor = Colors.black;
         }
 
         /// checking whether the current valueKey's case matches the currently
@@ -609,12 +639,21 @@ class _CurrencyPriceAdjustmentContainerState
         ///
         /// if so switch the case so that the updated price can be reflected
         if (currentSelectedInstrument == selectedInstrument) {
-          selectedInstrument = selectedInstrument.toLowerCase(); // lowercase
+          selectedInstrument = currentSelectedInstrument.toLowerCase(); // lowercase
           initialValuePrice = currentlySelectedInstrumentPrice;
         } else {
           selectedInstrument = currentSelectedInstrument; // uppercase
           initialValuePrice = currentlySelectedInstrumentPrice;
         }
+
+        /// setting the currently selected pair's price structure - whether
+        /// selected, updated, or entered..
+        currentPairPriceStructure = initialValuePrice!;
+
+        /// setting the current entered alert price text, whether selected,
+        /// updated, or entered
+        enteredPriceAlertText = currentPairPriceStructure;
+
       }
     }
 
@@ -624,7 +663,7 @@ class _CurrencyPriceAdjustmentContainerState
     /// price's text form field when a user is still entering text..
     else if (currentSelectedInstrument.toLowerCase() !=
             selectedInstrument.toLowerCase() &&
-        focusNode.hasFocus == false) {
+        focusNodeAlertPrice!.hasFocus == false) {
       print("updatedFilters?a");
 
       textColor = Colors.black;
@@ -636,6 +675,13 @@ class _CurrencyPriceAdjustmentContainerState
       print("initialValuePrice: $initialValuePrice");
       print("updatedFilters?b");
 
+      /// setting the currently selected pair's price structure
+      currentPairPriceStructure = initialValuePrice!;
+
+      /// setting the current entered alert price text, whether selected,
+      /// updated, or entered
+      enteredPriceAlertText = currentPairPriceStructure;
+
       /// resetting this signal variable to ensure that price updates
       /// will get displayed again at intervals after editing the alert
       /// price of a previously selected currency pair..
@@ -644,12 +690,13 @@ class _CurrencyPriceAdjustmentContainerState
 
     /// updates the alert price after an error currency pair text has been
     /// entered, submitted and displayed..
-    if (textColor!.value == colorRedInt && focusNode.hasFocus == false) {
+    if (textColor!.value == colorRedInt && focusNodeAlertPrice!.hasFocus == false) {
       // setState(() {
-      correctEnteredErrorTextTimer = Timer(const Duration(milliseconds: 2250), () {
+      correctEnteredErrorTextTimer =
+          Timer(const Duration(milliseconds: 2250), () {
         setState(() {
           print("colorRedInt is");
-          String currentlySelectedPair =
+          String currentlySelectedPairAlertPrice =
               dataProvider!.getAlertPriceCurrencyPriceTextField();
 
           textColor = Colors.black;
@@ -662,14 +709,22 @@ class _CurrencyPriceAdjustmentContainerState
           /// pair if the value key's "selectedInstrument" isn't switched to
           /// another case (upper case or lower case, whichever is relevant)
           if (selectedInstrument == selectedInstrument.toUpperCase()) {
-            selectedInstrument = currentlySelectedPair.toLowerCase();
-            initialValuePrice = currentlySelectedPair.toUpperCase();
+            selectedInstrument = selectedInstrument.toLowerCase();
+            initialValuePrice = currentlySelectedInstrumentPrice.toUpperCase();
           } else if (selectedInstrument == selectedInstrument.toLowerCase()) {
-            selectedInstrument = currentlySelectedPair.toUpperCase();
-            initialValuePrice = currentlySelectedPair.toUpperCase();
+            selectedInstrument = selectedInstrument.toUpperCase();
+            initialValuePrice = currentlySelectedInstrumentPrice.toUpperCase();
           }
           print(
-              "currentlySelectedPair == previouslyEnteredErrorText: ${currentlySelectedPair == previouslyEnteredErrorText}");
+              "currentlySelectedInstrumentPrice == previouslyEnteredErrorText: ${currentlySelectedInstrumentPrice == previouslyEnteredErrorText}");
+
+          /// setting the currently selected pair's price structure
+          currentPairPriceStructure = initialValuePrice!;
+
+          /// setting the current entered alert price text, whether selected,
+          /// updated, or entered
+          enteredPriceAlertText = currentPairPriceStructure;
+
         });
       });
       // });
@@ -680,7 +735,10 @@ class _CurrencyPriceAdjustmentContainerState
 
   @override
   Widget build(BuildContext context) {
-    /// Price reduction icon flexible - sizedbox
+
+    print("Price reduction icon flexible - container");
+
+    /// Price reduction icon flexible - container
     return Container(
         height: widget.heightCreateNewAlertContainer,
         width: widget.widthCreateNewAlertContainer,
@@ -693,27 +751,122 @@ class _CurrencyPriceAdjustmentContainerState
                 fit: FlexFit.tight,
                 flex: flexPlusAndMinusButtons,
                 child: GestureDetector(
-                  onTap: (){
+                  onTap: () {
+                    if (isValidCurrentAlertPrice) {
 
-                  },
-                  onLongPress: (){
+                      String decreasedAlertPrice = dataProvider!.subtractOrAddOneOrFiveUnitsFromAlertPrice(
+                          currentPairPriceStructure: currentPairPriceStructure,
+                          alertPrice: enteredPriceAlertText,
+                          isSubtract: true
+                      );
 
+                      print("decreasedAlertPrice: ${decreasedAlertPrice}");
+
+                      // focusNodeAlertPrice!.requestFocus();
+
+                      setState(() {
+
+                        /// was the keyboard visible before the button was
+                        /// clicked
+                        bool isKeyboardVisibleBeforeButtonClick=
+                            focusNodeAlertPrice!.hasFocus;
+
+                        /// setting the current alert price
+                        enteredPriceAlertText=decreasedAlertPrice;
+
+                        initialValuePrice = decreasedAlertPrice;
+
+
+                        if (selectedInstrument == selectedInstrument.toUpperCase()) {
+
+                          /// disposing the old focus node to provide access
+                          /// to the new alert price text form field's focus
+                          /// node
+                          focusNodeAlertPrice!.dispose();
+
+                          /// updating the valueKey to ensure that a new
+                          /// instance of alert price's text form field will be
+                          /// created with a new alert price
+                          selectedInstrument = selectedInstrument.toLowerCase();
+
+                          /// creating a new focus node for the new alert price
+                          /// text form field
+                          focusNodeAlertPrice=FocusNode(debugLabel: "alertPrice$selectedInstrument");
+
+                          print("focusNodeAlertPrice: ${focusNodeAlertPrice}");
+
+                          /// the new alert price
+                          // initialValuePrice = decreasedAlertPrice;
+
+                        } else if (selectedInstrument == selectedInstrument.toLowerCase()) {
+
+                          /// disposing the old focus node to provide access
+                          /// to the new alert price text form field's focus
+                          /// node
+                          focusNodeAlertPrice!.dispose();
+
+                          /// updating the valueKey to ensure that a new
+                          /// instance of alert price's text form field will be
+                          /// created with a new alert price
+                          selectedInstrument = selectedInstrument.toUpperCase();
+
+                          /// creating a new focus node for the new alert price
+                          /// text form field
+                          focusNodeAlertPrice=FocusNode(debugLabel: "alertPrice$selectedInstrument");
+
+                          print("focusNodeAlertPrice: ${focusNodeAlertPrice}");
+
+                          /// the new alert price
+                          // initialValuePrice = decreasedAlertPrice;
+                        }
+
+                        print("alertPrice hasFocus: ${isKeyboardVisibleBeforeButtonClick}");
+
+                        /// ensuring that the keyboard remains visible if it
+                        /// was visible before this button was clicked
+                        /// - (after the old focus node has been disposed)..
+                        if (isKeyboardVisibleBeforeButtonClick){
+                          focusNodeAlertPrice!.requestFocus();
+                          // FocusScope.of(context).requestFocus(focusNodeAlertPrice!);
+                        }
+
+                        /// ensuring that 
+                        hasEditedAlertPriceAtLeastOnce=true;
+
+                      });
+
+                      // print("alertPrice focusNode hasFocus: ${focusNodeAlertPrice!.hasFocus}");
+
+                      // setState(() {
+
+
+                        // FocusScope.of(context).requestFocus(focusNode);
+                        // FocusScope.of(context).unfocus();
+                      // });
+
+
+
+
+
+                    }
                   },
-                  onLongPressEnd: (longPressEndDetails){
-                    print("longPressEndDetails.globalPosition: ${longPressEndDetails.globalPosition}");
-                    print("longPressEndDetails.localPosition: ${longPressEndDetails.localPosition}");
-                    print("longPressEndDetails.velocity: ${longPressEndDetails.velocity}");
+                  onLongPress: () {},
+                  onLongPressEnd: (longPressEndDetails) {
+                    print(
+                        "longPressEndDetails.globalPosition: ${longPressEndDetails.globalPosition}");
+                    print(
+                        "longPressEndDetails.localPosition: ${longPressEndDetails.localPosition}");
+                    print(
+                        "longPressEndDetails.velocity: ${longPressEndDetails.velocity}");
                   },
                   child: Container(
-                    // color: Colors.yellow,
+                    color: Colors.yellow,
                     alignment: Alignment.center,
                     child: Text("-",
                         style: TextStyle(
                             fontFamily: "PT-Mono",
                             fontWeight: FontWeight.normal,
-                            fontSize: widget.fontSizeMinus
-                        )
-                    ),
+                            fontSize: widget.fontSizeMinus)),
                   ),
                 )),
 
@@ -728,24 +881,23 @@ class _CurrencyPriceAdjustmentContainerState
                         key: ValueKey(selectedInstrument),
                         initialValue: initialValuePrice,
                         enabled: isFirstTimeFetching ? false : true,
-                        focusNode: focusNode,
+                        focusNode: focusNodeAlertPrice,
                         keyboardType: TextInputType.number,
                         maxLength: initialValuePrice!.length,
                         // expands: false,
                         // maxLines: 1,
                         onTap: () {
-
                           /// bool to check if updateCurrencyPairManually timer in dataProvider is
                           /// active
                           ///
                           /// helps to determine
 
-                          dataProvider!
-                              .updateHasFocusAlertPriceTextField(hasFocus: true);
+                          dataProvider!.updateHasFocusAlertPriceTextField(
+                              hasFocus: true);
                         },
                         onChanged: (enteredText) {
-                          dataProvider!
-                              .updateHasFocusAlertPriceTextField(hasFocus: true);
+                          dataProvider!.updateHasFocusAlertPriceTextField(
+                              hasFocus: true);
 
                           /// confirming whether the entered text is a string of
                           /// numbers.. despite setting the keyboardType to
@@ -769,13 +921,26 @@ class _CurrencyPriceAdjustmentContainerState
                             }
                           }
 
-                          /// if it entered text is a string of numbers, display
-                          /// it..
+                          /// if it entered text is a string of numbers (i.e. a
+                          /// valid alert price), display it..
                           if (numberChecker.length == lengthOfEnteredText) {
-                            hasEditedAlertPriceAtLeastOnce = true;
-
                             setState(() {
+                              /// setting the currently entered alert price text
+                              enteredPriceAlertText = enteredText;
+
+                              /// setting the bool that signals whether the
+                              /// current alert price is valid or not
+                              isValidCurrentAlertPrice = true;
+
+                              /// updating text color to valid alert price
+                              /// text color (Colors.black)
                               textColor = Colors.black;
+
+                              /// signalling whether alert price has been
+                              /// edited at least one time. If true, the alert
+                              /// price will stop updating text to ensure that
+                              /// the user's entries are left undisturbed
+                              hasEditedAlertPriceAtLeastOnce = true;
                             });
 
                             dataProvider!
@@ -787,30 +952,42 @@ class _CurrencyPriceAdjustmentContainerState
                           /// an invalid text has been entered..
                           else {
                             setState(() {
-                              previouslyEnteredErrorText=enteredText;
+                              /// setting the currently entered alert price text
+                              enteredPriceAlertText = enteredText;
+
+                              /// setting the bool that signals whether the
+                              /// current alert price is valid or not
+                              isValidCurrentAlertPrice = false;
+
+                              /// updating the error text value
+                              previouslyEnteredErrorText = enteredText;
+
+                              /// painting the alert price text red to signal
+                              /// that an error text has been entered
                               textColor = Colors.red;
                             });
                           }
                         },
                         onEditingComplete: () {
-                          focusNode.unfocus();
-                          dataProvider!
-                              .updateHasFocusAlertPriceTextField(hasFocus: false);
-                          dataProvider!
-                              .updateHasFocusCurrencyPairTextField(hasFocus: false);
+                          focusNodeAlertPrice!.unfocus();
+                          dataProvider!.updateHasFocusAlertPriceTextField(
+                              hasFocus: false);
+                          dataProvider!.updateHasFocusCurrencyPairTextField(
+                              hasFocus: false);
                         },
                         style: TextStyle(
-                            fontFamily: "PT-Mono",
-                            fontWeight: FontWeight.normal,
-                            fontSize: widget.fontSizePrice,
-                            color: textColor,
-                            overflow: TextOverflow.fade,
+                          fontFamily: "PT-Mono",
+                          fontWeight: FontWeight.normal,
+                          fontSize: widget.fontSizePrice,
+                          color: textColor,
+                          overflow: TextOverflow.fade,
                         ),
                         textAlign: TextAlign.center,
                         textAlignVertical: TextAlignVertical.center,
                         decoration: const InputDecoration(
                           // contentPadding: EdgeInsets.only(left: 5),
-                          counterText: "", // removes the maxLength's counter
+                          counterText: "",
+                          // removes the maxLength's counter
                           enabledBorder: OutlineInputBorder(
                             borderSide: BorderSide(color: Colors.transparent),
                           ),
@@ -1021,15 +1198,19 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
               )
             : Positioned(
                 child: GestureDetector(
-                  onTap: (){
+                  onTap: () {
                     /// hide the software keyboard and unblur the screen when
                     /// the blurred container gets clicked
                     FocusScope.of(context).unfocus();
-                    dataProvider!.updateHasFocusCurrencyPairTextField(hasFocus: false);
-                    dataProvider!.updateHasFocusAlertPriceTextField(hasFocus: false);
+                    dataProvider!
+                        .updateHasFocusCurrencyPairTextField(hasFocus: false);
+                    dataProvider!
+                        .updateHasFocusAlertPriceTextField(hasFocus: false);
 
-                    print("dataProvider!.getHasFocusCurrencyPairTextField(): ${dataProvider!.getHasFocusCurrencyPairTextField()}");
-                    print("dataProvider!.getHasFocusAlertPriceTextField();: ${dataProvider!.getHasFocusAlertPriceTextField()}");
+                    print(
+                        "dataProvider!.getHasFocusCurrencyPairTextField(): ${dataProvider!.getHasFocusCurrencyPairTextField()}");
+                    print(
+                        "dataProvider!.getHasFocusAlertPriceTextField();: ${dataProvider!.getHasFocusAlertPriceTextField()}");
 
                     // dataProvider!.updateHasFocusCurrencyPairTextField(hasFocus: false);
                     // dataP
@@ -1097,7 +1278,7 @@ class _AlertsAndOtherMenuItemsState extends State<AlertsAndOtherMenuItems> {
   @override
   Widget build(BuildContext context) {
     // print(
-        // "dataProvider!.getHasFocusATextField() == true a: ${dataProvider!.getHasFocusATextField() == true}");
+    // "dataProvider!.getHasFocusATextField() == true a: ${dataProvider!.getHasFocusATextField() == true}");
 
     return SizedBox(
 
@@ -1234,7 +1415,7 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
   String? previouslyEnteredErrorTextFieldValue;
 
   /// focus node
-  FocusNode focusNode = FocusNode();
+  FocusNode? focusNodeCurrencyPair;
 
   /// timer that checks whether prices have been fetched
   Timer hasFetchedPricesTimer =
@@ -1277,6 +1458,8 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
       /// Note: keyboard toggle will make it null due to multiple rebuilds
       initialValue ??= selectedInstrument;
       print("initialValue: $initialValue");
+
+      focusNodeCurrencyPair=FocusNode(debugLabel: "currencyPair$selectedInstrument");
 
       print("textColorDidChangeDependencies: $textColor");
       print("textColor!.value: ${textColor!.value}");
@@ -1324,47 +1507,45 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
 
     if ((textColor!.value != colorRedInt ||
             correctEnteredErrorTextTimer.isActive) &&
-        focusNode.hasFocus == false &&
-        isFirstValueInMapOfAllInstrumentsContainsFetching == false
-    ) {
+        focusNodeCurrencyPair!.hasFocus == false &&
+        isFirstValueInMapOfAllInstrumentsContainsFetching == false) {
       print("initial value before change: ${initialValue}");
 
       correctEnteredErrorTextTimer.cancel();
       textColor = Colors.black;
       selectedInstrument = dataProvider!.getCurrentlySelectedInstrument();
       initialValue = selectedInstrument;
-
     }
 
     /// updating the text form field after an error currency pair text has been
     /// entered, submitted and displayed..
-    if (textColor!.value == colorRedInt && focusNode.hasFocus == false) {
+    if (textColor!.value == colorRedInt && focusNodeCurrencyPair!.hasFocus == false) {
+      correctEnteredErrorTextTimer =
+          Timer(const Duration(milliseconds: 2250), () {
+        print("colorRedInt is");
+        String currentlySelectedPair =
+            dataProvider!.getCurrentlySelectedInstrument();
 
-      correctEnteredErrorTextTimer = Timer(const Duration(milliseconds: 2250), () {
-          print("colorRedInt is");
-          String currentlySelectedPair =
-              dataProvider!.getCurrentlySelectedInstrument();
+        setState(() {
+          textColor = Colors.black;
 
-          setState(() {
-            textColor = Colors.black;
-
-            /// if the value key's 'selectedInstrument' variable does not change,
-            /// the text form field widget will not get rebuilt. In this case,
-            /// when an invalid currency pair, which would be colored red, is
-            /// entered into the text form field at the bottom left corner,
-            /// an update will not be made to reflect the currently selected
-            /// pair if the value key's "selectedInstrument" isn't switched to
-            /// another case (upper case or lower case, whichever is relevant)
-            if (selectedInstrument == selectedInstrument!.toUpperCase()) {
-              selectedInstrument = currentlySelectedPair.toLowerCase();
-              initialValue = currentlySelectedPair.toUpperCase();
-            } else if (selectedInstrument == selectedInstrument!.toLowerCase()) {
-              selectedInstrument = currentlySelectedPair.toUpperCase();
-              initialValue = currentlySelectedPair.toUpperCase();
-            }
-          });
-          print(
-              "currentlySelectedPair == previouslyEnteredErrorText: ${currentlySelectedPair == previouslyEnteredErrorText}");
+          /// if the value key's 'selectedInstrument' variable does not change,
+          /// the text form field widget will not get rebuilt. In this case,
+          /// when an invalid currency pair, which would be colored red, is
+          /// entered into the text form field at the bottom left corner,
+          /// an update will not be made to reflect the currently selected
+          /// pair if the value key's "selectedInstrument" isn't switched to
+          /// another case (upper case or lower case, whichever is relevant)
+          if (selectedInstrument == selectedInstrument!.toUpperCase()) {
+            selectedInstrument = currentlySelectedPair.toLowerCase();
+            initialValue = currentlySelectedPair.toUpperCase();
+          } else if (selectedInstrument == selectedInstrument!.toLowerCase()) {
+            selectedInstrument = currentlySelectedPair.toUpperCase();
+            initialValue = currentlySelectedPair.toUpperCase();
+          }
+        });
+        print(
+            "currentlySelectedPair == previouslyEnteredErrorText: ${currentlySelectedPair == previouslyEnteredErrorText}");
       });
     }
 
@@ -1382,9 +1563,9 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
     // if the entered currency pair text is invalid, set the value key to
     // the error text,
     // if (textColor!.value == colorRedInt) {
-      // selectedInstrument = initialValue;
+    // selectedInstrument = initialValue;
     // } else {
-      // selectedInstrument = dataProvider!.getCurrentlySelectedInstrument();
+    // selectedInstrument = dataProvider!.getCurrentlySelectedInstrument();
     // }
 
     /// Change the text form field's text to the selected grid tile's currency
@@ -1406,7 +1587,7 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
     // print("isRunningErrorOnChangedSetState == false: ${isRunningErrorOnChangedSetState == false}");
     print(
         "textColor!.value != colorRedInt: ${textColor!.value != colorRedInt}");
-    print("focusNode.hasFocus: ${focusNode.hasFocus == false}");
+    print("focusNode.hasFocus: ${focusNodeCurrencyPair!.hasFocus == false}");
     print(
         "isFirstValueInMapOfAllInstrumentsContainsFetching == false: ${isFirstValueInMapOfAllInstrumentsContainsFetching == false}");
 
@@ -1422,7 +1603,7 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
 
     print("initialValue didUpdateWidget: ${initialValue}");
 
-    print("focusNode.hasFocus: ${focusNode.hasFocus}");
+    print("focusNode.hasFocus: ${focusNodeCurrencyPair!.hasFocus}");
 
     // /// setting this widget's focus note in data provider
     // dataProvider!.hasFocusCurrencyPairTextField = focusNode;
@@ -1444,7 +1625,7 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
     Widget currencyPairTextField = TextFormField(
       key: ValueKey(selectedInstrument),
       enabled: isFirstValueInMapOfAllInstrumentsContainsFetching ? false : true,
-      focusNode: focusNode,
+      focusNode: focusNodeCurrencyPair!,
       initialValue: initialValue,
       keyboardType: TextInputType.text,
       onTap: () {
@@ -1490,9 +1671,9 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
             dataProvider!.updateEnteredTextCurrencyPair(
                 enteredText: null,
                 isErrorEnteredText: null,
-                focusNode: focusNode
+                focusNode: focusNodeCurrencyPair!
                 // context: context
-            );
+                );
           });
 
           // }
@@ -1513,14 +1694,13 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
             dataProvider!.updateEnteredTextCurrencyPair(
                 enteredText: enteredTextUpper,
                 isErrorEnteredText: null,
-                focusNode: focusNode,
-                context: context
-            );
+                focusNode: focusNodeCurrencyPair!,
+                context: context);
           });
         }
       },
       onEditingComplete: () {
-        focusNode.unfocus();
+        focusNodeCurrencyPair!.unfocus();
 
         /// setting this widget's focus node in data provider
         dataProvider!.updateHasFocusCurrencyPairTextField(hasFocus: false);

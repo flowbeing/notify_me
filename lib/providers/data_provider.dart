@@ -720,23 +720,57 @@ class DataProvider with ChangeNotifier {
     }
   }
 
-  /// subtracts a unit or five units from the currently selected instrument's
+  /// subtracts or adds a unit or five units to the current instrument's
   /// alert price
-  String subtractOneOrFiveUnitsFromAlertPrice({required String alertPrice}){
+  String subtractOrAddOneOrFiveUnitsFromAlertPrice({
+    /// to determine the actual unit price of the entered alert price
+    required String currentPairPriceStructure,
+    /// the entered alert price, regardless of whether the price structure
+    /// of the user has changed the currently selected pair's price by editing
+    /// it..
+    required String alertPrice,
+    required isSubtract
+  }){
 
-    /// obtaining the count of number after "."
-    List<String> alertPriceSplit = alertPrice.split("");
-    int lengthOfAlertPrice = alertPrice.length;
-    int numberOfNumAfterDot = 0;
+    /// obtaining the original count of numbers that exist after the "." symbol
+    /// - currentPairPriceStructure
+    List<String> alertPriceOriginalStructureSplit = currentPairPriceStructure.split("");
+    int lengthOfCurrentPairPriceStructure = currentPairPriceStructure.length;
+    int countOfNumAfterDot = 0;
 
-    if (alertPriceSplit.contains(".")){
-      int indexOfDot = alertPriceSplit.indexOf(".");
+    if (alertPriceOriginalStructureSplit.contains(".")){
+      int indexOfDot = alertPriceOriginalStructureSplit.indexOf(".");
       int positionOfDot=indexOfDot+1;
-      numberOfNumAfterDot=lengthOfAlertPrice-(positionOfDot);
+      countOfNumAfterDot=lengthOfCurrentPairPriceStructure-(positionOfDot);
     }
 
-    // double incrementValue =
+    /// determining one unit of the current alert price
+    String aUnitOfTheAlertPrice = "1";
 
-    return "";
+    if (countOfNumAfterDot!=0){
+      aUnitOfTheAlertPrice="0.${"0"*countOfNumAfterDot}";
+      List<String> incrementValueOneUnitSplit= aUnitOfTheAlertPrice.split('');
+      int indexOfLastItemInIncrementValueOneUnitSplit = aUnitOfTheAlertPrice.length - 1;
+      incrementValueOneUnitSplit[indexOfLastItemInIncrementValueOneUnitSplit] = "1";
+      aUnitOfTheAlertPrice=incrementValueOneUnitSplit.join("");
+    }
+
+    print("aUnitOfTheAlertPrice: ${aUnitOfTheAlertPrice}");
+
+    /// subtracting or adding a unit to the alert price depending on the
+    /// specified operation type..
+    String finalValue = "0";
+
+    if (isSubtract){
+      /// subtracting a unit of the selected currency pair's original price
+      /// (structure) from the visible alert price ..
+      finalValue = (double.parse(alertPrice) - double.parse(aUnitOfTheAlertPrice)).toStringAsFixed(countOfNumAfterDot);
+    } else {
+      /// adding a unit of the selected currency pair's original price
+      /// (structure) from the visible alert price..
+      finalValue = (double.parse(alertPrice) + double.parse(aUnitOfTheAlertPrice)).toStringAsFixed(countOfNumAfterDot);
+    }
+
+    return finalValue;
   }
 }
