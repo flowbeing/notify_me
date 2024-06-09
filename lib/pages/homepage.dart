@@ -592,7 +592,8 @@ class _CurrencyPriceAdjustmentContainerState
       initialValuePrice = dataProvider!.getAlertPriceCurrencyPriceTextField();
 
       print("initializedState focusNode");
-      focusNodeAlertPrice = FocusNode(debugLabel: "alertPrice$selectedInstrument");
+      focusNodeAlertPrice = FocusNode(
+          debugLabel: "alertPrice$selectedInstrument", skipTraversal: true);
 
       /// setting the currently selected pair's price structure - whether
       /// selected, updated, or entered..
@@ -639,7 +640,8 @@ class _CurrencyPriceAdjustmentContainerState
         ///
         /// if so switch the case so that the updated price can be reflected
         if (currentSelectedInstrument == selectedInstrument) {
-          selectedInstrument = currentSelectedInstrument.toLowerCase(); // lowercase
+          selectedInstrument =
+              currentSelectedInstrument.toLowerCase(); // lowercase
           initialValuePrice = currentlySelectedInstrumentPrice;
         } else {
           selectedInstrument = currentSelectedInstrument; // uppercase
@@ -653,7 +655,6 @@ class _CurrencyPriceAdjustmentContainerState
         /// setting the current entered alert price text, whether selected,
         /// updated, or entered
         enteredPriceAlertText = currentPairPriceStructure;
-
       }
     }
 
@@ -690,7 +691,8 @@ class _CurrencyPriceAdjustmentContainerState
 
     /// updates the alert price after an error currency pair text has been
     /// entered, submitted and displayed..
-    if (textColor!.value == colorRedInt && focusNodeAlertPrice!.hasFocus == false) {
+    if (textColor!.value == colorRedInt &&
+        focusNodeAlertPrice!.hasFocus == false) {
       // setState(() {
       correctEnteredErrorTextTimer =
           Timer(const Duration(milliseconds: 2250), () {
@@ -724,7 +726,6 @@ class _CurrencyPriceAdjustmentContainerState
           /// setting the current entered alert price text, whether selected,
           /// updated, or entered
           enteredPriceAlertText = currentPairPriceStructure;
-
         });
       });
       // });
@@ -735,287 +736,288 @@ class _CurrencyPriceAdjustmentContainerState
 
   @override
   Widget build(BuildContext context) {
-
     print("Price reduction icon flexible - container");
 
     /// Price reduction icon flexible - container
-    return Container(
-        height: widget.heightCreateNewAlertContainer,
-        width: widget.widthCreateNewAlertContainer,
-        decoration: BoxDecoration(
-            border: Border.all(width: widget.borderWidthGridTile / 4)),
-        child: Row(
-          children: [
-            /// minus button
-            Flexible(
-                fit: FlexFit.tight,
-                flex: flexPlusAndMinusButtons,
-                child: GestureDetector(
-                  onTap: () {
-                    if (isValidCurrentAlertPrice) {
+    return FocusScope(
+      child: Container(
+          height: widget.heightCreateNewAlertContainer,
+          width: widget.widthCreateNewAlertContainer,
+          decoration: BoxDecoration(
+              border: Border.all(width: widget.borderWidthGridTile / 4)),
+          child: Row(
+            children: [
+              /// minus button
+              Flexible(
+                  fit: FlexFit.tight,
+                  flex: flexPlusAndMinusButtons,
+                  child: GestureDetector(
+                    onTap: () {
+                      if (isValidCurrentAlertPrice) {
+                        String decreasedAlertPrice = dataProvider!
+                            .subtractOrAddOneOrFiveUnitsFromAlertPrice(
+                                currentPairPriceStructure:
+                                    currentPairPriceStructure,
+                                alertPrice: enteredPriceAlertText,
+                                isSubtract: true);
 
-                      String decreasedAlertPrice = dataProvider!.subtractOrAddOneOrFiveUnitsFromAlertPrice(
-                          currentPairPriceStructure: currentPairPriceStructure,
-                          alertPrice: enteredPriceAlertText,
-                          isSubtract: true
-                      );
+                        print("decreasedAlertPrice: ${decreasedAlertPrice}");
 
-                      print("decreasedAlertPrice: ${decreasedAlertPrice}");
+                        // focusNodeAlertPrice!.requestFocus();
 
-                      // focusNodeAlertPrice!.requestFocus();
+                        setState(() {
+                          /// was the keyboard visible before the button was
+                          /// clicked
+                          bool isKeyboardVisibleBeforeButtonClick =
+                              focusNodeAlertPrice!.hasFocus;
 
-                      setState(() {
+                          /// setting the current alert price
+                          enteredPriceAlertText = decreasedAlertPrice;
 
-                        /// was the keyboard visible before the button was
-                        /// clicked
-                        bool isKeyboardVisibleBeforeButtonClick=
-                            focusNodeAlertPrice!.hasFocus;
+                          initialValuePrice = decreasedAlertPrice;
 
-                        /// setting the current alert price
-                        enteredPriceAlertText=decreasedAlertPrice;
+                          if (selectedInstrument ==
+                              selectedInstrument.toUpperCase()) {
+                            /// disposing the old focus node to provide access
+                            /// to the new alert price text form field's focus
+                            /// node
+                            focusNodeAlertPrice!.dispose();
 
-                        initialValuePrice = decreasedAlertPrice;
+                            /// updating the valueKey to ensure that a new
+                            /// instance of alert price's text form field will be
+                            /// created with a new alert price
+                            selectedInstrument = selectedInstrument.toLowerCase();
 
+                            /// creating a new focus node for the new alert price
+                            /// text form field
+                            focusNodeAlertPrice = FocusNode(
+                                debugLabel: "alertPrice$selectedInstrument",
+                                skipTraversal: true);
 
-                        if (selectedInstrument == selectedInstrument.toUpperCase()) {
+                            print("focusNodeAlertPrice: ${focusNodeAlertPrice}");
 
-                          /// disposing the old focus node to provide access
-                          /// to the new alert price text form field's focus
-                          /// node
-                          focusNodeAlertPrice!.dispose();
+                            /// the new alert price
+                            // initialValuePrice = decreasedAlertPrice;
 
-                          /// updating the valueKey to ensure that a new
-                          /// instance of alert price's text form field will be
-                          /// created with a new alert price
-                          selectedInstrument = selectedInstrument.toLowerCase();
+                          } else if (selectedInstrument ==
+                              selectedInstrument.toLowerCase()) {
+                            /// disposing the old focus node to provide access
+                            /// to the new alert price text form field's focus
+                            /// node
+                            focusNodeAlertPrice!.dispose();
 
-                          /// creating a new focus node for the new alert price
-                          /// text form field
-                          focusNodeAlertPrice=FocusNode(debugLabel: "alertPrice$selectedInstrument");
+                            /// updating the valueKey to ensure that a new
+                            /// instance of alert price's text form field will be
+                            /// created with a new alert price
+                            selectedInstrument = selectedInstrument.toUpperCase();
 
-                          print("focusNodeAlertPrice: ${focusNodeAlertPrice}");
+                            /// creating a new focus node for the new alert price
+                            /// text form field
+                            focusNodeAlertPrice = FocusNode(
+                                debugLabel: "alertPrice$selectedInstrument",
+                                skipTraversal: true);
 
-                          /// the new alert price
-                          // initialValuePrice = decreasedAlertPrice;
+                            print("focusNodeAlertPrice: ${focusNodeAlertPrice}");
 
-                        } else if (selectedInstrument == selectedInstrument.toLowerCase()) {
+                            /// the new alert price
+                            // initialValuePrice = decreasedAlertPrice;
+                          }
 
-                          /// disposing the old focus node to provide access
-                          /// to the new alert price text form field's focus
-                          /// node
-                          focusNodeAlertPrice!.dispose();
+                          print(
+                              "alertPrice hasFocus: ${isKeyboardVisibleBeforeButtonClick}");
 
-                          /// updating the valueKey to ensure that a new
-                          /// instance of alert price's text form field will be
-                          /// created with a new alert price
-                          selectedInstrument = selectedInstrument.toUpperCase();
+                          /// ensuring that the keyboard remains visible if it
+                          /// was visible before this button was clicked
+                          /// - (after the old focus node has been disposed)..
+                          if (isKeyboardVisibleBeforeButtonClick) {
+                            // FocusScope.of(context).nextFocus();
+                            focusNodeAlertPrice!.requestFocus();
+                            // FocusScope.of(context).requestFocus(focusNodeAlertPrice!);
 
-                          /// creating a new focus node for the new alert price
-                          /// text form field
-                          focusNodeAlertPrice=FocusNode(debugLabel: "alertPrice$selectedInstrument");
+                          }
 
-                          print("focusNodeAlertPrice: ${focusNodeAlertPrice}");
+                          /// ensuring that the current alert price value will
+                          /// remain and not be affected by price updates
+                          hasEditedAlertPriceAtLeastOnce = true;
+                        });
 
-                          /// the new alert price
-                          // initialValuePrice = decreasedAlertPrice;
-                        }
+                        // print("alertPrice focusNode hasFocus: ${focusNodeAlertPrice!.hasFocus}");
 
-                        print("alertPrice hasFocus: ${isKeyboardVisibleBeforeButtonClick}");
-
-                        /// ensuring that the keyboard remains visible if it
-                        /// was visible before this button was clicked
-                        /// - (after the old focus node has been disposed)..
-                        if (isKeyboardVisibleBeforeButtonClick){
-                          focusNodeAlertPrice!.requestFocus();
-                          // FocusScope.of(context).requestFocus(focusNodeAlertPrice!);
-                        }
-
-                        /// ensuring that 
-                        hasEditedAlertPriceAtLeastOnce=true;
-
-                      });
-
-                      // print("alertPrice focusNode hasFocus: ${focusNodeAlertPrice!.hasFocus}");
-
-                      // setState(() {
-
+                        // setState(() {
 
                         // FocusScope.of(context).requestFocus(focusNode);
                         // FocusScope.of(context).unfocus();
-                      // });
+                        // });
 
+                      }
+                    },
+                    onLongPress: () {},
+                    onLongPressEnd: (longPressEndDetails) {
+                      print(
+                          "longPressEndDetails.globalPosition: ${longPressEndDetails.globalPosition}");
+                      print(
+                          "longPressEndDetails.localPosition: ${longPressEndDetails.localPosition}");
+                      print(
+                          "longPressEndDetails.velocity: ${longPressEndDetails.velocity}");
+                    },
+                    child: Container(
+                      color: Colors.yellow,
+                      alignment: Alignment.center,
+                      child: Text("-",
+                          style: TextStyle(
+                              fontFamily: "PT-Mono",
+                              fontWeight: FontWeight.normal,
+                              fontSize: widget.fontSizeMinus)),
+                    ),
+                  )),
 
-
-
-
-                    }
-                  },
-                  onLongPress: () {},
-                  onLongPressEnd: (longPressEndDetails) {
-                    print(
-                        "longPressEndDetails.globalPosition: ${longPressEndDetails.globalPosition}");
-                    print(
-                        "longPressEndDetails.localPosition: ${longPressEndDetails.localPosition}");
-                    print(
-                        "longPressEndDetails.velocity: ${longPressEndDetails.velocity}");
-                  },
+              /// price container
+              Flexible(
+                  fit: FlexFit.tight,
+                  flex: flexPriceContainer,
                   child: Container(
-                    color: Colors.yellow,
+                      alignment: Alignment.center,
+                      // color: Colors.yellow,
+                      child: TextFormField(
+                          key: ValueKey(selectedInstrument),
+                          initialValue: initialValuePrice,
+                          enabled: isFirstTimeFetching ? false : true,
+                          focusNode: focusNodeAlertPrice,
+                          keyboardType: TextInputType.number,
+                          maxLength: initialValuePrice!.length,
+                          // expands: false,
+                          // maxLines: 1,
+                          onTap: () {
+                            /// bool to check if updateCurrencyPairManually timer in dataProvider is
+                            /// active
+                            ///
+                            /// helps to determine
+
+                            dataProvider!.updateHasFocusAlertPriceTextField(
+                                hasFocus: true);
+                          },
+                          onChanged: (enteredText) {
+                            dataProvider!.updateHasFocusAlertPriceTextField(
+                                hasFocus: true);
+
+                            /// confirming whether the entered text is a string of
+                            /// numbers.. despite setting the keyboardType to
+                            /// TextInputType.number..
+                            int lengthOfEnteredText = enteredText.length;
+                            String numberChecker = "";
+
+                            for (String i in enteredText.split("")) {
+                              if (i == "." ||
+                                  i == "0" ||
+                                  i == "1" ||
+                                  i == "2" ||
+                                  i == "3" ||
+                                  i == "4" ||
+                                  i == "5" ||
+                                  i == "6" ||
+                                  i == "7" ||
+                                  i == "8" ||
+                                  i == "9") {
+                                numberChecker += i;
+                              }
+                            }
+
+                            /// if it entered text is a string of numbers (i.e. a
+                            /// valid alert price), display it..
+                            if (numberChecker.length == lengthOfEnteredText) {
+                              setState(() {
+                                /// setting the currently entered alert price text
+                                enteredPriceAlertText = enteredText;
+
+                                /// setting the bool that signals whether the
+                                /// current alert price is valid or not
+                                isValidCurrentAlertPrice = true;
+
+                                /// updating text color to valid alert price
+                                /// text color (Colors.black)
+                                textColor = Colors.black;
+
+                                /// signalling whether alert price has been
+                                /// edited at least one time. If true, the alert
+                                /// price will stop updating text to ensure that
+                                /// the user's entries are left undisturbed
+                                hasEditedAlertPriceAtLeastOnce = true;
+                              });
+
+                              dataProvider!
+                                  .updateAlertPriceCurrencyPriceTextField(
+                                      alertPrice: enteredText);
+                            }
+
+                            /// .. otherwise, color the text red to signify that
+                            /// an invalid text has been entered..
+                            else {
+                              setState(() {
+                                /// setting the currently entered alert price text
+                                enteredPriceAlertText = enteredText;
+
+                                /// setting the bool that signals whether the
+                                /// current alert price is valid or not
+                                isValidCurrentAlertPrice = false;
+
+                                /// updating the error text value
+                                previouslyEnteredErrorText = enteredText;
+
+                                /// painting the alert price text red to signal
+                                /// that an error text has been entered
+                                textColor = Colors.red;
+                              });
+                            }
+                          },
+                          onEditingComplete: () {
+                            focusNodeAlertPrice!.unfocus();
+                            dataProvider!.updateHasFocusAlertPriceTextField(
+                                hasFocus: false);
+                            dataProvider!.updateHasFocusCurrencyPairTextField(
+                                hasFocus: false);
+                          },
+                          style: TextStyle(
+                            fontFamily: "PT-Mono",
+                            fontWeight: FontWeight.normal,
+                            fontSize: widget.fontSizePrice,
+                            color: textColor,
+                            overflow: TextOverflow.fade,
+                          ),
+                          textAlign: TextAlign.center,
+                          textAlignVertical: TextAlignVertical.center,
+                          decoration: const InputDecoration(
+                            // contentPadding: EdgeInsets.only(left: 5),
+                            counterText: "",
+                            // removes the maxLength's counter
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.transparent),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.transparent),
+                            ),
+                            disabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.transparent),
+                            ),
+                            errorBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.transparent),
+                            ),
+                          )))),
+
+              /// plus button
+              Flexible(
+                  fit: FlexFit.tight,
+                  flex: flexPlusAndMinusButtons,
+                  child: Container(
                     alignment: Alignment.center,
-                    child: Text("-",
+                    child: Text("+",
                         style: TextStyle(
                             fontFamily: "PT-Mono",
                             fontWeight: FontWeight.normal,
-                            fontSize: widget.fontSizeMinus)),
-                  ),
-                )),
-
-            /// price container
-            Flexible(
-                fit: FlexFit.tight,
-                flex: flexPriceContainer,
-                child: Container(
-                    alignment: Alignment.center,
-                    // color: Colors.yellow,
-                    child: TextFormField(
-                        key: ValueKey(selectedInstrument),
-                        initialValue: initialValuePrice,
-                        enabled: isFirstTimeFetching ? false : true,
-                        focusNode: focusNodeAlertPrice,
-                        keyboardType: TextInputType.number,
-                        maxLength: initialValuePrice!.length,
-                        // expands: false,
-                        // maxLines: 1,
-                        onTap: () {
-                          /// bool to check if updateCurrencyPairManually timer in dataProvider is
-                          /// active
-                          ///
-                          /// helps to determine
-
-                          dataProvider!.updateHasFocusAlertPriceTextField(
-                              hasFocus: true);
-                        },
-                        onChanged: (enteredText) {
-                          dataProvider!.updateHasFocusAlertPriceTextField(
-                              hasFocus: true);
-
-                          /// confirming whether the entered text is a string of
-                          /// numbers.. despite setting the keyboardType to
-                          /// TextInputType.number..
-                          int lengthOfEnteredText = enteredText.length;
-                          String numberChecker = "";
-
-                          for (String i in enteredText.split("")) {
-                            if (i == "." ||
-                                i == "0" ||
-                                i == "1" ||
-                                i == "2" ||
-                                i == "3" ||
-                                i == "4" ||
-                                i == "5" ||
-                                i == "6" ||
-                                i == "7" ||
-                                i == "8" ||
-                                i == "9") {
-                              numberChecker += i;
-                            }
-                          }
-
-                          /// if it entered text is a string of numbers (i.e. a
-                          /// valid alert price), display it..
-                          if (numberChecker.length == lengthOfEnteredText) {
-                            setState(() {
-                              /// setting the currently entered alert price text
-                              enteredPriceAlertText = enteredText;
-
-                              /// setting the bool that signals whether the
-                              /// current alert price is valid or not
-                              isValidCurrentAlertPrice = true;
-
-                              /// updating text color to valid alert price
-                              /// text color (Colors.black)
-                              textColor = Colors.black;
-
-                              /// signalling whether alert price has been
-                              /// edited at least one time. If true, the alert
-                              /// price will stop updating text to ensure that
-                              /// the user's entries are left undisturbed
-                              hasEditedAlertPriceAtLeastOnce = true;
-                            });
-
-                            dataProvider!
-                                .updateAlertPriceCurrencyPriceTextField(
-                                    alertPrice: enteredText);
-                          }
-
-                          /// .. otherwise, color the text red to signify that
-                          /// an invalid text has been entered..
-                          else {
-                            setState(() {
-                              /// setting the currently entered alert price text
-                              enteredPriceAlertText = enteredText;
-
-                              /// setting the bool that signals whether the
-                              /// current alert price is valid or not
-                              isValidCurrentAlertPrice = false;
-
-                              /// updating the error text value
-                              previouslyEnteredErrorText = enteredText;
-
-                              /// painting the alert price text red to signal
-                              /// that an error text has been entered
-                              textColor = Colors.red;
-                            });
-                          }
-                        },
-                        onEditingComplete: () {
-                          focusNodeAlertPrice!.unfocus();
-                          dataProvider!.updateHasFocusAlertPriceTextField(
-                              hasFocus: false);
-                          dataProvider!.updateHasFocusCurrencyPairTextField(
-                              hasFocus: false);
-                        },
-                        style: TextStyle(
-                          fontFamily: "PT-Mono",
-                          fontWeight: FontWeight.normal,
-                          fontSize: widget.fontSizePrice,
-                          color: textColor,
-                          overflow: TextOverflow.fade,
-                        ),
-                        textAlign: TextAlign.center,
-                        textAlignVertical: TextAlignVertical.center,
-                        decoration: const InputDecoration(
-                          // contentPadding: EdgeInsets.only(left: 5),
-                          counterText: "",
-                          // removes the maxLength's counter
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: Colors.transparent),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: Colors.transparent),
-                          ),
-                          disabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: Colors.transparent),
-                          ),
-                          errorBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: Colors.transparent),
-                          ),
-                        )))),
-
-            /// plus button
-            Flexible(
-                fit: FlexFit.tight,
-                flex: flexPlusAndMinusButtons,
-                child: Container(
-                  alignment: Alignment.center,
-                  child: Text("+",
-                      style: TextStyle(
-                          fontFamily: "PT-Mono",
-                          fontWeight: FontWeight.normal,
-                          fontSize: widget.fontSizePlus)),
-                ))
-          ],
-        ));
+                            fontSize: widget.fontSizePlus)),
+                  ))
+            ],
+          )),
+    );
   }
 }
 
@@ -1459,7 +1461,13 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
       initialValue ??= selectedInstrument;
       print("initialValue: $initialValue");
 
-      focusNodeCurrencyPair=FocusNode(debugLabel: "currencyPair$selectedInstrument");
+      focusNodeCurrencyPair = FocusNode(
+          debugLabel: "currencyPair$selectedInstrument",
+          skipTraversal: true,
+          canRequestFocus: false,
+          descendantsAreFocusable: false,
+          descendantsAreTraversable: false,
+      );
 
       print("textColorDidChangeDependencies: $textColor");
       print("textColor!.value: ${textColor!.value}");
@@ -1519,7 +1527,8 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
 
     /// updating the text form field after an error currency pair text has been
     /// entered, submitted and displayed..
-    if (textColor!.value == colorRedInt && focusNodeCurrencyPair!.hasFocus == false) {
+    if (textColor!.value == colorRedInt &&
+        focusNodeCurrencyPair!.hasFocus == false) {
       correctEnteredErrorTextTimer =
           Timer(const Duration(milliseconds: 2250), () {
         print("colorRedInt is");
@@ -1628,6 +1637,7 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
       focusNode: focusNodeCurrencyPair!,
       initialValue: initialValue,
       keyboardType: TextInputType.text,
+      autofocus: false,
       onTap: () {
         // FocusScope.of(context).requestFocus();
 
