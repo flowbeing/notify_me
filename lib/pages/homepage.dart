@@ -565,6 +565,15 @@ class _CurrencyPriceAdjustmentContainerState
   /// selected, updated, or entered
   String enteredPriceAlertText = "";
 
+  /// signalling whether the minus or plus buttons have been long pressed
+  // bool isLongPressedButton=false;
+
+  /// addition or subtraction timer - to add or subtract a unit of price at
+  /// interval
+  Timer additionOrSubtractionTimer=Timer.periodic(const Duration(microseconds: 1), (timer) {
+    timer.cancel();
+  });
+
   // final _formKey = GlobalKey<FormState>();
 
   // @override
@@ -603,7 +612,7 @@ class _CurrencyPriceAdjustmentContainerState
       /// updated, or entered
       enteredPriceAlertText = currentPairPriceStructure;
 
-      flexPlusAndMinusButtons = (0.1761363636 * 100).round();
+      flexPlusAndMinusButtons = (0.2 * 100).round(); //0.1761363636
       flexPriceContainer = 100 - (flexPlusAndMinusButtons * 2);
 
       print("flexPlusAndMinusButtons: $flexPlusAndMinusButtons");
@@ -734,6 +743,116 @@ class _CurrencyPriceAdjustmentContainerState
     super.didChangeDependencies();
   }
 
+  void subtractOrAddOneUnitToAlertPrice({required bool isSubtract}){
+
+    if (isValidCurrentAlertPrice) {
+      String decreasedOrIncreasedAlertPrice = dataProvider!
+          .subtractOrAddOneOrFiveUnitsFromAlertPrice(
+          currentPairPriceStructure:
+          currentPairPriceStructure,
+          alertPrice: enteredPriceAlertText,
+          isSubtract: isSubtract ? true : false
+      );
+
+      print("decreasedOrIncreasedAlertPrice: ${decreasedOrIncreasedAlertPrice}");
+
+      // focusNodeAlertPrice!.requestFocus();
+
+      setState(() {
+        /// was the keyboard visible before the button was
+        /// clicked
+        bool isKeyboardVisibleBeforeButtonClick =
+            focusNodeAlertPrice!.hasFocus;
+
+        /// setting the current alert price
+        enteredPriceAlertText = decreasedOrIncreasedAlertPrice;
+
+        initialValuePrice = decreasedOrIncreasedAlertPrice;
+
+        if (selectedInstrument ==
+            selectedInstrument.toUpperCase()) {
+          /// disposing the old focus node to provide access
+          /// to the new alert price text form field's focus
+          /// node
+          focusNodeAlertPrice!.dispose();
+
+          /// updating the valueKey to ensure that a new
+          /// instance of alert price's text form field will be
+          /// created with a new alert price
+          selectedInstrument = selectedInstrument.toLowerCase();
+
+          /// creating a new focus node for the new alert price
+          /// text form field
+          focusNodeAlertPrice = FocusNode(
+              // debugLabel: "alertPrice$selectedInstrument",
+              // skipTraversal: true
+          );
+
+          print("focusNodeAlertPrice: ${focusNodeAlertPrice}");
+
+          /// the new alert price
+          // initialValuePrice = decreasedAlertPrice;
+
+        } else if (selectedInstrument ==
+            selectedInstrument.toLowerCase()) {
+          /// disposing the old focus node to provide access
+          /// to the new alert price text form field's focus
+          /// node
+          focusNodeAlertPrice!.dispose();
+
+          /// updating the valueKey to ensure that a new
+          /// instance of alert price's text form field will be
+          /// created with a new alert price
+          selectedInstrument = selectedInstrument.toUpperCase();
+
+          /// creating a new focus node for the new alert price
+          /// text form field
+          focusNodeAlertPrice = FocusNode(
+              // debugLabel: "alertPrice$selectedInstrument",
+              // skipTraversal: true
+          );
+
+          print("focusNodeAlertPrice: ${focusNodeAlertPrice}");
+
+          /// the new alert price
+          // initialValuePrice = decreasedAlertPrice;
+        }
+
+        print(
+            "alertPrice hasFocus: ${isKeyboardVisibleBeforeButtonClick}");
+
+        /// ensuring that the keyboard remains visible if it
+        /// was visible before this button was clicked
+        /// - (after the old focus node has been disposed)..
+        if (isKeyboardVisibleBeforeButtonClick) {
+          // FocusScope.of(context).nextFocus();
+          print("requestingFocus");
+          // FocusScope.of(context).requestFocus(focusNodeAlertPrice!);
+
+          focusNodeAlertPrice!.requestFocus();
+          print("focusNodeAlertPrice.hasFocus:${focusNodeAlertPrice!.hasFocus}");
+          print("requestedFocus");
+          // FocusScope.of(context).requestFocus(focusNodeAlertPrice!);
+
+        }
+
+        /// ensuring that the current alert price value will
+        /// remain and not be affected by price updates
+        hasEditedAlertPriceAtLeastOnce = true;
+      });
+
+      // print("alertPrice focusNode hasFocus: ${focusNodeAlertPrice!.hasFocus}");
+
+      // setState(() {
+
+      // FocusScope.of(context).requestFocus(focusNode);
+      // FocusScope.of(context).unfocus();
+      // });
+
+    }
+
+  }
+
   @override
   Widget build(BuildContext context) {
     print("Price reduction icon flexible - container");
@@ -753,115 +872,30 @@ class _CurrencyPriceAdjustmentContainerState
                   flex: flexPlusAndMinusButtons,
                   child: GestureDetector(
                     onTap: () {
-                      if (isValidCurrentAlertPrice) {
-                        String decreasedAlertPrice = dataProvider!
-                            .subtractOrAddOneOrFiveUnitsFromAlertPrice(
-                                currentPairPriceStructure:
-                                    currentPairPriceStructure,
-                                alertPrice: enteredPriceAlertText,
-                                isSubtract: true);
-
-                        print("decreasedAlertPrice: ${decreasedAlertPrice}");
-
-                        // focusNodeAlertPrice!.requestFocus();
-
-                        setState(() {
-                          /// was the keyboard visible before the button was
-                          /// clicked
-                          bool isKeyboardVisibleBeforeButtonClick =
-                              focusNodeAlertPrice!.hasFocus;
-
-                          /// setting the current alert price
-                          enteredPriceAlertText = decreasedAlertPrice;
-
-                          initialValuePrice = decreasedAlertPrice;
-
-                          if (selectedInstrument ==
-                              selectedInstrument.toUpperCase()) {
-                            /// disposing the old focus node to provide access
-                            /// to the new alert price text form field's focus
-                            /// node
-                            focusNodeAlertPrice!.dispose();
-
-                            /// updating the valueKey to ensure that a new
-                            /// instance of alert price's text form field will be
-                            /// created with a new alert price
-                            selectedInstrument = selectedInstrument.toLowerCase();
-
-                            /// creating a new focus node for the new alert price
-                            /// text form field
-                            focusNodeAlertPrice = FocusNode(
-                                debugLabel: "alertPrice$selectedInstrument",
-                                skipTraversal: true);
-
-                            print("focusNodeAlertPrice: ${focusNodeAlertPrice}");
-
-                            /// the new alert price
-                            // initialValuePrice = decreasedAlertPrice;
-
-                          } else if (selectedInstrument ==
-                              selectedInstrument.toLowerCase()) {
-                            /// disposing the old focus node to provide access
-                            /// to the new alert price text form field's focus
-                            /// node
-                            focusNodeAlertPrice!.dispose();
-
-                            /// updating the valueKey to ensure that a new
-                            /// instance of alert price's text form field will be
-                            /// created with a new alert price
-                            selectedInstrument = selectedInstrument.toUpperCase();
-
-                            /// creating a new focus node for the new alert price
-                            /// text form field
-                            focusNodeAlertPrice = FocusNode(
-                                debugLabel: "alertPrice$selectedInstrument",
-                                skipTraversal: true);
-
-                            print("focusNodeAlertPrice: ${focusNodeAlertPrice}");
-
-                            /// the new alert price
-                            // initialValuePrice = decreasedAlertPrice;
-                          }
-
-                          print(
-                              "alertPrice hasFocus: ${isKeyboardVisibleBeforeButtonClick}");
-
-                          /// ensuring that the keyboard remains visible if it
-                          /// was visible before this button was clicked
-                          /// - (after the old focus node has been disposed)..
-                          if (isKeyboardVisibleBeforeButtonClick) {
-                            // FocusScope.of(context).nextFocus();
-                            focusNodeAlertPrice!.requestFocus();
-                            // FocusScope.of(context).requestFocus(focusNodeAlertPrice!);
-
-                          }
-
-                          /// ensuring that the current alert price value will
-                          /// remain and not be affected by price updates
-                          hasEditedAlertPriceAtLeastOnce = true;
-                        });
-
-                        // print("alertPrice focusNode hasFocus: ${focusNodeAlertPrice!.hasFocus}");
-
-                        // setState(() {
-
-                        // FocusScope.of(context).requestFocus(focusNode);
-                        // FocusScope.of(context).unfocus();
-                        // });
-
-                      }
+                      /// add a unit of price to the current currency pair's
+                      /// price
+                      subtractOrAddOneUnitToAlertPrice(isSubtract: true);
                     },
-                    onLongPress: () {},
+                    onLongPress: ()  {
+
+                      print("");
+                      print("onLongPress");
+
+                      /// create and run a subtraction timer that runs and
+                      /// updates the screen every 50 millisecond
+                      additionOrSubtractionTimer=Timer.periodic(const Duration(milliseconds: 50), (timer) {
+                        subtractOrAddOneUnitToAlertPrice(isSubtract: true);
+                      });
+
+                    },
                     onLongPressEnd: (longPressEndDetails) {
-                      print(
-                          "longPressEndDetails.globalPosition: ${longPressEndDetails.globalPosition}");
-                      print(
-                          "longPressEndDetails.localPosition: ${longPressEndDetails.localPosition}");
-                      print(
-                          "longPressEndDetails.velocity: ${longPressEndDetails.velocity}");
+
+                      /// cancel the subtraction timer
+                      additionOrSubtractionTimer.cancel();
+
                     },
                     child: Container(
-                      color: Colors.yellow,
+                      color: Colors.transparent,
                       alignment: Alignment.center,
                       child: Text("-",
                           style: TextStyle(
@@ -1007,13 +1041,39 @@ class _CurrencyPriceAdjustmentContainerState
               Flexible(
                   fit: FlexFit.tight,
                   flex: flexPlusAndMinusButtons,
-                  child: Container(
-                    alignment: Alignment.center,
-                    child: Text("+",
-                        style: TextStyle(
-                            fontFamily: "PT-Mono",
-                            fontWeight: FontWeight.normal,
-                            fontSize: widget.fontSizePlus)),
+                  child: GestureDetector(
+                    onTap: (){
+                      /// subtract a unit of price from the current currency
+                      /// pair's price
+                      subtractOrAddOneUnitToAlertPrice(isSubtract: false);
+                    },
+                    onLongPress: ()  {
+
+                      print("");
+                      print("onLongPress");
+
+                      /// create and run an addition timer that runs and
+                      /// updates the screen every 50 millisecond
+                      additionOrSubtractionTimer=Timer.periodic(const Duration(milliseconds: 50), (timer) {
+                        subtractOrAddOneUnitToAlertPrice(isSubtract: false);
+                      });
+
+                    },
+                    onLongPressEnd: (longPressEndDetails) {
+
+                      /// cancel the addition timer
+                      additionOrSubtractionTimer.cancel();
+
+                    },
+                    child: Container(
+                      color: Colors.transparent,
+                      alignment: Alignment.center,
+                      child: Text("+",
+                          style: TextStyle(
+                              fontFamily: "PT-Mono",
+                              fontWeight: FontWeight.normal,
+                              fontSize: widget.fontSizePlus)),
+                    ),
                   ))
             ],
           )),
