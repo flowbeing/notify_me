@@ -1225,7 +1225,8 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
                   border: Border.all(
                       color: Colors.grey,
                       // const Color(0xFFFC8955)
-                      width: widget.borderWidthGridTile / 6.1538461538),
+                      width: widget.borderWidthGridTile / 6.1538461538
+                  ),
                   borderRadius: BorderRadius.circular(widget.radiusGridTile),
                 ),
                 child: Image.asset(

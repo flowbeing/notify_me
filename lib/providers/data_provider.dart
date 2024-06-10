@@ -17,6 +17,9 @@ class DataProvider with ChangeNotifier {
   /// Data object
   Data? _data;
 
+  /// a map of all alerts
+  Map<String, Map> mapOfAllAlerts = {};
+
   /// A map of all forex and crypto prices
   Map<dynamic, dynamic> _allForexAndCryptoPrices =
       allInstrumentsWithFetchingNotification;
@@ -773,4 +776,45 @@ class DataProvider with ChangeNotifier {
 
     return finalValue;
   }
+
+  /// add alert to map of all alerts
+  void addAlertToMapOfAllAlerts({
+    required String currencyPair,
+    required String alertPrice
+  }){
+
+    List<String> alreadyAddedAlertCurrencyPair = mapOfAllAlerts.keys.toList();
+    bool isCurrencyInMapOfAlerts = alreadyAddedAlertCurrencyPair.contains(currencyPair);
+    int keyCurrentAlert=0;
+
+    bool isAlertAlreadyExist = false;
+
+
+    if (isCurrencyInMapOfAlerts==false){
+      // int numberOfExistingAlertsForTheSpecifiedPair = mapOfAllAlerts[currencyPair].keys.toList();
+      mapOfAllAlerts[currencyPair]={};
+    }
+
+    /// obtaining the list of already created alerts (prices) for the specified
+    /// currency pair
+    List<dynamic> listOfAlertsPricesCurrentCurrencyPair=mapOfAllAlerts[currencyPair]!.values.toList();
+
+    /// setting the map key of the alert that should be created
+    ///
+    /// only used if the alert does not already exist
+    keyCurrentAlert=listOfAlertsPricesCurrentCurrencyPair.length;
+
+    /// checking whether the alert already exists
+    if (isCurrencyInMapOfAlerts==true){
+      isAlertAlreadyExist = listOfAlertsPricesCurrentCurrencyPair.contains(alertPrice);
+    }
+
+    /// including the alert into the map of all alerts if it does not already
+    /// exist
+    if (isAlertAlreadyExist==false){
+      mapOfAllAlerts[currencyPair]![keyCurrentAlert]=alertPrice;
+    }
+
+  }
+
 }
