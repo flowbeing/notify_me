@@ -14,3 +14,9 @@ enum Filter {
   crypto,
   none
 }
+
+enum AlertOperationType {
+  mute,
+  unMute,
+  remove
+}

@@ -227,7 +227,7 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
 
       double scaleOffset =
           (dataProvider!.getCurrentlySelectedInstrumentRowNumber() - 1) *
-              (widget.heightGridTile + widget.mainAxisSpacing);
+              (widget.heightGridTile); //  + widget.mainAxisSpacing
 
       print("scaleOffset: $scaleOffset");
       return scaleOffset;
@@ -259,7 +259,7 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
       // key: ValueKey("gridViewBuilderContainer$indexSelectedGridTile"),
       // color: Colors.yellow,
       width: double.infinity,
-      height: widget.heightFirstSixGridTiles + widget.mainAxisSpacing + .1,
+      height: widget.heightFirstSixGridTiles, //+ widget.mainAxisSpacing + .1,
       // margin: const EdgeInsets.all(0),
       padding: const EdgeInsets.all(0),
 

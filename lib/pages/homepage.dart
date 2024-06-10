@@ -563,14 +563,15 @@ class _CurrencyPriceAdjustmentContainerState
 
   /// setting the current entered alert price text, whether valid or not,
   /// selected, updated, or entered
-  String enteredPriceAlertText = "";
+  String enteredAlertPriceText = "";
 
   /// signalling whether the minus or plus buttons have been long pressed
   // bool isLongPressedButton=false;
 
   /// addition or subtraction timer - to add or subtract a unit of price at
   /// interval
-  Timer additionOrSubtractionTimer=Timer.periodic(const Duration(microseconds: 1), (timer) {
+  Timer additionOrSubtractionTimer =
+      Timer.periodic(const Duration(microseconds: 1), (timer) {
     timer.cancel();
   });
 
@@ -610,7 +611,12 @@ class _CurrencyPriceAdjustmentContainerState
 
       /// setting the current entered alert price text, whether selected,
       /// updated, or entered
-      enteredPriceAlertText = currentPairPriceStructure;
+      enteredAlertPriceText = currentPairPriceStructure;
+
+      /// saving the original alert price in the data provider class for use
+      /// (addition to map of all alerts when triggered) later..
+      dataProvider!.setOriginalOrEditedAlertPriceCurrencyPriceTextField(
+          originalOrUserEditedAlertPrice: enteredAlertPriceText);
 
       flexPlusAndMinusButtons = (0.2 * 100).round(); //0.1761363636
       flexPriceContainer = 100 - (flexPlusAndMinusButtons * 2);
@@ -663,7 +669,12 @@ class _CurrencyPriceAdjustmentContainerState
 
         /// setting the current entered alert price text, whether selected,
         /// updated, or entered
-        enteredPriceAlertText = currentPairPriceStructure;
+        enteredAlertPriceText = currentPairPriceStructure;
+
+        /// saving the original alert price in the data provider class for use
+        /// (addition to map of all alerts when triggered) later..
+        dataProvider!.setOriginalOrEditedAlertPriceCurrencyPriceTextField(
+            originalOrUserEditedAlertPrice: enteredAlertPriceText);
       }
     }
 
@@ -690,12 +701,17 @@ class _CurrencyPriceAdjustmentContainerState
 
       /// setting the current entered alert price text, whether selected,
       /// updated, or entered
-      enteredPriceAlertText = currentPairPriceStructure;
+      enteredAlertPriceText = currentPairPriceStructure;
 
       /// resetting this signal variable to ensure that price updates
       /// will get displayed again at intervals after editing the alert
       /// price of a previously selected currency pair..
       hasEditedAlertPriceAtLeastOnce = false;
+
+      /// saving the original alert price in the data provider class for use
+      /// (addition to map of all alerts when triggered) later..
+      dataProvider!.setOriginalOrEditedAlertPriceCurrencyPriceTextField(
+          originalOrUserEditedAlertPrice: enteredAlertPriceText);
     }
 
     /// updates the alert price after an error currency pair text has been
@@ -734,7 +750,12 @@ class _CurrencyPriceAdjustmentContainerState
 
           /// setting the current entered alert price text, whether selected,
           /// updated, or entered
-          enteredPriceAlertText = currentPairPriceStructure;
+          enteredAlertPriceText = currentPairPriceStructure;
+
+          /// saving the original alert price in the data provider class for use
+          /// (addition to map of all alerts when triggered) later..
+          dataProvider!.setOriginalOrEditedAlertPriceCurrencyPriceTextField(
+              originalOrUserEditedAlertPrice: enteredAlertPriceText);
         });
       });
       // });
@@ -743,34 +764,40 @@ class _CurrencyPriceAdjustmentContainerState
     super.didChangeDependencies();
   }
 
-  void subtractOrAddOneUnitToAlertPrice({required bool isSubtract}){
-
+  void subtractOrAddOneUnitToAlertPrice({required bool isSubtract}) {
     if (isValidCurrentAlertPrice) {
       String decreasedOrIncreasedAlertPrice = dataProvider!
           .subtractOrAddOneOrFiveUnitsFromAlertPrice(
-          currentPairPriceStructure:
-          currentPairPriceStructure,
-          alertPrice: enteredPriceAlertText,
-          isSubtract: isSubtract ? true : false
-      );
+              currentPairPriceStructure: currentPairPriceStructure,
+              alertPrice: enteredAlertPriceText,
+              isSubtract: isSubtract ? true : false);
 
-      print("decreasedOrIncreasedAlertPrice: ${decreasedOrIncreasedAlertPrice}");
+      print(
+          "decreasedOrIncreasedAlertPrice: ${decreasedOrIncreasedAlertPrice}");
 
       // focusNodeAlertPrice!.requestFocus();
 
       setState(() {
         /// was the keyboard visible before the button was
         /// clicked
-        bool isKeyboardVisibleBeforeButtonClick =
-            focusNodeAlertPrice!.hasFocus;
+        bool isKeyboardVisibleBeforeButtonClick = focusNodeAlertPrice!.hasFocus;
 
-        /// setting the current alert price
-        enteredPriceAlertText = decreasedOrIncreasedAlertPrice;
+        /// setting the (user edited version) current alert price, for use in
+        /// future subtraction or additions, since initialValuePrice can be both
+        /// the price structure and user edited alert price..
+        enteredAlertPriceText = decreasedOrIncreasedAlertPrice;
 
+        /// setting the alert price value that should be displayed.
+        ///
+        /// Can be both the price structure and user edited alert price..
         initialValuePrice = decreasedOrIncreasedAlertPrice;
 
-        if (selectedInstrument ==
-            selectedInstrument.toUpperCase()) {
+        /// saving the edited alert price in the data provider class for use
+        /// later..
+        dataProvider!.setOriginalOrEditedAlertPriceCurrencyPriceTextField(
+            originalOrUserEditedAlertPrice: enteredAlertPriceText);
+
+        if (selectedInstrument == selectedInstrument.toUpperCase()) {
           /// disposing the old focus node to provide access
           /// to the new alert price text form field's focus
           /// node
@@ -786,15 +813,14 @@ class _CurrencyPriceAdjustmentContainerState
           focusNodeAlertPrice = FocusNode(
               // debugLabel: "alertPrice$selectedInstrument",
               // skipTraversal: true
-          );
+              );
 
           print("focusNodeAlertPrice: ${focusNodeAlertPrice}");
 
           /// the new alert price
           // initialValuePrice = decreasedAlertPrice;
 
-        } else if (selectedInstrument ==
-            selectedInstrument.toLowerCase()) {
+        } else if (selectedInstrument == selectedInstrument.toLowerCase()) {
           /// disposing the old focus node to provide access
           /// to the new alert price text form field's focus
           /// node
@@ -810,7 +836,7 @@ class _CurrencyPriceAdjustmentContainerState
           focusNodeAlertPrice = FocusNode(
               // debugLabel: "alertPrice$selectedInstrument",
               // skipTraversal: true
-          );
+              );
 
           print("focusNodeAlertPrice: ${focusNodeAlertPrice}");
 
@@ -818,8 +844,7 @@ class _CurrencyPriceAdjustmentContainerState
           // initialValuePrice = decreasedAlertPrice;
         }
 
-        print(
-            "alertPrice hasFocus: ${isKeyboardVisibleBeforeButtonClick}");
+        print("alertPrice hasFocus: ${isKeyboardVisibleBeforeButtonClick}");
 
         /// ensuring that the keyboard remains visible if it
         /// was visible before this button was clicked
@@ -830,7 +855,8 @@ class _CurrencyPriceAdjustmentContainerState
           // FocusScope.of(context).requestFocus(focusNodeAlertPrice!);
 
           focusNodeAlertPrice!.requestFocus();
-          print("focusNodeAlertPrice.hasFocus:${focusNodeAlertPrice!.hasFocus}");
+          print(
+              "focusNodeAlertPrice.hasFocus:${focusNodeAlertPrice!.hasFocus}");
           print("requestedFocus");
           // FocusScope.of(context).requestFocus(focusNodeAlertPrice!);
 
@@ -850,7 +876,6 @@ class _CurrencyPriceAdjustmentContainerState
       // });
 
     }
-
   }
 
   @override
@@ -876,23 +901,20 @@ class _CurrencyPriceAdjustmentContainerState
                       /// price
                       subtractOrAddOneUnitToAlertPrice(isSubtract: true);
                     },
-                    onLongPress: ()  {
-
+                    onLongPress: () {
                       print("");
                       print("onLongPress");
 
                       /// create and run a subtraction timer that runs and
                       /// updates the screen every 50 millisecond
-                      additionOrSubtractionTimer=Timer.periodic(const Duration(milliseconds: 50), (timer) {
+                      additionOrSubtractionTimer = Timer.periodic(
+                          const Duration(milliseconds: 50), (timer) {
                         subtractOrAddOneUnitToAlertPrice(isSubtract: true);
                       });
-
                     },
                     onLongPressEnd: (longPressEndDetails) {
-
                       /// cancel the subtraction timer
                       additionOrSubtractionTimer.cancel();
-
                     },
                     child: Container(
                       color: Colors.transparent,
@@ -961,7 +983,7 @@ class _CurrencyPriceAdjustmentContainerState
                             if (numberChecker.length == lengthOfEnteredText) {
                               setState(() {
                                 /// setting the currently entered alert price text
-                                enteredPriceAlertText = enteredText;
+                                enteredAlertPriceText = enteredText;
 
                                 /// setting the bool that signals whether the
                                 /// current alert price is valid or not
@@ -988,7 +1010,7 @@ class _CurrencyPriceAdjustmentContainerState
                             else {
                               setState(() {
                                 /// setting the currently entered alert price text
-                                enteredPriceAlertText = enteredText;
+                                enteredAlertPriceText = enteredText;
 
                                 /// setting the bool that signals whether the
                                 /// current alert price is valid or not
@@ -1042,28 +1064,25 @@ class _CurrencyPriceAdjustmentContainerState
                   fit: FlexFit.tight,
                   flex: flexPlusAndMinusButtons,
                   child: GestureDetector(
-                    onTap: (){
+                    onTap: () {
                       /// subtract a unit of price from the current currency
                       /// pair's price
                       subtractOrAddOneUnitToAlertPrice(isSubtract: false);
                     },
-                    onLongPress: ()  {
-
+                    onLongPress: () {
                       print("");
                       print("onLongPress");
 
                       /// create and run an addition timer that runs and
                       /// updates the screen every 50 millisecond
-                      additionOrSubtractionTimer=Timer.periodic(const Duration(milliseconds: 50), (timer) {
+                      additionOrSubtractionTimer = Timer.periodic(
+                          const Duration(milliseconds: 50), (timer) {
                         subtractOrAddOneUnitToAlertPrice(isSubtract: false);
                       });
-
                     },
                     onLongPressEnd: (longPressEndDetails) {
-
                       /// cancel the addition timer
                       additionOrSubtractionTimer.cancel();
-
                     },
                     child: Container(
                       color: Colors.transparent,
@@ -1155,6 +1174,12 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
   /// has focus..
   bool isFocusedAnyTextField = false;
 
+  /// a map of existing alerts
+  Map<dynamic, dynamic> mapOfExistingAlerts = {};
+
+  /// list of all alerts data from the above map of existing alerts
+  List<Map<String, dynamic>> listOfExistingAlerts = [];
+
   @override
   void didChangeDependencies() {
     print("didChangeDependencies Blurrable");
@@ -1162,8 +1187,40 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
     isFocusedAnyTextField =
         dataProvider!.getHasFocusCurrencyPairOrAlertPriceTextField();
 
+    /// a map of existing alerts
+    mapOfExistingAlerts = dataProvider!.getMapOfAllAlerts();
+
+    /// obtaining a list of all alerts data from the above map of existing
+    /// alerts
+    listOfExistingAlerts = getListOfExistingAlerts();
+
     // TODO: implement didChangeDependencies
     super.didChangeDependencies();
+  }
+
+  /// determining all existing alerts and alerts
+  List<Map<String, dynamic>> getListOfExistingAlerts() {
+    /// all alerts data listed
+    List<Map<String, dynamic>> listOfExistingAlerts = [];
+
+    /// iterating through all existing alerts so that they can be added into
+    /// the above list of existing alerts
+    mapOfExistingAlerts.forEach((currentPair, alertsForCurrentPair) {
+      /// adding all existing alert for the current pair to the list of existing
+      /// alerts
+      for (var alertsData in alertsForCurrentPair) {
+        String currentAlertPrice = alertsData['price'];
+        String isMuted = alertsData['isMuted'];
+
+        listOfExistingAlerts.add({
+          "currencyPair": currentPair,
+          "price": currentAlertPrice,
+          "isMuted": isMuted
+        });
+      }
+    });
+
+    return listOfExistingAlerts;
   }
 
   @override
@@ -1225,16 +1282,22 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
                   border: Border.all(
                       color: Colors.grey,
                       // const Color(0xFFFC8955)
-                      width: widget.borderWidthGridTile / 6.1538461538
-                  ),
+                      width: widget.borderWidthGridTile / 6.1538461538),
                   borderRadius: BorderRadius.circular(widget.radiusGridTile),
                 ),
-                child: Image.asset(
-                  "assets/images/no_alerts.png",
-                  width: 10,
-                  height: 10,
-                  // fit: BoxFit.fitHeight,
-                ),
+                child: mapOfExistingAlerts.isEmpty
+                    ? Image.asset(
+                        "assets/images/no_alerts.png",
+                        width: 10,
+                        height: 10,
+                        // fit: BoxFit.fitHeight,
+                      )
+                    : ListView.builder(
+                        itemCount: listOfExistingAlerts.length,
+                        itemBuilder: (context, index) {
+                          return ListTile();
+                        },
+                      ),
               ),
 
               /// Swipe notification's Sized Box
@@ -1345,20 +1408,20 @@ class _AlertsAndOtherMenuItemsState extends State<AlertsAndOtherMenuItems> {
 
     return SizedBox(
 
-        /// an extra main axis spacing was added to the
-        /// height of the grid view builder. Hence, an
-        /// adjustments have to the made to the height of
-        /// this widget as well as the padding top of it's
-        /// child widget to ensure that no visible widget
-        /// will cross the bottom iphone bar
-        height: widget.heightAlertsAndOtherMenuItemsSizedBox -
-            widget.mainAxisSpacing,
+        // an extra main axis spacing was added to the
+        // height of the grid view builder. Hence, an
+        // adjustments have to the made to the height of
+        // this widget as well as the padding top of it's
+        // child widget to ensure that no visible widget
+        // will cross the bottom iphone bar
+        height: widget.heightAlertsAndOtherMenuItemsSizedBox,
+        // - widget.mainAxisSpacing,
         width: double.infinity,
         // color: Colors.green,
         child: Padding(
           padding: EdgeInsets.only(
-              top: widget.marginTopAlertsAndOtherMenuItemsSizedBox -
-                  widget.mainAxisSpacing,
+              top: widget.marginTopAlertsAndOtherMenuItemsSizedBox,
+              // - widget.mainAxisSpacing,
               bottom: widget.marginBottomAlertsAndOtherMenuItemsSizedBox),
           child: Row(children: <Widget>[
             /// title - "Alert"
@@ -1523,11 +1586,11 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
       print("initialValue: $initialValue");
 
       focusNodeCurrencyPair = FocusNode(
-          debugLabel: "currencyPair$selectedInstrument",
-          skipTraversal: true,
-          canRequestFocus: false,
-          descendantsAreFocusable: false,
-          descendantsAreTraversable: false,
+        debugLabel: "currencyPair$selectedInstrument",
+        skipTraversal: true,
+        canRequestFocus: false,
+        descendantsAreFocusable: false,
+        descendantsAreTraversable: false,
       );
 
       print("textColorDidChangeDependencies: $textColor");
@@ -1831,35 +1894,41 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
       currencyPairOrTextButtonWidget = addAlertButtonText;
     }
 
-    return Container(
-        alignment: Alignment.center,
-        height: widget.heightCreateNewAlertContainer,
-        width: widget.widthCurrencyPairTextField,
-        decoration: BoxDecoration(
-            color: widget.isCurrencyPairTextField
-                ? Colors.transparent
-                : Colors.black,
-            borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(widget.isCurrencyPairTextField
-                    ? widget.borderTopLeftOrRightRadiusCreateAlert
-                    : 0),
-                bottomLeft: Radius.circular(widget.isCurrencyPairTextField
-                    ? widget.borderBottomLeftOrRightRadiusCreateAlert
-                    : 0),
-                topRight: Radius.circular(
-                    widget.isCurrencyPairTextField == false
-                        ? widget.borderTopLeftOrRightRadiusCreateAlert
-                        : 0),
-                bottomRight: Radius.circular(
-                    widget.isCurrencyPairTextField == false
-                        ? widget.borderBottomLeftOrRightRadiusCreateAlert
-                        : 0)),
-            border: Border.all(
-                width: widget.borderWidthGridTile / 4,
-                color: widget.isCurrencyPairTextField
-                    ? Colors.transparent
-                    : Colors.black)),
-        child: currencyPairOrTextButtonWidget);
+    return GestureDetector(
+      onTap: () {
+        /// adding alert if the active child widget is the "add alert" button
+        if (widget.isCurrencyPairTextField == false) {
+          dataProvider!.addAlertToMapOfAllAlerts();
+        }
+      },
+      child: Container(
+          alignment: Alignment.center,
+          height: widget.heightCreateNewAlertContainer,
+          width: widget.widthCurrencyPairTextField,
+          decoration: BoxDecoration(
+              color: widget.isCurrencyPairTextField
+                  ? Colors.transparent
+                  : Colors.black,
+              borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(widget.isCurrencyPairTextField
+                      ? widget.borderTopLeftOrRightRadiusCreateAlert
+                      : 0),
+                  bottomLeft: Radius.circular(widget.isCurrencyPairTextField
+                      ? widget.borderBottomLeftOrRightRadiusCreateAlert
+                      : 0),
+                  topRight: Radius.circular(
+                      widget.isCurrencyPairTextField == false
+                          ? widget.borderTopLeftOrRightRadiusCreateAlert
+                          : 0),
+                  bottomRight: Radius.circular(
+                      widget.isCurrencyPairTextField == false
+                          ? widget.borderBottomLeftOrRightRadiusCreateAlert
+                          : 0)),
+              border: Border.all(
+                  width: widget.borderWidthGridTile / 4,
+                  color: widget.isCurrencyPairTextField ? Colors.transparent : Colors.black)),
+          child: currencyPairOrTextButtonWidget),
+    );
   }
 }
 

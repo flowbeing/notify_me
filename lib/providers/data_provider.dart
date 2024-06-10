@@ -18,7 +18,7 @@ class DataProvider with ChangeNotifier {
   Data? _data;
 
   /// a map of all alerts
-  Map<String, Map> mapOfAllAlerts = {};
+  Map<String, List<Map<String, dynamic>>> _mapOfAllAlerts = {};
 
   /// A map of all forex and crypto prices
   Map<dynamic, dynamic> _allForexAndCryptoPrices =
@@ -73,8 +73,12 @@ class DataProvider with ChangeNotifier {
 
   bool _hasFocusCurrencyPairAndAlertPriceTextFields = false;
 
-  /// registers the price of the alert that will be added
+  /// holds an original alert price for the currently selected currency
   String _alertPriceCurrencyPriceTextField = "";
+
+  /// hold an original or edited alert price for the currently selected
+  /// currency
+  String _originalOrEditedAlertPriceCurrencyPriceTextField = "";
 
   /// loads this app's configuration file and creates all relevant File objects
   Future _initialDataAndDotEnv() async {
@@ -362,19 +366,17 @@ class DataProvider with ChangeNotifier {
 
   /// retrieves the signal that stipulates whether or not currency
   /// pair or alert price text form field is being edited
-  bool getHasFocusCurrencyPairOrAlertPriceTextField(){
-
-    if (_hasFocusCurrencyPairTextField==true || _hasFocusAlertPriceTextField==true){
-      _hasFocusCurrencyPairAndAlertPriceTextFields=true;
-    }
-    else if (_hasFocusCurrencyPairTextField==false && _hasFocusAlertPriceTextField==false) {
-      _hasFocusCurrencyPairAndAlertPriceTextFields=false;
+  bool getHasFocusCurrencyPairOrAlertPriceTextField() {
+    if (_hasFocusCurrencyPairTextField == true ||
+        _hasFocusAlertPriceTextField == true) {
+      _hasFocusCurrencyPairAndAlertPriceTextFields = true;
+    } else if (_hasFocusCurrencyPairTextField == false &&
+        _hasFocusAlertPriceTextField == false) {
+      _hasFocusCurrencyPairAndAlertPriceTextFields = false;
       // notifyListeners();
     }
 
     return _hasFocusCurrencyPairAndAlertPriceTextFields;
-
-
   }
 
   /// retrieves the currently selected pair's price if any (i.e if prices have
@@ -391,10 +393,14 @@ class DataProvider with ChangeNotifier {
     String currentlySelectCurrencyPair =
         _listOfAllInstruments[_indexSelectedGridTile];
 
+    String currentlySelectedCurrencyPairPrice =
+        _allForexAndCryptoPrices[currentlySelectCurrencyPair]['current_price'];
+
     return isFetchingPrices
         ? "0.00000"
-        : _allForexAndCryptoPrices[currentlySelectCurrencyPair]
-            ['current_price'];
+        : currentlySelectedCurrencyPairPrice == "demo"
+            ? "0.00000"
+            : currentlySelectedCurrencyPairPrice;
   }
 
   /// sets the alert price of the currently selected currency pair when
@@ -406,14 +412,16 @@ class DataProvider with ChangeNotifier {
     if (isFetchingPrices) {
       _alertPriceCurrencyPriceTextField = "0.00000";
     } else {
-      String currentlySelectedInstrumentPrice =
-          getCurrentlySelectedInstrumentPrice();
+      _alertPriceCurrencyPriceTextField=getCurrentlySelectedInstrumentPrice();
 
-      if (currentlySelectedInstrumentPrice == "demo") {
-        _alertPriceCurrencyPriceTextField = "0.00000";
-      } else {
-        _alertPriceCurrencyPriceTextField = currentlySelectedInstrumentPrice;
-      }
+      // String currentlySelectedInstrumentPrice =
+      //     getCurrentlySelectedInstrumentPrice();
+      //
+      // if (currentlySelectedInstrumentPrice == "demo") {
+      //   _alertPriceCurrencyPriceTextField = "0.00000";
+      // } else {
+      //   _alertPriceCurrencyPriceTextField = currentlySelectedInstrumentPrice;
+      // }
     }
   }
 
@@ -428,18 +436,32 @@ class DataProvider with ChangeNotifier {
     return _alertPriceCurrencyPriceTextField;
   }
 
+  /// sets the currently selected currency pair's alert price, original or
+  /// user edited version..
+  void setOriginalOrEditedAlertPriceCurrencyPriceTextField(
+      {required String originalOrUserEditedAlertPrice}) {
+    _originalOrEditedAlertPriceCurrencyPriceTextField =
+        originalOrUserEditedAlertPrice;
+  }
+
+  /// gets the currently selected currency pair's alert price, original or
+  /// user edited version..
+  String getOriginalOrEditedAlertPriceCurrencyPriceTextField() {
+    return _originalOrEditedAlertPriceCurrencyPriceTextField;
+  }
+
   /// update entered currency pair text ->
   /// CurrencyPairTextFieldOrCreateAlertButton
   ///
   /// When the entered text is a valid currency pair, this method will help to
   /// update the grid view widget with the currently selected (entered) pair
-  void updateEnteredTextCurrencyPair({
-    required String? enteredText,
-    bool? isErrorEnteredText,
-    FocusNode? focusNode,
-    /// used with FocusScope to determine whether the keyboard is still visible
-    BuildContext? context
-  }) {
+  void updateEnteredTextCurrencyPair(
+      {required String? enteredText,
+      bool? isErrorEnteredText,
+      FocusNode? focusNode,
+
+      /// used with FocusScope to determine whether the keyboard is still visible
+      BuildContext? context}) {
     /// when grid tile gets tapped, reset the manually entered tell by setting
     /// it to null. enteredText will be null
     if (focusNode == null) {
@@ -496,37 +518,37 @@ class DataProvider with ChangeNotifier {
 
         // if (focusNode.hasFocus == false) {
 
-          _enteredCurrencyPair = enteredText;
-          _isErrorEnteredText = isErrorEnteredText;
+        _enteredCurrencyPair = enteredText;
+        _isErrorEnteredText = isErrorEnteredText;
 
-          /// if the entered currency pair is valid, update the index of the
-          /// selected grid tile..
-          if (_isErrorEnteredText == null) {
-            int indexOfEnteredValidCurrencyPair =
-                _listOfAllInstruments.indexOf(_enteredCurrencyPair);
+        /// if the entered currency pair is valid, update the index of the
+        /// selected grid tile..
+        if (_isErrorEnteredText == null) {
+          int indexOfEnteredValidCurrencyPair =
+              _listOfAllInstruments.indexOf(_enteredCurrencyPair);
 
-            _indexSelectedGridTile = indexOfEnteredValidCurrencyPair;
+          _indexSelectedGridTile = indexOfEnteredValidCurrencyPair;
 
-            /// setting the alert price of the entered currency pair
-            setAlertPriceCurrencyPriceTextField();
-          }
+          /// setting the alert price of the entered currency pair
+          setAlertPriceCurrencyPriceTextField();
+        }
 
-          /// if the alert price text field gains focus immediately after the
-          /// currency pair text form field loses focus, ensure that the blur
-          /// effect remains
-          // bool isKeyboardStillVisible = FocusScope.of(context!).hasFocus;
-          //
-          // if (isKeyboardStillVisible){
-          //   _hasFocusCurrencyPairTextField=true;
-          // }else{
-          //   _hasFocusCurrencyPairTextField=false;
-          // }
+        /// if the alert price text field gains focus immediately after the
+        /// currency pair text form field loses focus, ensure that the blur
+        /// effect remains
+        // bool isKeyboardStillVisible = FocusScope.of(context!).hasFocus;
+        //
+        // if (isKeyboardStillVisible){
+        //   _hasFocusCurrencyPairTextField=true;
+        // }else{
+        //   _hasFocusCurrencyPairTextField=false;
+        // }
 
-          // _hasFocusCurrencyPairTextField=false;
+        // _hasFocusCurrencyPairTextField=false;
 
-          timer.cancel();
+        timer.cancel();
 
-          notifyListeners();
+        notifyListeners();
         // }
       });
     }
@@ -725,37 +747,41 @@ class DataProvider with ChangeNotifier {
 
   /// subtracts or adds a unit or five units to the current instrument's
   /// alert price
-  String subtractOrAddOneOrFiveUnitsFromAlertPrice({
-    /// to determine the actual unit price of the entered alert price
-    required String currentPairPriceStructure,
-    /// the entered alert price, regardless of whether the price structure
-    /// of the user has changed the currently selected pair's price by editing
-    /// it..
-    required String alertPrice,
-    required isSubtract
-  }){
+  String subtractOrAddOneOrFiveUnitsFromAlertPrice(
+      {
 
+      /// to determine the actual unit price of the entered alert price
+      required String currentPairPriceStructure,
+
+      /// the entered alert price, regardless of whether the price structure
+      /// of the user has changed the currently selected pair's price by editing
+      /// it..
+      required String alertPrice,
+      required isSubtract}) {
     /// obtaining the original count of numbers that exist after the "." symbol
     /// - currentPairPriceStructure
-    List<String> alertPriceOriginalStructureSplit = currentPairPriceStructure.split("");
+    List<String> alertPriceOriginalStructureSplit =
+        currentPairPriceStructure.split("");
     int lengthOfCurrentPairPriceStructure = currentPairPriceStructure.length;
     int countOfNumAfterDot = 0;
 
-    if (alertPriceOriginalStructureSplit.contains(".")){
+    if (alertPriceOriginalStructureSplit.contains(".")) {
       int indexOfDot = alertPriceOriginalStructureSplit.indexOf(".");
-      int positionOfDot=indexOfDot+1;
-      countOfNumAfterDot=lengthOfCurrentPairPriceStructure-(positionOfDot);
+      int positionOfDot = indexOfDot + 1;
+      countOfNumAfterDot = lengthOfCurrentPairPriceStructure - (positionOfDot);
     }
 
     /// determining one unit of the current alert price
     String aUnitOfTheAlertPrice = "1";
 
-    if (countOfNumAfterDot!=0){
-      aUnitOfTheAlertPrice="0.${"0"*countOfNumAfterDot}";
-      List<String> incrementValueOneUnitSplit= aUnitOfTheAlertPrice.split('');
-      int indexOfLastItemInIncrementValueOneUnitSplit = aUnitOfTheAlertPrice.length - 1;
-      incrementValueOneUnitSplit[indexOfLastItemInIncrementValueOneUnitSplit] = "1";
-      aUnitOfTheAlertPrice=incrementValueOneUnitSplit.join("");
+    if (countOfNumAfterDot != 0) {
+      aUnitOfTheAlertPrice = "0.${"0" * countOfNumAfterDot}";
+      List<String> incrementValueOneUnitSplit = aUnitOfTheAlertPrice.split('');
+      int indexOfLastItemInIncrementValueOneUnitSplit =
+          aUnitOfTheAlertPrice.length - 1;
+      incrementValueOneUnitSplit[indexOfLastItemInIncrementValueOneUnitSplit] =
+          "1";
+      aUnitOfTheAlertPrice = incrementValueOneUnitSplit.join("");
     }
 
     print("aUnitOfTheAlertPrice: ${aUnitOfTheAlertPrice}");
@@ -764,57 +790,130 @@ class DataProvider with ChangeNotifier {
     /// specified operation type..
     String finalValue = "0";
 
-    if (isSubtract){
+    if (isSubtract) {
       /// subtracting a unit of the selected currency pair's original price
       /// (structure) from the visible alert price ..
-      finalValue = (double.parse(alertPrice) - double.parse(aUnitOfTheAlertPrice)).toStringAsFixed(countOfNumAfterDot);
+      finalValue =
+          (double.parse(alertPrice) - double.parse(aUnitOfTheAlertPrice))
+              .toStringAsFixed(countOfNumAfterDot);
     } else {
       /// adding a unit of the selected currency pair's original price
       /// (structure) from the visible alert price..
-      finalValue = (double.parse(alertPrice) + double.parse(aUnitOfTheAlertPrice)).toStringAsFixed(countOfNumAfterDot);
+      finalValue =
+          (double.parse(alertPrice) + double.parse(aUnitOfTheAlertPrice))
+              .toStringAsFixed(countOfNumAfterDot);
     }
 
     return finalValue;
   }
 
-  /// add alert to map of all alerts
-  void addAlertToMapOfAllAlerts({
-    required String currencyPair,
-    required String alertPrice
-  }){
+  /// adds the currently displayed alert price to the map of all alerts, if
+  /// it has not already been added..
+  void addAlertToMapOfAllAlerts() {
+    /// currently selected currency pair
+    String currentlySelectedCurrencyPair = getCurrentlySelectedInstrument();
+    String currentlyDisplayedAlertPrice =
+        _originalOrEditedAlertPriceCurrencyPriceTextField;
 
-    List<String> alreadyAddedAlertCurrencyPair = mapOfAllAlerts.keys.toList();
-    bool isCurrencyInMapOfAlerts = alreadyAddedAlertCurrencyPair.contains(currencyPair);
-    int keyCurrentAlert=0;
+    print("currentlySelectedCurrencyPair:${currentlySelectedCurrencyPair}");
+    print("currentlyDisplayedAlertPrice: ${currentlyDisplayedAlertPrice}");
+
+    List<String> alreadyAddedAlertCurrencyPair = _mapOfAllAlerts.keys.toList();
+    bool isCurrencyInMapOfAlerts =
+        alreadyAddedAlertCurrencyPair.contains(currentlySelectedCurrencyPair);
+    int keyCurrentAlert = 0;
 
     bool isAlertAlreadyExist = false;
 
-
-    if (isCurrencyInMapOfAlerts==false){
+    if (isCurrencyInMapOfAlerts == false) {
       // int numberOfExistingAlertsForTheSpecifiedPair = mapOfAllAlerts[currencyPair].keys.toList();
-      mapOfAllAlerts[currencyPair]={};
+      _mapOfAllAlerts[currentlySelectedCurrencyPair] = [];
     }
 
-    /// obtaining the list of already created alerts (prices) for the specified
-    /// currency pair
-    List<dynamic> listOfAlertsPricesCurrentCurrencyPair=mapOfAllAlerts[currencyPair]!.values.toList();
+    /// Map<String, List<Map<String, dynamic>>
 
-    /// setting the map key of the alert that should be created
+    /// obtaining the list of already created alerts (prices and isMuted data)
+    /// for the specified currency pair
+    List<Map<String, dynamic>>? listOfAlertsDataCurrentCurrencyPair =
+        _mapOfAllAlerts[
+            currentlySelectedCurrencyPair]; // Map<String, Map<String, dynamic>>
+
+    /// creating the map key for the alert that should be created
     ///
     /// only used if the alert does not already exist
-    keyCurrentAlert=listOfAlertsPricesCurrentCurrencyPair.length;
+    keyCurrentAlert = listOfAlertsDataCurrentCurrencyPair!.length;
 
-    /// checking whether the alert already exists
-    if (isCurrencyInMapOfAlerts==true){
-      isAlertAlreadyExist = listOfAlertsPricesCurrentCurrencyPair.contains(alertPrice);
+    // /// checking whether the alert already exists
+    // if (isCurrencyInMapOfAlerts == true) {
+    // }
+
+    /// iterating through the specified currency pair's existing alerts
+    /// (if any) to determine whether the price alert that should be added
+    /// already exists
+    for (var alertData in listOfAlertsDataCurrentCurrencyPair) {
+      String price = alertData['price'];
+
+      if (price == currentlyDisplayedAlertPrice) {
+        isAlertAlreadyExist = true;
+        break;
+      }
     }
 
-    /// including the alert into the map of all alerts if it does not already
-    /// exist
-    if (isAlertAlreadyExist==false){
-      mapOfAllAlerts[currencyPair]![keyCurrentAlert]=alertPrice;
+    /// including the new alert into the map of all alerts if it does not
+    /// already exist
+    if (isAlertAlreadyExist == false) {
+      _mapOfAllAlerts[currentlySelectedCurrencyPair]!.insert(keyCurrentAlert,
+          {"price": currentlyDisplayedAlertPrice, "isMuted": false});
     }
 
+    print("mapOfAllAlerts: ${_mapOfAllAlerts}");
+
+    notifyListeners();
   }
 
+  /// mutes, un-mute or removes an an alert from the map of all alerts
+  ///
+  /// used with alert prices list view builder..
+  void muteUnMuteOrRemoveAlert(
+      {required String currencyPair,
+      required String alertPrice,
+      required AlertOperationType alertOperationType}) {
+    bool isCurrencyPairInMapOfAllAlerts =
+        _mapOfAllAlerts.keys.toList().contains(currencyPair);
+    bool isAlertExists = false;
+
+    /// if at least one alert exists for the specified...
+    if (isCurrencyPairInMapOfAllAlerts) {
+      List<Map<String, dynamic>>? listOfAlertsSpecifiedPair =
+          _mapOfAllAlerts[currencyPair];
+
+      /// iterate through the specified currency pair's existing alerts, if
+      /// any, to mute or delete the specified alert, if it exists..
+      int indexOfAlertIfAlreadyExists = 0;
+      for (var alertsData in listOfAlertsSpecifiedPair!) {
+        String price = alertsData['price'];
+        // String isMuted = alertsData['isMuted'];
+
+        if (price == alertPrice) {
+          if (alertOperationType == AlertOperationType.mute) {
+            _mapOfAllAlerts[currencyPair]![indexOfAlertIfAlreadyExists]
+                ['isMuted'] = true;
+          } else if (alertOperationType == AlertOperationType.unMute) {
+            _mapOfAllAlerts[currencyPair]![indexOfAlertIfAlreadyExists]
+                ['isMuted'] = false;
+          } else if (alertOperationType == AlertOperationType.remove) {
+            _mapOfAllAlerts[currencyPair]!
+                .removeAt(indexOfAlertIfAlreadyExists);
+          }
+        }
+
+        indexOfAlertIfAlreadyExists += 1;
+      }
+    }
+  }
+
+  /// retrieve a map of all alerts
+  Map<String, List<Map<String, dynamic>>> getMapOfAllAlerts(){
+    return _mapOfAllAlerts;
+  }
 }
