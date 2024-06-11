@@ -98,12 +98,26 @@ class HomepageState extends State<Homepage> {
   double iconSizeDotDivider = 0;
   double widthSpaceInBetweenAlertsMenu = 0;
 
-  /// dimensions - alerts ListView Builder
+  /// dimensions - alerts ListView Builder & List Tile
   double heightAlertsListViewBuilder = 0;
   double radiusListViewBuilder = 0;
   double fontSizeNoAlerts = 0; //
   double fontSizeAlertsListTile = 0; //
   double borderWidthListViewBuilder = 0;
+
+  double heightListTile=0;
+  double widthListTileLeading=0;
+  double widthListTileTitle=0;
+  double widthListTileTrailing=0;
+
+  double paddingLeftTrailing=0;
+  double paddingRightTrailing=0;
+  double paddingMiddleTrailing=0;
+
+  double widthPriceUpOrDownIndicator=0;
+  double widthMuteOrPauseButton=0;
+  double widthUnMuteOrPlayButton=0;
+  double widthDeleteButton=0;
 
   /// measurements - swipe notification
   double heightSwipeNotification = 0;
@@ -208,6 +222,16 @@ class HomepageState extends State<Homepage> {
     fontSizeNoAlerts = fontSizeSymbols; //
     fontSizeAlertsListTile = 0.01716738197 * deviceHeight;
     borderWidthListViewBuilder = 0.0002682403433 * deviceHeight;
+
+    heightListTile=0.05364806867*deviceHeight;
+    widthListTileLeading=0.2465116279*deviceWidth;
+    widthListTileTitle=0.4534883721*deviceWidth;
+    widthListTileTrailing=0.2534883721*deviceWidth;
+
+    widthPriceUpOrDownIndicator=0.04418604651*deviceWidth;
+    widthMuteOrPauseButton=0.02093023256*deviceWidth;
+    widthUnMuteOrPlayButton=0.02790697674*deviceWidth;
+    widthDeleteButton=0.01860465116*deviceWidth;
 
     /// height - swipe notification
     heightSwipeNotification = 0.03004291845 * deviceHeight;
@@ -379,9 +403,19 @@ class HomepageState extends State<Homepage> {
                       iconSizeDotDivider: iconSizeDotDivider,
                       widthSpaceInBetweenAlertsMenu:
                           widthSpaceInBetweenAlertsMenu,
-                      heightAlertsListViewBuilder: heightAlertsListViewBuilder,
                       heightSwipeNotification: heightSwipeNotification,
-                      fontSizeSwipeNotification: fontSizeSwipeNotification),
+                      fontSizeSwipeNotification: fontSizeSwipeNotification,
+                      heightAlertsListViewBuilder: heightAlertsListViewBuilder,
+                     heightListTile: heightListTile,
+                     widthListTileLeading: widthListTileLeading,
+                     widthListTileTitle:widthListTileTitle,
+                     widthListTileTrailing:widthListTileTrailing,
+                     widthPriceUpOrDownIndicator:widthPriceUpOrDownIndicator,
+                     widthMuteOrPauseButton:widthMuteOrPauseButton,
+                     widthUnMuteOrPlayButton:widthUnMuteOrPlayButton,
+                     widthDeleteButton:widthUnMuteOrPlayButton
+
+                  ),
 
                   /// Create New Alert's Sized Box
                   CreateNewAlert(
@@ -1131,6 +1165,17 @@ class BlurrableWidgetsAboveCreateAlertWidget extends StatefulWidget {
     required this.heightAlertsListViewBuilder,
     required this.heightSwipeNotification,
     required this.fontSizeSwipeNotification,
+
+    /// list tile dimensions
+    required this.heightListTile,
+    required this.widthListTileLeading,
+    required this.widthListTileTitle,
+    required this.widthListTileTrailing,
+
+    required this.widthPriceUpOrDownIndicator,
+    required this.widthMuteOrPauseButton,
+    required this.widthUnMuteOrPlayButton,
+    required this.widthDeleteButton,
   }) : super(key: key);
 
   final double heightFirstSixGridTiles;
@@ -1159,6 +1204,17 @@ class BlurrableWidgetsAboveCreateAlertWidget extends StatefulWidget {
   final double heightAlertsListViewBuilder;
   final double heightSwipeNotification;
   final double fontSizeSwipeNotification;
+
+  /// list tile dimensions
+  final double heightListTile;
+  final double widthListTileLeading;
+  final double widthListTileTitle;
+  final double widthListTileTrailing;
+  final double widthPriceUpOrDownIndicator;
+  final double widthMuteOrPauseButton;
+  final double widthUnMuteOrPlayButton;
+  final double widthDeleteButton;
+
 
   @override
   State<BlurrableWidgetsAboveCreateAlertWidget> createState() =>
@@ -1210,7 +1266,7 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
       /// alerts
       for (var alertsData in alertsForCurrentPair) {
         String currentAlertPrice = alertsData['price'];
-        String isMuted = alertsData['isMuted'];
+        bool isMuted = alertsData['isMuted'];
 
         listOfExistingAlerts.add({
           "currencyPair": currentPair,
@@ -1292,12 +1348,41 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
                         height: 10,
                         // fit: BoxFit.fitHeight,
                       )
-                    : ListView.builder(
-                        itemCount: listOfExistingAlerts.length,
-                        itemBuilder: (context, index) {
-                          return ListTile();
-                        },
-                      ),
+                    : SizedBox(
+                      height: widget.heightListTile,
+                      width: double.infinity,
+                      child: ListView.builder(
+                          padding: EdgeInsets.zero,
+                          itemCount: listOfExistingAlerts.length,
+                          itemBuilder: (context, index) {
+                            return Container(
+                              color: Colors.yellow,
+                              margin: EdgeInsets.zero,
+                              padding: EdgeInsets.zero,
+                              child: ListTile(
+                                contentPadding: EdgeInsets.zero,
+                                leading: Container(
+                                  width: widget.widthListTileLeading,
+                                  height: widget.heightListTile,
+                                  color: Colors.blue,
+                                  alignment: Alignment.center,
+                                  margin: EdgeInsets.zero,
+                                  padding: EdgeInsets.zero,
+                                  // child: Text("1.0000")
+                                ),
+                                title: Container(
+                                  alignment: Alignment.center,
+                                  color: Colors.green,
+                                    child: const Text("title")
+                                ),
+                                trailing: Container(
+                                  child: Text("text"),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                    ),
               ),
 
               /// Swipe notification's Sized Box
@@ -1306,7 +1391,7 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
                   width: double.infinity,
                   // color: Colors.blueAccent
                   child: Center(
-                    child: Text("Swipe",
+                    child: Text(mapOfExistingAlerts.isEmpty ? "" : "Swipe",
                         style: TextStyle(
                             fontFamily: "PT-Mono",
                             fontSize: widget.fontSizeSwipeNotification,
