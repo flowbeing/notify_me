@@ -105,19 +105,22 @@ class HomepageState extends State<Homepage> {
   double fontSizeAlertsListTile = 0; //
   double borderWidthListViewBuilder = 0;
 
-  double heightListTile=0;
-  double widthListTileLeading=0;
-  double widthListTileTitle=0;
-  double widthListTileTrailing=0;
+  double heightListTile = 0;
+  double widthListTile = 0;
 
-  double paddingLeftTrailing=0;
-  double paddingRightTrailing=0;
-  double paddingMiddleTrailing=0;
+  double widthListTileLeading = 0;
+  double widthListTileTitle = 0;
+  double widthListTileTrailing = 0;
 
-  double widthPriceUpOrDownIndicator=0;
-  double widthMuteOrPauseButton=0;
-  double widthUnMuteOrPlayButton=0;
-  double widthDeleteButton=0;
+  double paddingLeftTrailing = 0;
+  double paddingRightTrailing = 0;
+  double paddingMiddleTrailing = 0;
+  double paddingBottomListTile = 0;
+
+  double widthPriceUpOrDownIndicator = 0;
+  double widthMutePauseOrUnallowButton = 0;
+  double widthUnMutePlayOrAllowButton = 0;
+  double widthDeleteButton = 0;
 
   /// measurements - swipe notification
   double heightSwipeNotification = 0;
@@ -223,15 +226,23 @@ class HomepageState extends State<Homepage> {
     fontSizeAlertsListTile = 0.01716738197 * deviceHeight;
     borderWidthListViewBuilder = 0.0002682403433 * deviceHeight;
 
-    heightListTile=0.05364806867*deviceHeight;
-    widthListTileLeading=0.2465116279*deviceWidth;
-    widthListTileTitle=0.4534883721*deviceWidth;
-    widthListTileTrailing=0.2534883721*deviceWidth;
+    heightListTile = 0.05364806867 * deviceHeight;
+    widthListTile = 0.9534883721 * deviceWidth;
 
-    widthPriceUpOrDownIndicator=0.04418604651*deviceWidth;
-    widthMuteOrPauseButton=0.02093023256*deviceWidth;
-    widthUnMuteOrPlayButton=0.02790697674*deviceWidth;
-    widthDeleteButton=0.01860465116*deviceWidth;
+    widthListTileLeading = 0.2585365854 * widthListTile;
+    widthListTileTitle = 0.4756097561 * widthListTile;
+    widthListTileTrailing = 0.2658536585 * widthListTile;
+
+    paddingLeftTrailing = 0.04634146341 * widthListTile; //
+    paddingRightTrailing = paddingLeftTrailing; //
+    paddingMiddleTrailing = 0.03902439024 * widthListTile; //
+    paddingBottomListTile = 0.01287553648 * deviceHeight;
+
+    widthPriceUpOrDownIndicator = paddingLeftTrailing; //
+
+    widthMutePauseOrUnallowButton = 0.02195121951 * widthListTile; //
+    widthUnMutePlayOrAllowButton = 0.02926829268 * widthListTile; //
+    widthDeleteButton = 0.01951219512 * widthListTile; //
 
     /// height - swipe notification
     heightSwipeNotification = 0.03004291845 * deviceHeight;
@@ -406,16 +417,21 @@ class HomepageState extends State<Homepage> {
                       heightSwipeNotification: heightSwipeNotification,
                       fontSizeSwipeNotification: fontSizeSwipeNotification,
                       heightAlertsListViewBuilder: heightAlertsListViewBuilder,
-                     heightListTile: heightListTile,
-                     widthListTileLeading: widthListTileLeading,
-                     widthListTileTitle:widthListTileTitle,
-                     widthListTileTrailing:widthListTileTrailing,
-                     widthPriceUpOrDownIndicator:widthPriceUpOrDownIndicator,
-                     widthMuteOrPauseButton:widthMuteOrPauseButton,
-                     widthUnMuteOrPlayButton:widthUnMuteOrPlayButton,
-                     widthDeleteButton:widthUnMuteOrPlayButton
-
-                  ),
+                      fontSizeAListTile: fontSizeAlertsListTile,
+                      heightListTile: heightListTile,
+                      widthListTileLeading: widthListTileLeading,
+                      widthListTileTitle: widthListTileTitle,
+                      widthListTileTrailing: widthListTileTrailing,
+                      paddingLeftTrailing: paddingLeftTrailing,
+                      paddingRightTrailing: paddingRightTrailing,
+                      paddingMiddleTrailing: paddingMiddleTrailing,
+                      paddingBottomListTile: paddingBottomListTile,
+                      widthPriceUpOrDownIndicator: widthPriceUpOrDownIndicator,
+                      widthMutePauseOrUnallowButton:
+                          widthMutePauseOrUnallowButton,
+                      widthUnMutePlayOrAllowButton:
+                          widthUnMutePlayOrAllowButton,
+                      widthDeleteButton: widthUnMutePlayOrAllowButton),
 
                   /// Create New Alert's Sized Box
                   CreateNewAlert(
@@ -829,7 +845,8 @@ class _CurrencyPriceAdjustmentContainerState
         /// saving the edited alert price in the data provider class for use
         /// later..
         dataProvider!.setOriginalOrEditedAlertPriceCurrencyPriceTextField(
-            originalOrUserEditedAlertPrice: enteredAlertPriceText);
+            originalOrUserEditedAlertPrice: enteredAlertPriceText
+        );
 
         if (selectedInstrument == selectedInstrument.toUpperCase()) {
           /// disposing the old focus node to provide access
@@ -940,9 +957,9 @@ class _CurrencyPriceAdjustmentContainerState
                       print("onLongPress");
 
                       /// create and run a subtraction timer that runs and
-                      /// updates the screen every 50 millisecond
+                      /// updates the screen every 65 millisecond
                       additionOrSubtractionTimer = Timer.periodic(
-                          const Duration(milliseconds: 50), (timer) {
+                          const Duration(milliseconds: 65), (timer) {
                         subtractOrAddOneUnitToAlertPrice(isSubtract: true);
                       });
                     },
@@ -1034,9 +1051,18 @@ class _CurrencyPriceAdjustmentContainerState
                                 hasEditedAlertPriceAtLeastOnce = true;
                               });
 
+
+                              /// ? check later: can the two methods below
+                              /// be merged ¿
                               dataProvider!
                                   .updateAlertPriceCurrencyPriceTextField(
                                       alertPrice: enteredText);
+
+                              dataProvider!
+                                  .setOriginalOrEditedAlertPriceCurrencyPriceTextField(
+                                      originalOrUserEditedAlertPrice:
+                                          enteredText
+                              );
                             }
 
                             /// .. otherwise, color the text red to signify that
@@ -1108,9 +1134,9 @@ class _CurrencyPriceAdjustmentContainerState
                       print("onLongPress");
 
                       /// create and run an addition timer that runs and
-                      /// updates the screen every 50 millisecond
+                      /// updates the screen every 65 millisecond
                       additionOrSubtractionTimer = Timer.periodic(
-                          const Duration(milliseconds: 50), (timer) {
+                          const Duration(milliseconds: 65), (timer) {
                         subtractOrAddOneUnitToAlertPrice(isSubtract: false);
                       });
                     },
@@ -1167,14 +1193,18 @@ class BlurrableWidgetsAboveCreateAlertWidget extends StatefulWidget {
     required this.fontSizeSwipeNotification,
 
     /// list tile dimensions
+    required this.fontSizeAListTile,
     required this.heightListTile,
     required this.widthListTileLeading,
     required this.widthListTileTitle,
     required this.widthListTileTrailing,
-
+    required this.paddingLeftTrailing,
+    required this.paddingRightTrailing,
+    required this.paddingMiddleTrailing,
+    required this.paddingBottomListTile,
     required this.widthPriceUpOrDownIndicator,
-    required this.widthMuteOrPauseButton,
-    required this.widthUnMuteOrPlayButton,
+    required this.widthMutePauseOrUnallowButton,
+    required this.widthUnMutePlayOrAllowButton,
     required this.widthDeleteButton,
   }) : super(key: key);
 
@@ -1206,15 +1236,21 @@ class BlurrableWidgetsAboveCreateAlertWidget extends StatefulWidget {
   final double fontSizeSwipeNotification;
 
   /// list tile dimensions
+  final double fontSizeAListTile;
   final double heightListTile;
   final double widthListTileLeading;
   final double widthListTileTitle;
   final double widthListTileTrailing;
-  final double widthPriceUpOrDownIndicator;
-  final double widthMuteOrPauseButton;
-  final double widthUnMuteOrPlayButton;
-  final double widthDeleteButton;
 
+  final double paddingLeftTrailing;
+  final double paddingRightTrailing;
+  final double paddingMiddleTrailing;
+  final double paddingBottomListTile;
+
+  final double widthPriceUpOrDownIndicator;
+  final double widthMutePauseOrUnallowButton;
+  final double widthUnMutePlayOrAllowButton;
+  final double widthDeleteButton;
 
   @override
   State<BlurrableWidgetsAboveCreateAlertWidget> createState() =>
@@ -1236,6 +1272,12 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
   /// list of all alerts data from the above map of existing alerts
   List<Map<String, dynamic>> listOfExistingAlerts = [];
 
+  /// signal whether prices have not been fetched at least once
+  bool isFirstTimeFetchingPrices = true;
+
+  /// get the latest map of all instruments' prices
+  Map<dynamic, dynamic> mapOfAllPrices = {};
+
   @override
   void didChangeDependencies() {
     print("didChangeDependencies Blurrable");
@@ -1249,6 +1291,14 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
     /// obtaining a list of all alerts data from the above map of existing
     /// alerts
     listOfExistingAlerts = getListOfExistingAlerts();
+
+    /// setting bool that signals whether prices have not been fetched at least
+    /// once
+    isFirstTimeFetchingPrices =
+        dataProvider!.getIsFirstValueInMapOfAllInstrumentsContainsFetching();
+
+    /// get the latest map of all instruments' prices
+    mapOfAllPrices = dataProvider!.getInstruments(isRetrieveAll: true);
 
     // TODO: implement didChangeDependencies
     super.didChangeDependencies();
@@ -1275,6 +1325,8 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
         });
       }
     });
+
+    listOfExistingAlerts = listOfExistingAlerts.reversed.toList();
 
     return listOfExistingAlerts;
   }
@@ -1336,53 +1388,238 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
                 decoration: BoxDecoration(
                   // color: Colors.yellow,
                   border: Border.all(
-                      color: Colors.grey,
+
+                      /// make the alerts holding container's borders visible
+                      /// if no alerts exist. Otherwise, don't display them.
+                      color: mapOfExistingAlerts.isEmpty
+                          ? Colors.grey
+                          : Colors.transparent,
                       // const Color(0xFFFC8955)
                       width: widget.borderWidthGridTile / 6.1538461538),
                   borderRadius: BorderRadius.circular(widget.radiusGridTile),
                 ),
-                child: mapOfExistingAlerts.isEmpty
+
+                /// display a no alerts image if no price alerts have been
+                /// created or prices have not been fetched at least once.
+                /// Otherwise, display all existing alerts
+                child: mapOfExistingAlerts.isEmpty ||
+                        isFirstTimeFetchingPrices == true
                     ? Image.asset(
                         "assets/images/no_alerts.png",
                         width: 10,
                         height: 10,
                         // fit: BoxFit.fitHeight,
                       )
-                    : SizedBox(
-                      height: widget.heightListTile,
-                      width: double.infinity,
-                      child: ListView.builder(
+
+                    /// Alerts list view builder's container
+                    : Container(
+                        // color: Colors.green,
+                        height: widget.heightListTile,
+                        width: double.infinity,
+
+                        /// Alerts list view builder
+                        child: ListView.builder(
                           padding: EdgeInsets.zero,
                           itemCount: listOfExistingAlerts.length,
                           itemBuilder: (context, index) {
+                            /// currency pair the current alert belongs to
+                            String currentAlertInstrument =
+                                listOfExistingAlerts[index]['currencyPair'];
+
+                            /// calculating decimal numbers of the currently
+                            /// alert as a string
+                            ///
+                            /// price structure
+                            String currentAlertInstrumentPriceString =
+                                mapOfAllPrices[currentAlertInstrument]
+                                    ['current_price'];
+                            int dotPositionCurrentAlertInstrumentPrice =
+                                currentAlertInstrumentPriceString.indexOf(".") +
+                                    1;
+                            int numOfDecimalNumbersCurrentInstrumentOriginalPrice =
+                                currentAlertInstrumentPriceString.length -
+                                    dotPositionCurrentAlertInstrumentPrice;
+
+                            /// price of the currently alert as a double
+                            double currentAlertInstrumentAlertPrice =
+                                double.parse(
+                                    listOfExistingAlerts[index]['price']);
+
+                            /// the latest price of the alert currency pair
+                            ///
+                            /// if the list view builder is visible, the price
+                            /// will not contain fetched because of the ternary
+                            /// statement I specified above..
+                            print("mapOfAllPrices: $mapOfAllPrices");
+                            double currentPairLatestPrice = double.parse(
+                                mapOfAllPrices[currentAlertInstrument]
+                                    ['current_price']);
+
+                            /// is the alert price above or below the current
+                            /// currency pair's latest price
+                            String diffAlertPriceAndLatestPrice =
+                                (currentAlertInstrumentAlertPrice -
+                                        currentPairLatestPrice)
+                                    .toString();
+                            double diffAlertPriceAndLatestPriceDouble =
+                                double.parse(diffAlertPriceAndLatestPrice);
+
+                            /// icon that signals whether the alert price is
+                            /// above or below the current currency pair's
+                            /// latest price
+                            String
+                                alertPriceRelativePositionIndicatorImageString =
+                                diffAlertPriceAndLatestPrice.contains("-")
+                                    ? "assets/images/alert_price_below_current_price.png"
+                                    : "assets/images/alert_price_above_current_price.png";
+
+                            if (diffAlertPriceAndLatestPriceDouble == 0) {
+                              alertPriceRelativePositionIndicatorImageString =
+                                  "assets/images/alert_price_no_price_diff_three.png";
+                            }
+
+                            print(
+                                "currentAlertInstrument: ${currentAlertInstrument}, currentAlertPrice: ${currentAlertInstrumentAlertPrice}");
+                            print(
+                                "diffAlertPriceAndLatestPrice: ${diffAlertPriceAndLatestPrice}");
+
+                            /// is the current alert muted?
+                            bool isMuted =
+                                listOfExistingAlerts[index]["isMuted"];
+
+                            /// boolean that signals whether the current alert
+                            /// is the last alert in the list of existing alerts
+                            bool isLastAlert =
+                                index == listOfExistingAlerts.length - 1;
+
                             return Container(
-                              color: Colors.yellow,
-                              margin: EdgeInsets.zero,
-                              padding: EdgeInsets.zero,
+                              key: ValueKey(
+                                  "$currentAlertInstrument$currentAlertInstrumentAlertPrice"),
+                              // color: Colors.yellow,
+                              height: widget.heightListTile,
+                              width: double.infinity,
+                              alignment: Alignment.center,
+                              margin: EdgeInsets.only(
+                                  top: 0,
+                                  left: 0,
+                                  right: 0,
+
+                                  /// add a spacing below each alert's list tile
+                                  /// so far the alert isn't the last in the
+                                  /// list of existing price alerts.
+                                  bottom: isLastAlert
+                                      ? 0
+                                      : widget.paddingBottomListTile),
+                              padding: null,
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(
+                                      widget.radiusGridTile),
+                                  border: Border.all(
+                                      color: Colors.grey,
+                                      width: widget.borderWidthGridTile / 5.4)),
                               child: ListTile(
+                                dense: true,
                                 contentPadding: EdgeInsets.zero,
+                                minVerticalPadding: 0,
+                                horizontalTitleGap: 0,
+                                // visualDensity: VisualDensity.comfortable,
+
+                                /// leading - Currency Pair
                                 leading: Container(
-                                  width: widget.widthListTileLeading,
-                                  height: widget.heightListTile,
-                                  color: Colors.blue,
-                                  alignment: Alignment.center,
-                                  margin: EdgeInsets.zero,
-                                  padding: EdgeInsets.zero,
-                                  // child: Text("1.0000")
-                                ),
+                                    width: widget.widthListTileLeading,
+                                    height: widget.heightListTile,
+                                    // color: Colors.blue,
+                                    alignment: Alignment.center,
+                                    margin: EdgeInsets.zero,
+                                    padding: EdgeInsets.zero,
+                                    child: Text(currentAlertInstrument,
+                                        style: TextStyle(
+                                            fontFamily: "PT-Mono",
+                                            fontSize:
+                                                widget.fontSizeAListTile))),
+
+                                /// title - Alert Price
                                 title: Container(
-                                  alignment: Alignment.center,
-                                  color: Colors.green,
-                                    child: const Text("title")
-                                ),
+                                    height: widget.heightListTile,
+                                    width: widget.widthListTileTitle,
+                                    alignment: Alignment.center,
+                                    // color: Colors.green,
+                                    child: Text(
+
+                                        /// show the alert price of the current
+                                        /// price alert instrument and ensure that
+                                        /// it has the number of decimal numbers
+                                        /// the alert instrument's original price
+                                        /// has..
+                                        currentAlertInstrumentAlertPrice
+                                            .toStringAsFixed(
+                                                numOfDecimalNumbersCurrentInstrumentOriginalPrice),
+                                        style: TextStyle(
+                                            fontFamily: "PT-Mono",
+                                            fontSize:
+                                                widget.fontSizeAListTile))),
+
+                                /// Buttons & Icons
+                                /// a. alert price's relative direction
+                                /// b. Pause or Play button
+                                /// c. delete button
                                 trailing: Container(
-                                  child: Text("text"),
+                                  alignment: Alignment.center,
+                                  width: widget.widthListTileTrailing,
+                                  height: widget.heightListTile,
+                                  child: Row(children: <Widget>[
+                                    /// initial padding left
+                                    SizedBox(
+                                      width: widget.paddingLeftTrailing,
+                                    ),
+
+                                    /// alert price's relative direction:
+                                    /// i.e is the alert price above or below
+                                    /// the current currency pair's latest
+                                    /// price?
+                                    SizedBox(
+                                        width:
+                                            widget.widthPriceUpOrDownIndicator,
+                                        child: Image.asset(
+                                            alertPriceRelativePositionIndicatorImageString)),
+
+                                    /// spacing between alert price's relative
+                                    /// position and the mute / unmute button
+                                    SizedBox(
+                                      width: widget.paddingMiddleTrailing,
+                                    ),
+
+                                    /// mute / unmute button
+                                    SizedBox(
+                                        width: isMuted == false
+                                            ? widget
+                                                .widthMutePauseOrUnallowButton
+                                            : widget
+                                                .widthUnMutePlayOrAllowButton,
+                                        child: Image.asset(isMuted == false
+                                            ? "assets/images/price_mute_button.png"
+                                            : "assets/images/price_unmute_button.png")),
+
+                                    /// spacing between the mute / unmute
+                                    /// button and the delete button
+                                    SizedBox(
+                                      width: widget.paddingMiddleTrailing,
+                                    ),
+
+                                    /// the delete button
+                                    SizedBox(
+                                        width: widget.widthDeleteButton,
+                                        child: Image.asset(
+                                          "assets/images/price_delete_button.png",
+                                          color: Colors.black,
+                                        )),
+                                  ]),
                                 ),
                               ),
                             );
                           },
                         ),
-                    ),
+                      ),
               ),
 
               /// Swipe notification's Sized Box
@@ -1391,7 +1628,7 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
                   width: double.infinity,
                   // color: Colors.blueAccent
                   child: Center(
-                    child: Text(mapOfExistingAlerts.isEmpty ? "" : "Swipe",
+                    child: Text(listOfExistingAlerts.length <= 2 ? "" : "Swipe",
                         style: TextStyle(
                             fontFamily: "PT-Mono",
                             fontSize: widget.fontSizeSwipeNotification,
@@ -1982,7 +2219,9 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
     return GestureDetector(
       onTap: () {
         /// adding alert if the active child widget is the "add alert" button
-        if (widget.isCurrencyPairTextField == false) {
+        /// and prices have been retrieved at least once
+        if (widget.isCurrencyPairTextField == false &&
+            isFirstValueInMapOfAllInstrumentsContainsFetching == false) {
           dataProvider!.addAlertToMapOfAllAlerts();
         }
       },

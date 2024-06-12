@@ -110,6 +110,9 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
   Key? currentValueKeyBackup;
   Key? currentValueKey;
 
+  /// have prices been fetched at least once
+  bool isFirstTimeFetchingPrices=true;
+
   @override
   didChangeDependencies() {
     // TODO: implement didChangeDependencies
@@ -119,8 +122,6 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
 
     /// setting the value of the currently selected currency pair
     indexSelectedGridTile = dataProvider!.getIndexSelectedGridTile();
-
-
 
     /// map of all instruments
     mapOfAllInstruments = dataProvider!.getInstruments();
@@ -136,6 +137,9 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
     enteredCurrencyPairMap = dataProvider!.getEnteredTextCurrencyPair();
     manuallyEnteredCurrencyPair = enteredCurrencyPairMap['enteredCurrencyPair'];
     isErrorManuallyEnteredCurrencyPair = enteredCurrencyPairMap['isErrorEnteredText'];
+
+    /// have prices been fetched at least once
+    isFirstTimeFetchingPrices=dataProvider!.getIsFirstValueInMapOfAllInstrumentsContainsFetching();
 
     print(
         "currently selected instrument's row number: ${currentlySelectedInstrumentRowNumber}");
@@ -368,6 +372,23 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
               priceDifferenceIfAny != "demo"){
 
             isSelectedTile = true;
+
+          }
+
+          /// if the user has switched the filter on the UI from "All" to
+          /// "Forex" or "Crypto", and the index of the previously selected
+          /// grid tile exceeds what can be selected from the filtered currency
+          /// pair list, select the last selectable instrument..
+          if (priceDifferenceIfAny=="demo" && isSelectedTile==true){
+            isSelectedTile=false;
+
+            /// determining the last selectable tile in the current grid view
+            /// filtered instruments
+            if (isFirstTimeFetchingPrices==false){
+              mapOfAllInstruments.forEach((currencyPair, value) {
+
+              });
+            }
 
           }
 

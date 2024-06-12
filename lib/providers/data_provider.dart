@@ -92,8 +92,15 @@ class DataProvider with ChangeNotifier {
     _data!.getUriAppDirectory();
   }
 
-  /// WIDGET VARIABLES
+  /// CURRENTLY SELECTED GRID TILE INDEX
   int _indexSelectedGridTile = 3;
+
+  /// SELECTED GRID TILE INDEXES FOR EACH FILTER
+  Map<String, dynamic> _indexSelectedGridTileMap={
+    'all': 3,
+    'forex': null,
+    'crypto': null
+  };
 
   /// returns a map of all instrument with all values set to "fetching"
   Future allSymbolsWithFetchingNotification() async {
@@ -231,7 +238,12 @@ class DataProvider with ChangeNotifier {
   }
 
   /// get instruments - can be all, forex, or crypto
-  Map<dynamic, dynamic> getInstruments() {
+  Map<dynamic, dynamic> getInstruments({
+    /// allows for retrieving all instrument's prices' data
+    ///
+    /// especially useful when listing existing price alerts
+    bool isRetrieveAll=false
+  }) {
     // print(_allForexAndCryptoPrices);
 
     Map<dynamic, dynamic> mapToReturn = {};
@@ -242,7 +254,7 @@ class DataProvider with ChangeNotifier {
     /// "fetching" notification set for all instruments. However, if prices have
     /// been fetched but "all" filter is active, show all instruments...
     if (_allForexAndCryptoPrices.values.toList()[0].runtimeType == String ||
-        _instrumentFilter == Filter.all) {
+        _instrumentFilter == Filter.all || isRetrieveAll==true) {
       /// adding null value to match maps that would be created by the
       /// conditions below..
       mapToReturn = _allForexAndCryptoPrices;
