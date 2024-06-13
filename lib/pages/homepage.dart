@@ -1445,6 +1445,10 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
                                 double.parse(
                                     listOfExistingAlerts[index]['price']);
 
+                            /// price of the currently alert as a string
+                            String currentAlertInstrumentAlertPriceString=
+                            listOfExistingAlerts[index]['price'];
+
                             /// the latest price of the alert currency pair
                             ///
                             /// if the list view builder is visible, the price
@@ -1492,128 +1496,175 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
                             bool isLastAlert =
                                 index == listOfExistingAlerts.length - 1;
 
-                            return Container(
+                            return Dismissible(
                               key: ValueKey(
-                                  "$currentAlertInstrument$currentAlertInstrumentAlertPrice"),
-                              // color: Colors.yellow,
-                              height: widget.heightListTile,
-                              width: double.infinity,
-                              alignment: Alignment.center,
-                              margin: EdgeInsets.only(
-                                  top: 0,
-                                  left: 0,
-                                  right: 0,
-
-                                  /// add a spacing below each alert's list tile
-                                  /// so far the alert isn't the last in the
-                                  /// list of existing price alerts.
-                                  bottom: isLastAlert
-                                      ? 0
-                                      : widget.paddingBottomListTile),
-                              padding: null,
-                              decoration: BoxDecoration(
+                                  "$currentAlertInstrument$currentPairLatestPrice"
+                              ),
+                              direction: DismissDirection.endToStart,
+                              onDismissed: (dismissDirection){
+                                /// removing alert from the map of all alert
+                                dataProvider!.muteUnMuteOrRemoveAlert(
+                                  alertOperationType: AlertOperationType.remove,
+                                  currencyPair: currentAlertInstrument,
+                                  alertPrice: currentAlertInstrumentAlertPriceString,
+                                );
+                              },
+                              background: Container(
+                                alignment: Alignment.centerRight,
+                                padding: EdgeInsets.only(
+                                  right: widget.paddingRightTrailing,
+                                ),
+                                margin: EdgeInsets.only(
+                                    bottom: isLastAlert
+                                        ? 0
+                                        : widget.paddingBottomListTile
+                                ),
+                                decoration: BoxDecoration(
+                                  /// Dismissible widget's background - colored red
+                                    color: const Color(0xFFFC8955),
+                                    border: Border.all(
+                                        color: Colors.grey,
+                                        width: widget.borderWidthGridTile / 5.4
+                                    ),
                                   borderRadius: BorderRadius.circular(
-                                      widget.radiusGridTile),
-                                  border: Border.all(
-                                      color: Colors.grey,
-                                      width: widget.borderWidthGridTile / 5.4)),
-                              child: ListTile(
-                                dense: true,
-                                contentPadding: EdgeInsets.zero,
-                                minVerticalPadding: 0,
-                                horizontalTitleGap: 0,
-                                // visualDensity: VisualDensity.comfortable,
+                                      widget.radiusGridTile
+                                  )
+                                ),
+                                child: Text(
+                                    "Delete",
+                                    style: TextStyle(
+                                      fontFamily: "PT-Mono",
+                                      fontSize: widget.fontSizeAListTile,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white
+                                    ),
+                                )
+                              ),
+                              child: Container(
+                                // color: Colors.red,
+                                height: widget.heightListTile,
+                                width: double.infinity,
+                                alignment: Alignment.center,
+                                margin: EdgeInsets.only(
+                                    top: 0,
+                                    left: 0,
+                                    right: 0,
 
-                                /// leading - Currency Pair
-                                leading: Container(
-                                    width: widget.widthListTileLeading,
-                                    height: widget.heightListTile,
-                                    // color: Colors.blue,
+                                    /// add a spacing below each alert's list tile
+                                    /// so far the alert isn't the last in the
+                                    /// list of existing price alerts.
+                                    bottom: isLastAlert
+                                        ? 0
+                                        : widget.paddingBottomListTile),
+                                padding: null,
+                                decoration: BoxDecoration(
+                                    // color:Colors.red,
+                                    borderRadius: BorderRadius.circular(
+                                        widget.radiusGridTile),
+                                    border: Border.all(
+                                        color: Colors.grey,
+                                        width: widget.borderWidthGridTile / 5.4)),
+                                child: ListTile(
+                                  key: ValueKey(
+                                      "$currentAlertInstrument$currentPairLatestPrice"
+                                  ),
+                                  // dense: true,
+                                  contentPadding: EdgeInsets.zero,
+                                  minVerticalPadding: 0,
+                                  horizontalTitleGap: 0,
+                                  // visualDensity: VisualDensity.comfortable,
+
+                                  /// leading - Currency Pair
+                                  leading: Container(
+                                      width: widget.widthListTileLeading,
+                                      height: widget.heightListTile,
+                                      // color: Colors.blue,
+                                      alignment: Alignment.center,
+                                      margin: EdgeInsets.zero,
+                                      padding: EdgeInsets.zero,
+                                      child: Text(currentAlertInstrument,
+                                          style: TextStyle(
+                                              fontFamily: "PT-Mono",
+                                              fontSize:
+                                                  widget.fontSizeAListTile))),
+
+                                  /// title - Alert Price
+                                  title: Container(
+                                      height: widget.heightListTile,
+                                      width: widget.widthListTileTitle,
+                                      alignment: Alignment.center,
+                                      // color: Colors.green,
+                                      child: Text(
+
+                                          /// show the alert price of the current
+                                          /// price alert instrument and ensure that
+                                          /// it has the number of decimal numbers
+                                          /// the alert instrument's original price
+                                          /// has..
+                                          currentAlertInstrumentAlertPrice
+                                              .toStringAsFixed(
+                                                  numOfDecimalNumbersCurrentInstrumentOriginalPrice),
+                                          style: TextStyle(
+                                              fontFamily: "PT-Mono",
+                                              fontSize:
+                                                  widget.fontSizeAListTile))),
+
+                                  /// Buttons & Icons
+                                  /// a. alert price's relative direction
+                                  /// b. Pause or Play button
+                                  /// c. delete button
+                                  trailing: Container(
                                     alignment: Alignment.center,
-                                    margin: EdgeInsets.zero,
-                                    padding: EdgeInsets.zero,
-                                    child: Text(currentAlertInstrument,
-                                        style: TextStyle(
-                                            fontFamily: "PT-Mono",
-                                            fontSize:
-                                                widget.fontSizeAListTile))),
-
-                                /// title - Alert Price
-                                title: Container(
+                                    width: widget.widthListTileTrailing,
                                     height: widget.heightListTile,
-                                    width: widget.widthListTileTitle,
-                                    alignment: Alignment.center,
-                                    // color: Colors.green,
-                                    child: Text(
+                                    child: Row(children: <Widget>[
+                                      /// initial padding left
+                                      SizedBox(
+                                        width: widget.paddingLeftTrailing,
+                                      ),
 
-                                        /// show the alert price of the current
-                                        /// price alert instrument and ensure that
-                                        /// it has the number of decimal numbers
-                                        /// the alert instrument's original price
-                                        /// has..
-                                        currentAlertInstrumentAlertPrice
-                                            .toStringAsFixed(
-                                                numOfDecimalNumbersCurrentInstrumentOriginalPrice),
-                                        style: TextStyle(
-                                            fontFamily: "PT-Mono",
-                                            fontSize:
-                                                widget.fontSizeAListTile))),
+                                      /// alert price's relative direction:
+                                      /// i.e is the alert price above or below
+                                      /// the current currency pair's latest
+                                      /// price?
+                                      SizedBox(
+                                          width:
+                                              widget.widthPriceUpOrDownIndicator,
+                                          child: Image.asset(
+                                              alertPriceRelativePositionIndicatorImageString)),
 
-                                /// Buttons & Icons
-                                /// a. alert price's relative direction
-                                /// b. Pause or Play button
-                                /// c. delete button
-                                trailing: Container(
-                                  alignment: Alignment.center,
-                                  width: widget.widthListTileTrailing,
-                                  height: widget.heightListTile,
-                                  child: Row(children: <Widget>[
-                                    /// initial padding left
-                                    SizedBox(
-                                      width: widget.paddingLeftTrailing,
-                                    ),
+                                      /// spacing between alert price's relative
+                                      /// position and the mute / unmute button
+                                      SizedBox(
+                                        width: widget.paddingMiddleTrailing,
+                                      ),
 
-                                    /// alert price's relative direction:
-                                    /// i.e is the alert price above or below
-                                    /// the current currency pair's latest
-                                    /// price?
-                                    SizedBox(
-                                        width:
-                                            widget.widthPriceUpOrDownIndicator,
-                                        child: Image.asset(
-                                            alertPriceRelativePositionIndicatorImageString)),
+                                      /// mute / unmute button
+                                      SizedBox(
+                                          width: isMuted == false
+                                              ? widget
+                                                  .widthMutePauseOrUnallowButton
+                                              : widget
+                                                  .widthUnMutePlayOrAllowButton,
+                                          child: Image.asset(isMuted == false
+                                              ? "assets/images/price_mute_button.png"
+                                              : "assets/images/price_unmute_button.png")),
 
-                                    /// spacing between alert price's relative
-                                    /// position and the mute / unmute button
-                                    SizedBox(
-                                      width: widget.paddingMiddleTrailing,
-                                    ),
+                                      /// spacing between the mute / unmute
+                                      /// button and the delete button
+                                      SizedBox(
+                                        width: widget.paddingMiddleTrailing,
+                                      ),
 
-                                    /// mute / unmute button
-                                    SizedBox(
-                                        width: isMuted == false
-                                            ? widget
-                                                .widthMutePauseOrUnallowButton
-                                            : widget
-                                                .widthUnMutePlayOrAllowButton,
-                                        child: Image.asset(isMuted == false
-                                            ? "assets/images/price_mute_button.png"
-                                            : "assets/images/price_unmute_button.png")),
-
-                                    /// spacing between the mute / unmute
-                                    /// button and the delete button
-                                    SizedBox(
-                                      width: widget.paddingMiddleTrailing,
-                                    ),
-
-                                    /// the delete button
-                                    SizedBox(
-                                        width: widget.widthDeleteButton,
-                                        child: Image.asset(
-                                          "assets/images/price_delete_button.png",
-                                          color: Colors.black,
-                                        )),
-                                  ]),
+                                      /// the delete button
+                                      SizedBox(
+                                          width: widget.widthDeleteButton,
+                                          child: Image.asset(
+                                            "assets/images/price_delete_button.png",
+                                            color: Colors.black,
+                                          )),
+                                    ]),
+                                  ),
                                 ),
                               ),
                             );
@@ -2222,7 +2273,15 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
         /// and prices have been retrieved at least once
         if (widget.isCurrencyPairTextField == false &&
             isFirstValueInMapOfAllInstrumentsContainsFetching == false) {
+
+          /// adding alert
           dataProvider!.addAlertToMapOfAllAlerts();
+
+          /// un-blurring the screen if it is currently blurred and making the
+          /// keyboard invisible if it's currently visible..
+          dataProvider!.updateHasFocusCurrencyPairTextField(hasFocus: false);
+          dataProvider!.updateHasFocusAlertPriceTextField(hasFocus: false);
+          FocusScope.of(context).unfocus();
         }
       },
       child: Container(

@@ -375,23 +375,6 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
 
           }
 
-          /// if the user has switched the filter on the UI from "All" to
-          /// "Forex" or "Crypto", and the index of the previously selected
-          /// grid tile exceeds what can be selected from the filtered currency
-          /// pair list, select the last selectable instrument..
-          if (priceDifferenceIfAny=="demo" && isSelectedTile==true){
-            isSelectedTile=false;
-
-            /// determining the last selectable tile in the current grid view
-            /// filtered instruments
-            if (isFirstTimeFetchingPrices==false){
-              mapOfAllInstruments.forEach((currencyPair, value) {
-
-              });
-            }
-
-          }
-
           /// defining each grid tile's colors
           Color pureColorGridTile = const Color(0xFF0066FF);
           Color? gridTileColor;

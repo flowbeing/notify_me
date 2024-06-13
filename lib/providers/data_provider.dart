@@ -24,6 +24,9 @@ class DataProvider with ChangeNotifier {
   Map<dynamic, dynamic> _allForexAndCryptoPrices =
       allInstrumentsWithFetchingNotification;
 
+  /// map of all instruments for the currently selected filter
+  Map<dynamic, dynamic> _mapOfAllInstrumentCurrentFilter = {};
+
   /// list of all forex instruments
   List<dynamic> _listOfAllInstruments = [];
 
@@ -43,19 +46,19 @@ class DataProvider with ChangeNotifier {
 
   /// timer - updatePrices method..
   Timer _relevantTimer =
-      Timer.periodic(const Duration(microseconds: 1), (timer) {
+  Timer.periodic(const Duration(microseconds: 1), (timer) {
     timer.cancel();
   });
 
   /// timer - check if prices have finished updating
   Timer _isPricesUpdatedCheckingTimer =
-      Timer.periodic(const Duration(microseconds: 1), (timer) {
+  Timer.periodic(const Duration(microseconds: 1), (timer) {
     timer.cancel();
   });
 
   /// timer to set manually entered currency pair, if any
   Timer _updateCurrencyPairManually =
-      Timer.periodic(const Duration(microseconds: 1), (timer) {
+  Timer.periodic(const Duration(microseconds: 1), (timer) {
     timer.cancel();
   });
 
@@ -93,20 +96,23 @@ class DataProvider with ChangeNotifier {
   }
 
   /// CURRENTLY SELECTED GRID TILE INDEX
+  ///
+  /// initially selected grid tile is set to 3 for Filter.all since Filter.all
+  /// will be the first selection filter option
   int _indexSelectedGridTile = 3;
 
   /// SELECTED GRID TILE INDEXES FOR EACH FILTER
-  Map<String, dynamic> _indexSelectedGridTileMap={
-    'all': 3,
-    'forex': null,
-    'crypto': null
-  };
+  // Map<Filter, dynamic> _indexSelectedGridTileMap = {
+  //   Filter.all: 3,
+  //   Filter.forex: null,
+  //   Filter.crypto: null
+  // };
 
   /// returns a map of all instrument with all values set to "fetching"
   Future allSymbolsWithFetchingNotification() async {
     /// setting an interim value for _allForexAndCryptoPrices (Map)
     _allForexAndCryptoPrices =
-        await _data!.getMapOfAllPairsWithFetchingNotification();
+    await _data!.getMapOfAllPairsWithFetchingNotification();
 
     return _allForexAndCryptoPrices;
   }
@@ -242,7 +248,7 @@ class DataProvider with ChangeNotifier {
     /// allows for retrieving all instrument's prices' data
     ///
     /// especially useful when listing existing price alerts
-    bool isRetrieveAll=false
+    bool isRetrieveAll = false
   }) {
     // print(_allForexAndCryptoPrices);
 
@@ -254,7 +260,7 @@ class DataProvider with ChangeNotifier {
     /// "fetching" notification set for all instruments. However, if prices have
     /// been fetched but "all" filter is active, show all instruments...
     if (_allForexAndCryptoPrices.values.toList()[0].runtimeType == String ||
-        _instrumentFilter == Filter.all || isRetrieveAll==true) {
+        _instrumentFilter == Filter.all || isRetrieveAll == true) {
       /// adding null value to match maps that would be created by the
       /// conditions below..
       mapToReturn = _allForexAndCryptoPrices;
@@ -303,7 +309,7 @@ class DataProvider with ChangeNotifier {
   /// all instruments i.e _allForexAndCryptoPrices
   dynamic getTypeFirstValueInMapOfAllInstruments() {
     String firstKeyPriceAllInstruments =
-        _allForexAndCryptoPrices.keys.toList()[0];
+    _allForexAndCryptoPrices.keys.toList()[0];
 
     dynamic typeFirstValueInMapOfAllInstruments =
         _allForexAndCryptoPrices[firstKeyPriceAllInstruments].runtimeType;
@@ -397,34 +403,34 @@ class DataProvider with ChangeNotifier {
   /// a helper function for setAlertPriceCurrencyPriceTextField
   String getCurrentlySelectedInstrumentPrice() {
     bool isFetchingPrices =
-        getIsFirstValueInMapOfAllInstrumentsContainsFetching();
+    getIsFirstValueInMapOfAllInstrumentsContainsFetching();
 
     /// ensuring that the list of all instruments fits the current filter
     getInstruments();
 
     String currentlySelectCurrencyPair =
-        _listOfAllInstruments[_indexSelectedGridTile];
+    _listOfAllInstruments[_indexSelectedGridTile];
 
     String currentlySelectedCurrencyPairPrice =
-        _allForexAndCryptoPrices[currentlySelectCurrencyPair]['current_price'];
+    _allForexAndCryptoPrices[currentlySelectCurrencyPair]['current_price'];
 
     return isFetchingPrices
         ? "0.00000"
         : currentlySelectedCurrencyPairPrice == "demo"
-            ? "0.00000"
-            : currentlySelectedCurrencyPairPrice;
+        ? "0.00000"
+        : currentlySelectedCurrencyPairPrice;
   }
 
   /// sets the alert price of the currently selected currency pair when
   void setAlertPriceCurrencyPriceTextField() {
     /// bool to signal that prices are being fetched for the first time..
     bool isFetchingPrices =
-        getIsFirstValueInMapOfAllInstrumentsContainsFetching();
+    getIsFirstValueInMapOfAllInstrumentsContainsFetching();
 
     if (isFetchingPrices) {
       _alertPriceCurrencyPriceTextField = "0.00000";
     } else {
-      _alertPriceCurrencyPriceTextField=getCurrentlySelectedInstrumentPrice();
+      _alertPriceCurrencyPriceTextField = getCurrentlySelectedInstrumentPrice();
 
       // String currentlySelectedInstrumentPrice =
       //     getCurrentlySelectedInstrumentPrice();
@@ -467,13 +473,12 @@ class DataProvider with ChangeNotifier {
   ///
   /// When the entered text is a valid currency pair, this method will help to
   /// update the grid view widget with the currently selected (entered) pair
-  void updateEnteredTextCurrencyPair(
-      {required String? enteredText,
-      bool? isErrorEnteredText,
-      FocusNode? focusNode,
+  void updateEnteredTextCurrencyPair({required String? enteredText,
+    bool? isErrorEnteredText,
+    FocusNode? focusNode,
 
-      /// used with FocusScope to determine whether the keyboard is still visible
-      BuildContext? context}) {
+    /// used with FocusScope to determine whether the keyboard is still visible
+    BuildContext? context}) {
     /// when grid tile gets tapped, reset the manually entered tell by setting
     /// it to null. enteredText will be null
     if (focusNode == null) {
@@ -526,43 +531,43 @@ class DataProvider with ChangeNotifier {
 
       _updateCurrencyPairManually =
           Timer.periodic(const Duration(milliseconds: 0), (timer) {
-        print("timer: $timer");
+            print("timer: $timer");
 
-        // if (focusNode.hasFocus == false) {
+            // if (focusNode.hasFocus == false) {
 
-        _enteredCurrencyPair = enteredText;
-        _isErrorEnteredText = isErrorEnteredText;
+            _enteredCurrencyPair = enteredText;
+            _isErrorEnteredText = isErrorEnteredText;
 
-        /// if the entered currency pair is valid, update the index of the
-        /// selected grid tile..
-        if (_isErrorEnteredText == null) {
-          int indexOfEnteredValidCurrencyPair =
+            /// if the entered currency pair is valid, update the index of the
+            /// selected grid tile..
+            if (_isErrorEnteredText == null) {
+              int indexOfEnteredValidCurrencyPair =
               _listOfAllInstruments.indexOf(_enteredCurrencyPair);
 
-          _indexSelectedGridTile = indexOfEnteredValidCurrencyPair;
+              _indexSelectedGridTile = indexOfEnteredValidCurrencyPair;
 
-          /// setting the alert price of the entered currency pair
-          setAlertPriceCurrencyPriceTextField();
-        }
+              /// setting the alert price of the entered currency pair
+              setAlertPriceCurrencyPriceTextField();
+            }
 
-        /// if the alert price text field gains focus immediately after the
-        /// currency pair text form field loses focus, ensure that the blur
-        /// effect remains
-        // bool isKeyboardStillVisible = FocusScope.of(context!).hasFocus;
-        //
-        // if (isKeyboardStillVisible){
-        //   _hasFocusCurrencyPairTextField=true;
-        // }else{
-        //   _hasFocusCurrencyPairTextField=false;
-        // }
+            /// if the alert price text field gains focus immediately after the
+            /// currency pair text form field loses focus, ensure that the blur
+            /// effect remains
+            // bool isKeyboardStillVisible = FocusScope.of(context!).hasFocus;
+            //
+            // if (isKeyboardStillVisible){
+            //   _hasFocusCurrencyPairTextField=true;
+            // }else{
+            //   _hasFocusCurrencyPairTextField=false;
+            // }
 
-        // _hasFocusCurrencyPairTextField=false;
+            // _hasFocusCurrencyPairTextField=false;
 
-        timer.cancel();
+            timer.cancel();
 
-        notifyListeners();
-        // }
-      });
+            notifyListeners();
+            // }
+          });
     }
   }
 
@@ -580,9 +585,58 @@ class DataProvider with ChangeNotifier {
     if (_instrumentFilter != filter) {
       _instrumentFilter = filter;
 
-      /// update the list of all instruments to include only currency pairs that
-      /// fit into the selected filter
-      setAlertPriceCurrencyPriceTextField();
+      /// are prices being fetched for the first time?
+      bool isFirstTimeFetchingPrices = _isFirstValueInMapOfAllInstrumentsContainsFetching;
+
+      /// map of all instruments according to the currently selected filter
+      _mapOfAllInstrumentCurrentFilter = getInstruments();
+      List<
+          dynamic> _listOfAllInstrumentCurrentFilter = _mapOfAllInstrumentCurrentFilter
+          .keys.toList();
+
+      /// currently selected instrument per the selected filter option
+      String selectedInstrumentPerSelectedFilter = _listOfAllInstrumentCurrentFilter[_indexSelectedGridTile];
+
+      /// is the price of the selected instrument per the selected filter option
+      /// equal to "demo"
+      ///
+      /// note: prices will not contain "fetching" here because filter options
+      /// won't be selectable when prices get fetched for the first time..
+      bool isSelectedInstrumentPriceEqualToDemo = _mapOfAllInstrumentCurrentFilter[selectedInstrumentPerSelectedFilter]["current_price"] ==
+          "demo";
+
+      /// determining the last selectable grid tile for "forex" &
+      /// "crypto" filter options' instruments' data
+      int indexLastSelectableGridTileForexOrCryptoFilter = 0;
+      for (var instrument in _listOfAllInstrumentCurrentFilter) {
+        String price = _mapOfAllInstrumentCurrentFilter[instrument]["current_price"];
+
+        if (price == "demo") {
+          break;
+        }
+
+        indexLastSelectableGridTileForexOrCryptoFilter += 1;
+      }
+
+      /// if forex or crypto filter option gets clicked after prices have been
+      /// fetched at least once and the translated selected instrument's doesn't
+      /// have a price that can be displayed, update the index selected grid
+      /// tile's index to the index of the last selectable instrument of the
+      /// selected filter (i.e the last instrument a user can select)
+      if (
+          (filter == Filter.forex || filter == Filter.crypto)
+          && isFirstTimeFetchingPrices == false
+            && isSelectedInstrumentPriceEqualToDemo
+              && indexLastSelectableGridTileForexOrCryptoFilter != 0
+      ){
+        indexLastSelectableGridTileForexOrCryptoFilter-=1;
+        _indexSelectedGridTile=indexLastSelectableGridTileForexOrCryptoFilter;
+      }
+
+
+        /// update the list of all instruments to include only currency pairs that
+        /// fit into the selected filter
+        setAlertPriceCurrencyPriceTextField();
 
       notifyListeners();
       print("current filter: $_instrumentFilter");
@@ -598,7 +652,7 @@ class DataProvider with ChangeNotifier {
 
     List<dynamic> listOfAllKeys = filteredAllInstruments.keys.toList();
     int indexOfInstrumentInMapOfAllInstruments =
-        listOfAllKeys.indexOf(currentlySelectedInstrument);
+    listOfAllKeys.indexOf(currentlySelectedInstrument);
 
     print(
         "indexOfInstrumentInMapOfAllInstruments: ${indexOfInstrumentInMapOfAllInstruments}");
@@ -612,7 +666,7 @@ class DataProvider with ChangeNotifier {
 
     /// instrument's row number within app's gridview
     int instrumentRowNum =
-        ((indexOfInstrumentInMapOfAllInstruments + 1) / 2).round();
+    ((indexOfInstrumentInMapOfAllInstruments + 1) / 2).round();
 
     print("instrumentRowNum: ${instrumentRowNum}");
 
@@ -657,7 +711,8 @@ class DataProvider with ChangeNotifier {
 
       print("_relevantTimer outside: $_relevantTimer");
       print(
-          "_relevantTimer.isActive == false && isPriceUpdating == false in: ${_relevantTimer.isActive == false && _isUpdatingPrices == false}");
+          "_relevantTimer.isActive == false && isPriceUpdating == false in: ${_relevantTimer
+              .isActive == false && _isUpdatingPrices == false}");
 
       /// If prices are currently being updated, replace current
       /// _relevantTimer with another when prices have fully been
@@ -682,50 +737,56 @@ class DataProvider with ChangeNotifier {
         /// operation status checking timer..
         _isPricesUpdatedCheckingTimer =
             Timer.periodic(const Duration(milliseconds: 1000), (timer) {
-          // 1000
-          print("Duration(milliseconds: 1000)");
-          print(
-              "2. _relevantTimer.isActive == false && isPriceUpdating == false: ${_relevantTimer.isActive == false && _isUpdatingPrices == false}");
-          print(
-              "2. _relevantTimer.isActive == false: ${_relevantTimer.isActive == false}");
-          print("2. isPriceUpdating == false: ${_isUpdatingPrices == false}");
-          print("");
+              // 1000
+              print("Duration(milliseconds: 1000)");
+              print(
+                  "2. _relevantTimer.isActive == false && isPriceUpdating == false: ${_relevantTimer
+                      .isActive == false && _isUpdatingPrices == false}");
+              print(
+                  "2. _relevantTimer.isActive == false: ${_relevantTimer
+                      .isActive == false}");
+              print(
+                  "2. isPriceUpdating == false: ${_isUpdatingPrices == false}");
+              print("");
 
-          /// dataProvider!.getIsUpdatingPrices() is used below instead of
-          /// "updatingPrices" variable to ensure that the latest state prices
-          /// update state is obtained directly from dataProvider...
+              /// dataProvider!.getIsUpdatingPrices() is used below instead of
+              /// "updatingPrices" variable to ensure that the latest state prices
+              /// update state is obtained directly from dataProvider...
 
-          if (_relevantTimer.isActive == false && _isUpdatingPrices == false) {
-            print("gridTile _relevantTimer in: $_relevantTimer");
-            print("gridTile selected: _relevantTimer.isActive == false "
-                "&& isPriceUpdating == false in: ${_relevantTimer.isActive == false && _isUpdatingPrices == false}");
+              if (_relevantTimer.isActive == false &&
+                  _isUpdatingPrices == false) {
+                print("gridTile _relevantTimer in: $_relevantTimer");
+                print("gridTile selected: _relevantTimer.isActive == false "
+                    "&& isPriceUpdating == false in: ${_relevantTimer
+                    .isActive == false && _isUpdatingPrices == false}");
 
-            // /// updating all instruments' price data
-            // priceAllInstruments = dataProvider!.getInstruments();
+                // /// updating all instruments' price data
+                // priceAllInstruments = dataProvider!.getInstruments();
 
-            _relevantTimer =
-                Timer.periodic(const Duration(milliseconds: 60001), (timer) {
-              timer.cancel();
+                _relevantTimer =
+                    Timer.periodic(
+                        const Duration(milliseconds: 60001), (timer) {
+                      timer.cancel();
 
-              // setState(() {
-              //   isNonTextFormFieldTriggeredBuild = true;
-              // });
+                      // setState(() {
+                      //   isNonTextFormFieldTriggeredBuild = true;
+                      // });
 
-              updatePrices();
+                      updatePrices();
+                    });
+
+                timer.cancel();
+
+                /// arbitrarily rebuild this FutureBuilder widget..
+                ///
+                /// Note that isGridTileOrFilterOptionClickedOrKeyboardVisible will be set back to
+                /// false once this FutureBuilder widget has been
+                /// rebuilt..
+                // setState(() {
+                //   isGridTileOrFilterOptionClickedOrKeyboardVisible = true;
+                // });
+              }
             });
-
-            timer.cancel();
-
-            /// arbitrarily rebuild this FutureBuilder widget..
-            ///
-            /// Note that isGridTileOrFilterOptionClickedOrKeyboardVisible will be set back to
-            /// false once this FutureBuilder widget has been
-            /// rebuilt..
-            // setState(() {
-            //   isGridTileOrFilterOptionClickedOrKeyboardVisible = true;
-            // });
-          }
-        });
       }
 
       /// if a previous 1 minute timer is no longer active and it's
@@ -741,39 +802,39 @@ class DataProvider with ChangeNotifier {
         print("3. _relevantTimer in: $_relevantTimer");
         print("3. _relevantTimer.isActive == false "
             "&& isPriceUpdating == false in: "
-            "${_relevantTimer.isActive == false && _isUpdatingPrices == false}");
+            "${_relevantTimer.isActive == false &&
+            _isUpdatingPrices == false}");
 
         _relevantTimer =
             Timer.periodic(const Duration(milliseconds: 60001), (timer) {
-          timer.cancel();
+              timer.cancel();
 
-          // setState(() {
-          //   isNonTextFormFieldTriggeredBuild = true;
-          // });
+              // setState(() {
+              //   isNonTextFormFieldTriggeredBuild = true;
+              // });
 
-          updatePrices();
-        });
+              updatePrices();
+            });
       }
     }
   }
 
   /// subtracts or adds a unit or five units to the current instrument's
   /// alert price
-  String subtractOrAddOneOrFiveUnitsFromAlertPrice(
-      {
+  String subtractOrAddOneOrFiveUnitsFromAlertPrice({
 
-      /// to determine the actual unit price of the entered alert price
-      required String currentPairPriceStructure,
+    /// to determine the actual unit price of the entered alert price
+    required String currentPairPriceStructure,
 
-      /// the entered alert price, regardless of whether the price structure
-      /// of the user has changed the currently selected pair's price by editing
-      /// it..
-      required String alertPrice,
-      required isSubtract}) {
+    /// the entered alert price, regardless of whether the price structure
+    /// of the user has changed the currently selected pair's price by editing
+    /// it..
+    required String alertPrice,
+    required isSubtract}) {
     /// obtaining the original count of numbers that exist after the "." symbol
     /// - currentPairPriceStructure
     List<String> alertPriceOriginalStructureSplit =
-        currentPairPriceStructure.split("");
+    currentPairPriceStructure.split("");
     int lengthOfCurrentPairPriceStructure = currentPairPriceStructure.length;
     int countOfNumAfterDot = 0;
 
@@ -792,7 +853,7 @@ class DataProvider with ChangeNotifier {
       int indexOfLastItemInIncrementValueOneUnitSplit =
           aUnitOfTheAlertPrice.length - 1;
       incrementValueOneUnitSplit[indexOfLastItemInIncrementValueOneUnitSplit] =
-          "1";
+      "1";
       aUnitOfTheAlertPrice = incrementValueOneUnitSplit.join("");
     }
 
@@ -832,7 +893,7 @@ class DataProvider with ChangeNotifier {
 
     List<String> alreadyAddedAlertCurrencyPair = _mapOfAllAlerts.keys.toList();
     bool isCurrencyInMapOfAlerts =
-        alreadyAddedAlertCurrencyPair.contains(currentlySelectedCurrencyPair);
+    alreadyAddedAlertCurrencyPair.contains(currentlySelectedCurrencyPair);
     int keyCurrentAlert = 0;
 
     bool isAlertAlreadyExist = false;
@@ -847,8 +908,8 @@ class DataProvider with ChangeNotifier {
     /// obtaining the list of already created alerts (prices and isMuted data)
     /// for the specified currency pair
     List<Map<String, dynamic>>? listOfAlertsDataCurrentCurrencyPair =
-        _mapOfAllAlerts[
-            currentlySelectedCurrencyPair]; // Map<String, Map<String, dynamic>>
+    _mapOfAllAlerts[
+    currentlySelectedCurrencyPair]; // Map<String, Map<String, dynamic>>
 
     /// creating the map key for the alert that should be created
     ///
@@ -886,46 +947,57 @@ class DataProvider with ChangeNotifier {
   /// mutes, un-mute or removes an an alert from the map of all alerts
   ///
   /// used with alert prices list view builder..
-  void muteUnMuteOrRemoveAlert(
-      {required String currencyPair,
-      required String alertPrice,
-      required AlertOperationType alertOperationType}) {
+  void muteUnMuteOrRemoveAlert({required String currencyPair,
+    required String alertPrice,
+    required AlertOperationType alertOperationType}) {
     bool isCurrencyPairInMapOfAllAlerts =
-        _mapOfAllAlerts.keys.toList().contains(currencyPair);
+    _mapOfAllAlerts.keys.toList().contains(currencyPair);
     bool isAlertExists = false;
 
+    print("here1");
     /// if at least one alert exists for the specified...
     if (isCurrencyPairInMapOfAllAlerts) {
       List<Map<String, dynamic>>? listOfAlertsSpecifiedPair =
-          _mapOfAllAlerts[currencyPair];
+      _mapOfAllAlerts[currencyPair];
+
+      print("here2");
 
       /// iterate through the specified currency pair's existing alerts, if
       /// any, to mute or delete the specified alert, if it exists..
       int indexOfAlertIfAlreadyExists = 0;
       for (var alertsData in listOfAlertsSpecifiedPair!) {
         String price = alertsData['price'];
+        String currencyPairAlertsData = alertsData['currencyPair'];
         // String isMuted = alertsData['isMuted'];
 
-        if (price == alertPrice) {
+        if (price == alertPrice && currencyPair==currencyPairAlertsData) {
+          print("here3");
           if (alertOperationType == AlertOperationType.mute) {
             _mapOfAllAlerts[currencyPair]![indexOfAlertIfAlreadyExists]
-                ['isMuted'] = true;
+            ['isMuted'] = true;
           } else if (alertOperationType == AlertOperationType.unMute) {
             _mapOfAllAlerts[currencyPair]![indexOfAlertIfAlreadyExists]
-                ['isMuted'] = false;
+            ['isMuted'] = false;
           } else if (alertOperationType == AlertOperationType.remove) {
             _mapOfAllAlerts[currencyPair]!
                 .removeAt(indexOfAlertIfAlreadyExists);
+
+            print("here4");
+            print("_mapOfAllAlerts: $_mapOfAllAlerts");
           }
         }
 
         indexOfAlertIfAlreadyExists += 1;
       }
     }
+
+    print("_mapOfAllAlerts: ${_mapOfAllAlerts}");
+
+    notifyListeners();
   }
 
   /// retrieve a map of all alerts
-  Map<String, List<Map<String, dynamic>>> getMapOfAllAlerts(){
+  Map<String, List<Map<String, dynamic>>> getMapOfAllAlerts() {
     return _mapOfAllAlerts;
   }
 }
