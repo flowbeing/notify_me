@@ -23,6 +23,9 @@ class DataProvider with ChangeNotifier {
   /// bool that signals whether all price alerts have been muted
   bool _isAllPriceAlertsMuted = false;
 
+  /// has any price alert been fulfilled?
+  bool _isAnAlertFulfilled=false;
+
   /// A map of all forex and crypto prices
   Map<dynamic, dynamic> _allForexAndCryptoPrices =
       allInstrumentsWithFetchingNotification;
@@ -103,6 +106,9 @@ class DataProvider with ChangeNotifier {
   /// initially selected grid tile is set to 3 for Filter.all since Filter.all
   /// will be the first selection filter option
   int _indexSelectedGridTile = 3;
+
+  /// a unit of the currently selected pair's price
+  String _selectedCurrencyPairOneUnitOfPrice="";
 
   /// SELECTED GRID TILE INDEXES FOR EACH FILTER
   // Map<Filter, dynamic> _indexSelectedGridTileMap = {
@@ -829,18 +835,27 @@ class DataProvider with ChangeNotifier {
   }
 
   /// subtracts or adds a unit or five units to the current instrument's
-  /// alert price
-  String subtractOrAddOneOrFiveUnitsFromAlertPrice(
+  /// alert price, or simply calculate and set the unit value of the currently
+  /// selected currency pair...
+  dynamic subtractOrAddOneOrFiveUnitsFromAlertPrice(
       {
 
       /// to determine the actual unit price of the entered alert price
       required String currentPairPriceStructure,
-
       /// the entered alert price, regardless of whether the price structure
       /// of the user has changed the currently selected pair's price by editing
       /// it..
-      required String alertPrice,
-      required isSubtract}) {
+      String alertPrice="",
+      /// should the method be used to subtract or add a unit price of the
+      /// current currency's alert price
+      isSubtract=false,
+      /// useful when only using this method to determine a unit of the alert
+      /// price..
+      ///
+      /// the above arguments are not necessary when this method will only be
+      /// used to determine a unit of the alert price..
+      AlertOperationType alertOperationType=AlertOperationType.none
+      }) {
     /// obtaining the original count of numbers that exist after the "." symbol
     /// - currentPairPriceStructure
     List<String> alertPriceOriginalStructureSplit =
@@ -865,6 +880,19 @@ class DataProvider with ChangeNotifier {
       incrementValueOneUnitSplit[indexOfLastItemInIncrementValueOneUnitSplit] =
           "1";
       aUnitOfTheAlertPrice = incrementValueOneUnitSplit.join("");
+
+      /// if this method has been called only to retrieve a unit of the
+      /// currently selected pair's price, return:
+      /// 1. aUnitOfTheAlertPrice
+      /// 2. countOfNumAfterDot...
+      /// and exit this method
+      if (alertOperationType==AlertOperationType.calcUnitPrice){
+        _selectedCurrencyPairOneUnitOfPrice=aUnitOfTheAlertPrice;
+        return {
+          "aUnitOfTheAlertPrice": aUnitOfTheAlertPrice,
+          "countOfNumAfterDot": countOfNumAfterDot
+        };
+      }
     }
 
     print("aUnitOfTheAlertPrice: ${aUnitOfTheAlertPrice}");
@@ -930,6 +958,7 @@ class DataProvider with ChangeNotifier {
     String currentlySelectedCurrencyPair = getCurrentlySelectedInstrument();
     String currentlyDisplayedAlertPrice =
         _originalOrEditedAlertPriceCurrencyPriceTextField;
+    String currentlySelectedCurrencyPairPrice= getCurrentlySelectedInstrumentPrice();
 
     print("currentlySelectedCurrencyPair:${currentlySelectedCurrencyPair}");
     print("currentlyDisplayedAlertPrice: ${currentlyDisplayedAlertPrice}");
@@ -941,6 +970,8 @@ class DataProvider with ChangeNotifier {
 
     bool isAlertAlreadyExist = false;
 
+    /// if no alerts have previously been created for the currently selected
+    /// currency pair, create a list of alerts for it within _mapOfAllAlerts
     if (isCurrencyInMapOfAlerts == false) {
       // int numberOfExistingAlertsForTheSpecifiedPair = mapOfAllAlerts[currencyPair].keys.toList();
       _mapOfAllAlerts[currentlySelectedCurrencyPair] = [];
@@ -974,11 +1005,22 @@ class DataProvider with ChangeNotifier {
       }
     }
 
-    /// including the new alert into the map of all alerts if it does not
-    /// already exist
-    if (isAlertAlreadyExist == false) {
+    /// including the new alert into the map of all alerts if:
+    /// 1. the current price of the alert instrument is not the same as the alert
+    /// price to be saved..
+    /// 2. it does not already exist
+    if (
+      currentlySelectedCurrencyPairPrice!=currentlyDisplayedAlertPrice
+          && isAlertAlreadyExist == false
+    ) {
       _mapOfAllAlerts[currentlySelectedCurrencyPair]!.insert(keyCurrentAlert,
-          {"price": currentlyDisplayedAlertPrice, "isMuted": false});
+          {
+            "price": currentlyDisplayedAlertPrice,
+            "isMuted": false,
+            /// signals whether the current price of the instrument is equal to
+            /// its alert price
+            "isAnAlertPriceFulfilled": false
+          });
     }
 
     /// save all price alerts locally asynchronously
@@ -1055,7 +1097,11 @@ class DataProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  /// this method mutes or un-mutes all alerts
+  /// this method is used to:
+  /// 1. mute all alerts
+  /// 2. un-mutes all alerts
+  /// 3. determine whether all alerts have been muted
+  /// 4. determine whether an alert price has been met, hit, or fulfilled..
   dynamic muteUnMuteAllOrCalcIsAllMuted(
       {
 
@@ -1070,8 +1116,17 @@ class DataProvider with ChangeNotifier {
     /// number of muted alerts
     int countMutedAlerts = 0;
 
+    /// number of fulfilled alerts
+    ///
+    /// i.e alerts that have been met
+    int countFulfilledAlerts=0;
+
+    /// is this the first time prices are being fetched?
+    bool isFirstTimeFetchingPrices=false;
+
     /// muting all price alerts
     _mapOfAllAlerts.forEach((currencyPair, listOfPriceAlertsCurrentPair) {
+
       /// index of the current currency pair's price alert
       int indexAlertCurrentPair = 0;
 
@@ -1087,6 +1142,9 @@ class DataProvider with ChangeNotifier {
                 [indexAlertCurrentPair]['isMuted'] ==
             true;
 
+        /// current alert price
+        String currentAlertPrice=alertData['price'];
+
         if (alertOperationType == AlertOperationType.mute) {
           /// set isMuted to true for the current price alert
           _mapOfAllAlerts[currencyPair][indexAlertCurrentPair]['isMuted'] =
@@ -1101,6 +1159,22 @@ class DataProvider with ChangeNotifier {
             /// increment the number of muted alert's counter
             countMutedAlerts += 1;
           }
+        }
+        else if (
+          alertOperationType==AlertOperationType.setAlertIsFulfilled
+          && isFirstTimeFetchingPrices==false
+        ){
+          /// the latest price of the alert currency pair
+          String currentPairPrice=_allForexAndCryptoPrices[currencyPair]['current_price'];
+
+          if (currentPairPrice==currentAlertPrice){
+            _mapOfAllAlerts[currencyPair][indexAlertCurrentPair]['isAnAlertPriceFulfilled']=true;
+            countFulfilledAlerts+=1;
+            _isAnAlertFulfilled=true;
+          } else if (currencyPair!=currentAlertPrice){
+            _mapOfAllAlerts[currencyPair][indexAlertCurrentPair]['isAnAlertPriceFulfilled']=false;
+          }
+
         }
 
         /// increment the currency pair's price alert index
@@ -1131,6 +1205,15 @@ class DataProvider with ChangeNotifier {
       _isAllPriceAlertsMuted = false;
     }
 
+    /// if no alerts have been triggered, set _isAnAlertFulfilled to false
+    if (countFulfilledAlerts>0){
+      _isAnAlertFulfilled=true;
+    } else{
+      _isAnAlertFulfilled=false;
+    }
+
+
+
     print('_mapOfAllAlerts.length: ${_mapOfAllAlerts.length}');
     print("_isAllPriceAlertsMuted: ${_isAllPriceAlertsMuted}");
 
@@ -1151,5 +1234,20 @@ class DataProvider with ChangeNotifier {
   /// returns a bool that signals whether the map of all alerts is empty
   bool isMapOfAllAlertsEmpty() {
     return _mapOfAllAlerts.isEmpty;
+  }
+
+  /// get whether an alert price has been fulfilled
+  ///
+  /// i.e if the latest price of at least one price alert's currency pair
+  /// equals its alert price..
+  getIsAnAlertPriceFulfilled(){
+
+    bool isAnAlertPriceFulfilled=false;
+
+    if (_mapOfAllAlerts.isNotEmpty){
+      _mapOfAllAlerts.forEach((currencyPair, listOfAllAlertsCurrentPair) {
+
+      });
+    }
   }
 }

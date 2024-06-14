@@ -576,6 +576,8 @@ class _CurrencyPriceAdjustmentContainerState
     extends State<CurrencyPriceAdjustmentContainer> {
   DataProvider? dataProvider;
 
+  int numTimesDidChangeDependenciesRan=0;
+
   int flexPlusAndMinusButtons = 0;
   int flexPriceContainer = 0;
 
@@ -639,6 +641,9 @@ class _CurrencyPriceAdjustmentContainerState
 
   @override
   didChangeDependencies() {
+    print("begin didChangeDependencies CurrencyPriceAdjustmentContainer");
+
+
     /// prevents the alert price textform field from rebuilding everytime
     /// notifyListeners gets called, since selectedInstrument (valueKey) will
     /// change with every execution of notifyListeners()
@@ -649,7 +654,11 @@ class _CurrencyPriceAdjustmentContainerState
       /// field's valueKey and alert price.. a mouthful
       selectedInstrument = dataProvider!.getCurrentlySelectedInstrument();
 
-      initialValuePrice = dataProvider!.getAlertPriceCurrencyPriceTextField();
+      /// ensuring that the initial alert price will be one unit more than the
+      /// currently selected currency pair's price
+      initialValuePrice =
+          dataProvider!.getAlertPriceCurrencyPriceTextField();
+
 
       print("initializedState focusNode");
       focusNodeAlertPrice = FocusNode(
@@ -688,6 +697,8 @@ class _CurrencyPriceAdjustmentContainerState
     String currentlySelectedInstrumentPrice =
         dataProvider!.getAlertPriceCurrencyPriceTextField();
 
+
+
     if (currentSelectedInstrument.toLowerCase() ==
             selectedInstrument.toLowerCase() &&
         focusNodeAlertPrice!.hasFocus == false) {
@@ -713,13 +724,47 @@ class _CurrencyPriceAdjustmentContainerState
           initialValuePrice = currentlySelectedInstrumentPrice;
         }
 
-        /// setting the currently selected pair's price structure - whether
-        /// selected, updated, or entered..
+        /// setting the currently selected pair's price structure or
+        ///
+        /// used to:
+        /// 1. calculate the number of dots the current pair's original
+        /// price has
+        // 2. ensure that the user cannot set a price alert with the latest
+        // price of the current currency. Ability to do so will cause the
+        // app to play a price alert sound whenever an alert gets added to
+        // the list of alerts. Now, that would be annoying..
         currentPairPriceStructure = initialValuePrice!;
+
+        /// if prices have been fetched at least once, ie. when the grid view
+        /// widget has loaded all currency pairs and their prices correctly,
+        /// set the alert price one unit of price higher than the current or
+        /// updated price..
+        if (isFirstTimeFetching==false){
+          /// ensuring that the initial alert price will be one unit more than the
+          /// currently selected currency pair's price
+          initialValuePrice =
+              dataProvider!.getAlertPriceCurrencyPriceTextField();
+          /// a map containing information about the current currency pair's
+          /// unit price and count of decimal numbers
+          Map unitPriceDataCurrentPairMap=dataProvider!.subtractOrAddOneOrFiveUnitsFromAlertPrice(
+              currentPairPriceStructure: initialValuePrice!,
+              alertOperationType: AlertOperationType.calcUnitPrice
+          );
+          /// current pair's unit price
+          String unitPriceCurrentPair=unitPriceDataCurrentPairMap["aUnitOfTheAlertPrice"];
+          /// number of decimal numbers the current pair's price has
+          int countOfNumAfterDot=unitPriceDataCurrentPairMap["countOfNumAfterDot"];
+          initialValuePrice=(double.parse(initialValuePrice!) + double.parse(unitPriceCurrentPair)).toStringAsFixed(countOfNumAfterDot);
+        }
 
         /// setting the current entered alert price text, whether selected,
         /// updated, or entered
-        enteredAlertPriceText = currentPairPriceStructure;
+        ///
+        /// used below to save the current alert price in data_provider.dart
+        /// every time the current currency pair's price gets updated
+        /// automatically or after the user adds to or subtracts from it and
+        /// then saves it manually..
+        enteredAlertPriceText = initialValuePrice!;
 
         /// saving the original alert price in the data provider class for use
         /// (addition to map of all alerts when triggered) later..
@@ -746,12 +791,47 @@ class _CurrencyPriceAdjustmentContainerState
       print("initialValuePrice: $initialValuePrice");
       print("updatedFilters?b");
 
-      /// setting the currently selected pair's price structure
+      /// setting the currently selected pair's price structure or
+      ///
+      /// used to:
+      /// 1. calculate the number of dots the current pair's original
+      /// price has
+      // 2. ensure that the user cannot set a price alert with the latest
+      // price of the current currency. Ability to do so will cause the
+      // app to play a price alert sound whenever an alert gets added to
+      // the list of alerts. Now, that would be annoying..
       currentPairPriceStructure = initialValuePrice!;
+
+      /// if prices have been fetched at least once, ie. when the grid view
+      /// widget has loaded all currency pairs and their prices correctly,
+      /// set the alert price one unit of price higher than the current or
+      /// updated price..
+      if (isFirstTimeFetching==false){
+        /// ensuring that the initial alert price will be one unit more than the
+        /// currently selected currency pair's price
+        initialValuePrice =
+            dataProvider!.getAlertPriceCurrencyPriceTextField();
+        /// a map containing information about the current currency pair's
+        /// unit price and count of decimal numbers
+        Map unitPriceDataCurrentPairMap=dataProvider!.subtractOrAddOneOrFiveUnitsFromAlertPrice(
+            currentPairPriceStructure: initialValuePrice!,
+            alertOperationType: AlertOperationType.calcUnitPrice
+        );
+        /// current pair's unit price
+        String unitPriceCurrentPair=unitPriceDataCurrentPairMap["aUnitOfTheAlertPrice"];
+        /// number of decimal numbers the current pair's price has
+        int countOfNumAfterDot=unitPriceDataCurrentPairMap["countOfNumAfterDot"];
+        initialValuePrice=(double.parse(initialValuePrice!) + double.parse(unitPriceCurrentPair)).toStringAsFixed(countOfNumAfterDot);
+      }
 
       /// setting the current entered alert price text, whether selected,
       /// updated, or entered
-      enteredAlertPriceText = currentPairPriceStructure;
+      ///
+      /// used below to save the current alert price in data_provider.dart
+      /// every time the current currency pair's price gets updated
+      /// automatically or after the user adds to or subtracts from it and
+      /// then saves it manually..
+      enteredAlertPriceText = initialValuePrice!;
 
       /// resetting this signal variable to ensure that price updates
       /// will get displayed again at intervals after editing the alert
@@ -795,12 +875,47 @@ class _CurrencyPriceAdjustmentContainerState
           print(
               "currentlySelectedInstrumentPrice == previouslyEnteredErrorText: ${currentlySelectedInstrumentPrice == previouslyEnteredErrorText}");
 
-          /// setting the currently selected pair's price structure
+          /// setting the currently selected pair's price structure or
+          ///
+          /// used to:
+          /// 1. calculate the number of dots the current pair's original
+          /// price has
+          // 2. ensure that the user cannot set a price alert with the latest
+          // price of the current currency. Ability to do so will cause the
+          // app to play a price alert sound whenever an alert gets added to
+          // the list of alerts. Now, that would be annoying..
           currentPairPriceStructure = initialValuePrice!;
+
+          /// if prices have been fetched at least once, ie. when the grid view
+          /// widget has loaded all currency pairs and their prices correctly,
+          /// set the alert price one unit of price higher than the current or
+          /// updated price..
+          if (isFirstTimeFetching==false){
+            /// ensuring that the initial alert price will be one unit more than the
+            /// currently selected currency pair's price
+            initialValuePrice =
+                dataProvider!.getAlertPriceCurrencyPriceTextField();
+            /// a map containing information about the current currency pair's
+            /// unit price and count of decimal numbers
+            Map unitPriceDataCurrentPairMap=dataProvider!.subtractOrAddOneOrFiveUnitsFromAlertPrice(
+                currentPairPriceStructure: initialValuePrice!,
+                alertOperationType: AlertOperationType.calcUnitPrice
+            );
+            /// current pair's unit price
+            String unitPriceCurrentPair=unitPriceDataCurrentPairMap["aUnitOfTheAlertPrice"];
+            /// number of decimal numbers the current pair's price has
+            int countOfNumAfterDot=unitPriceDataCurrentPairMap["countOfNumAfterDot"];
+            initialValuePrice=(double.parse(initialValuePrice!) + double.parse(unitPriceCurrentPair)).toStringAsFixed(countOfNumAfterDot);
+          }
 
           /// setting the current entered alert price text, whether selected,
           /// updated, or entered
-          enteredAlertPriceText = currentPairPriceStructure;
+          ///
+          /// used below to save the current alert price in data_provider.dart
+          /// every time the current currency pair's price gets updated
+          /// automatically or after the user adds to or subtracts from it and
+          /// then saves it manually..
+          enteredAlertPriceText = initialValuePrice!;
 
           /// saving the original alert price in the data provider class for use
           /// (addition to map of all alerts when triggered) later..
@@ -810,6 +925,11 @@ class _CurrencyPriceAdjustmentContainerState
       });
       // });
     }
+
+    /// register this didChangeDependencies call
+    numTimesDidChangeDependenciesRan+=1;
+
+    print("end didChangeDependencies CurrencyPriceAdjustmentContainer");
 
     super.didChangeDependencies();
   }
@@ -973,7 +1093,9 @@ class _CurrencyPriceAdjustmentContainerState
                           style: TextStyle(
                               fontFamily: "PT-Mono",
                               fontWeight: FontWeight.normal,
-                              fontSize: widget.fontSizeMinus)),
+                              fontSize: widget.fontSizeMinus
+                          )
+                      ),
                     ),
                   )),
 
@@ -1093,7 +1215,10 @@ class _CurrencyPriceAdjustmentContainerState
                             fontFamily: "PT-Mono",
                             fontWeight: FontWeight.normal,
                             fontSize: widget.fontSizePrice,
-                            color: textColor,
+                            /// if the current alert price is the same as the
+                            /// current price of the alert instrument, signal
+                            /// to the user that it cannot be added
+                            color: currentPairPriceStructure==initialValuePrice ? Colors.grey : textColor,
                             overflow: TextOverflow.fade,
                           ),
                           textAlign: TextAlign.center,
@@ -1299,6 +1424,8 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
     /// get the latest map of all instruments' prices
     mapOfAllPrices = dataProvider!.getInstruments(isRetrieveAll: true);
 
+
+
     // TODO: implement didChangeDependencies
     super.didChangeDependencies();
   }
@@ -1461,13 +1588,12 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
                                 currentAlertInstrumentPriceString.length -
                                     dotPositionCurrentAlertInstrumentPrice;
 
-                            /// price of the currently alert as a double
+                            /// alert price of the current alert as a double
                             double currentAlertInstrumentAlertPrice =
                                 double.parse(
                                     listOfExistingAlerts[index]['price']);
 
-                            /// alert price of the current alert currency as a
-                            /// string
+                            /// alert price of the current alert as a double
                             String currentAlertInstrumentAlertPriceString =
                                 listOfExistingAlerts[index]['price'];
 
@@ -2257,6 +2383,14 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
       onTap: () {
         // FocusScope.of(context).requestFocus();
 
+        /// cancel any active error-text correcting timer so that it will not
+        /// interfere with the user experience when the user clicks on the
+        /// currency pair text form field again immediately after entering an
+        /// invalid text
+        correctEnteredErrorTextTimer.cancel();
+
+        /// register that the currency pair text form field has been tapped and
+        /// that the keyboard is currently visible
         dataProvider!.updateHasFocusCurrencyPairTextField(hasFocus: true);
       },
       onChanged: (enteredText) {
@@ -2392,7 +2526,7 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
         /// and prices have been retrieved at least once
         if (widget.isCurrencyPairTextField == false &&
             isFirstValueInMapOfAllInstrumentsContainsFetching == false) {
-          /// adding alert
+          /// adding alert to the map of all alerts
           dataProvider!.addAlertToMapOfAllAlerts();
 
           /// un-blurring the screen if it is currently blurred and making the
@@ -2407,7 +2541,8 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
           /// updates _isAllPriceAlertsMuted in data_provider.dart when the app
           /// gets started or updated
           dataProvider!.muteUnMuteAllOrCalcIsAllMuted(
-              alertOperationType: AlertOperationType.calcIsAllAlertsMuted);
+              alertOperationType: AlertOperationType.calcIsAllAlertsMuted
+          );
         }
       },
       child: Container(
