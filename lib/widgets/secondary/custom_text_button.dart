@@ -7,18 +7,19 @@ import '../../data/enums.dart';
 
 class CustomTextButton extends StatefulWidget {
   CustomTextButton(
-      {
-        required this.fontSize,
-        required this.currentFilter,
-        required this.selectedFilter,
-        this.functionUpdateSelectedFilter
-      });
+      {required this.fontSize,
+      required this.currentFilter,
+      required this.selectedFilter,
+      this.functionUpdateSelectedFilter});
 
   final double fontSize;
+
   /// used to identify when the custom text button is for the Mute all button
   final Filter currentFilter;
+
   /// used to identify when the custom text button is for the Mute all button
   final Filter selectedFilter;
+
   /// helps reflect the selected filter option and its corresponding data
   /// on the UI..
   final Function({required Filter selectedFilter})?
@@ -30,16 +31,29 @@ class CustomTextButton extends StatefulWidget {
 
 /// CustomTextButton's state
 class _CustomTextButtonState extends State<CustomTextButton> {
-
   DataProvider? dataProvider;
 
   String text = "";
 
+  /// should the custom button be highlighted?
+  bool isCustomTextButtonActivated = false;
+
+  /// is map of all alerts empty
+  // bool isMapOfAllAlertsEmpty = false;
 
   @override
   void didChangeDependencies() {
-
+    /// defining data provider
     dataProvider = Provider.of(context, listen: true);
+
+    /// updating bool that signals whether all existing alerts, if any, are
+    /// currently muted..
+    setState(() {
+      isCustomTextButtonActivated = dataProvider!.getIsMutedAll();
+      // isMapOfAllAlertsEmpty = dataProvider!.isMapOfAllAlertsEmpty();
+    });
+
+    print("isCustomTextButtonActivated: ${isCustomTextButtonActivated}");
 
     /// defining filters
     if (widget.currentFilter == Filter.all) {
@@ -58,20 +72,12 @@ class _CustomTextButtonState extends State<CustomTextButton> {
     super.didChangeDependencies();
   }
 
-  @override
-  void didUpdateWidget(covariant CustomTextButton oldWidget) {
-
-    // TODO: implement didUpdateWidget
-    super.didUpdateWidget(oldWidget);
-  }
-
   // FontWeight fontWeight = FontWeight.normal;
-  bool isCustomTextButtonClicked = false;
 
   @override
   GestureDetector build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
+      onTap: () async {
         /// if the current Text Button is a filter, update the selected filter
         /// variable...
         ///
@@ -80,8 +86,10 @@ class _CustomTextButtonState extends State<CustomTextButton> {
         /// and prices are not currently being fetched, allow this button to
         /// be displayed as the selected filter option on-screen..
         if (widget.selectedFilter != widget.currentFilter &&
-            widget.functionUpdateSelectedFilter != null  &&
-            dataProvider!.getIsFirstValueInMapOfAllInstrumentsContainsFetching() == false) {
+            widget.functionUpdateSelectedFilter != null &&
+            dataProvider!
+                    .getIsFirstValueInMapOfAllInstrumentsContainsFetching() ==
+                false) {
           print("reflecting this");
           widget.functionUpdateSelectedFilter!(
               selectedFilter: widget.currentFilter);
@@ -94,12 +102,37 @@ class _CustomTextButtonState extends State<CustomTextButton> {
         else if (widget.currentFilter == Filter.none &&
             widget.selectedFilter == Filter.none) {
           print("reflecting this 2");
-          if (dataProvider!.getIsFirstValueInMapOfAllInstrumentsContainsFetching() == false){
+          if (dataProvider!
+                  .getIsFirstValueInMapOfAllInstrumentsContainsFetching() ==
+              false) {
             setState(() {
-              isCustomTextButtonClicked = !isCustomTextButtonClicked;
+              isCustomTextButtonActivated = !isCustomTextButtonActivated;
+
+              /// if the "mute all" button has been activated and should be
+              /// highlighted, mute all alerts
+              if (isCustomTextButtonActivated == true) {
+                /// muting all alerts
+                dataProvider!.muteUnMuteAllOrCalcIsAllMuted(
+                    alertOperationType: AlertOperationType.mute);
+              }
+
+              /// ... else if "mute all" button has been deactivated, un-mute
+              /// all alerts
+              else if (isCustomTextButtonActivated == false) {
+                /// un-muting all alerts
+                dataProvider!.muteUnMuteAllOrCalcIsAllMuted(
+                    alertOperationType: AlertOperationType.unMute);
+              }
+
+              /// calculate and update whether all button have been muted
+              dataProvider!.muteUnMuteAllOrCalcIsAllMuted(
+                  alertOperationType: AlertOperationType.calcIsAllAlertsMuted);
             });
           }
         }
+
+        /// saving the (mute or un-mute all changes) changes locally
+        await dataProvider!.savePriceAlertsToLocalStorage();
       },
       child: Text(text,
           style: TextStyle(
@@ -107,15 +140,19 @@ class _CustomTextButtonState extends State<CustomTextButton> {
               fontSize: widget.fontSize,
               fontWeight: (widget.selectedFilter == widget.currentFilter &&
 
-                          /// functionUpdateSelectedFilter will be null for
+                          /// functionUpdateSelectedFilter will only be null for
                           /// "Mute All" button
-                          widget.functionUpdateSelectedFilter != null)
-                          || isCustomTextButtonClicked == true
+                          widget.functionUpdateSelectedFilter != null) ||
+                      (widget.functionUpdateSelectedFilter == null &&
+                          isCustomTextButtonActivated == true
+                          // && isMapOfAllAlertsEmpty == false
+                      )
 
                   /// --
                   ? FontWeight.w700
                   : FontWeight.normal,
-              color: dataProvider!.getIsFirstValueInMapOfAllInstrumentsContainsFetching()
+              color: dataProvider!
+                      .getIsFirstValueInMapOfAllInstrumentsContainsFetching()
                   ? Colors.grey
                   : Colors.black)),
     );

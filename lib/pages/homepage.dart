@@ -845,8 +845,7 @@ class _CurrencyPriceAdjustmentContainerState
         /// saving the edited alert price in the data provider class for use
         /// later..
         dataProvider!.setOriginalOrEditedAlertPriceCurrencyPriceTextField(
-            originalOrUserEditedAlertPrice: enteredAlertPriceText
-        );
+            originalOrUserEditedAlertPrice: enteredAlertPriceText);
 
         if (selectedInstrument == selectedInstrument.toUpperCase()) {
           /// disposing the old focus node to provide access
@@ -1051,7 +1050,6 @@ class _CurrencyPriceAdjustmentContainerState
                                 hasEditedAlertPriceAtLeastOnce = true;
                               });
 
-
                               /// ? check later: can the two methods below
                               /// be merged ¿
                               dataProvider!
@@ -1061,8 +1059,7 @@ class _CurrencyPriceAdjustmentContainerState
                               dataProvider!
                                   .setOriginalOrEditedAlertPriceCurrencyPriceTextField(
                                       originalOrUserEditedAlertPrice:
-                                          enteredText
-                              );
+                                          enteredText);
                             }
 
                             /// .. otherwise, color the text red to signify that
@@ -1292,6 +1289,8 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
     /// alerts
     listOfExistingAlerts = getListOfExistingAlerts();
 
+    print("listOfExistingAlerts: $listOfExistingAlerts");
+
     /// setting bool that signals whether prices have not been fetched at least
     /// once
     isFirstTimeFetchingPrices =
@@ -1306,8 +1305,9 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
 
   /// determining all existing alerts and alerts
   List<Map<String, dynamic>> getListOfExistingAlerts() {
+    // List<Map<String, dynamic>>
     /// all alerts data listed
-    List<Map<String, dynamic>> listOfExistingAlerts = [];
+    List<Map<String, dynamic>> listOfExistingAlertsWithin = [];
 
     /// iterating through all existing alerts so that they can be added into
     /// the above list of existing alerts
@@ -1318,17 +1318,35 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
         String currentAlertPrice = alertsData['price'];
         bool isMuted = alertsData['isMuted'];
 
-        listOfExistingAlerts.add({
+        Map<String, dynamic> alertDataToAdd = {
           "currencyPair": currentPair,
           "price": currentAlertPrice,
           "isMuted": isMuted
-        });
+        };
+
+        // print("alertDataToAdd: ${alertDataToAdd.toString()}");
+        // print("${listOfExistingAlerts.contains(alertDataToAdd)}");
+        //
+        // bool isAlreadyAddedCurrentAlertData = false;
+        // for (var alertData in listOfExistingAlerts){
+        //   String alreadyAddAlertDataString = alertData.toString();
+        //
+        //   if (alertDataToAdd.toString()==alreadyAddAlertDataString){
+        //     isAlreadyAddedCurrentAlertData=true;
+        //   }
+        // }
+        //
+        // if (isAlreadyAddedCurrentAlertData==false){
+        //   listOfExistingAlerts.add(alertDataToAdd);
+        // }
+
+        listOfExistingAlertsWithin.add(alertDataToAdd);
       }
     });
 
-    listOfExistingAlerts = listOfExistingAlerts.reversed.toList();
+    // listOfExistingAlerts = listOfExistingAlertsWithin.reversed.toList();
 
-    return listOfExistingAlerts;
+    return listOfExistingAlertsWithin.reversed.toList();
   }
 
   @override
@@ -1421,7 +1439,10 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
                         child: ListView.builder(
                           padding: EdgeInsets.zero,
                           itemCount: listOfExistingAlerts.length,
+                          // listOfExistingAlerts.length,
                           itemBuilder: (context, index) {
+                            // List<Map<dynamic, dynamic>> listOfExistingAlerts = getListOfExistingAlerts();
+
                             /// currency pair the current alert belongs to
                             String currentAlertInstrument =
                                 listOfExistingAlerts[index]['currencyPair'];
@@ -1445,16 +1466,17 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
                                 double.parse(
                                     listOfExistingAlerts[index]['price']);
 
-                            /// price of the currently alert as a string
-                            String currentAlertInstrumentAlertPriceString=
-                            listOfExistingAlerts[index]['price'];
+                            /// alert price of the current alert currency as a
+                            /// string
+                            String currentAlertInstrumentAlertPriceString =
+                                listOfExistingAlerts[index]['price'];
 
                             /// the latest price of the alert currency pair
                             ///
                             /// if the list view builder is visible, the price
                             /// will not contain fetched because of the ternary
                             /// statement I specified above..
-                            print("mapOfAllPrices: $mapOfAllPrices");
+                            // print("mapOfAllPrices: $mapOfAllPrices");
                             double currentPairLatestPrice = double.parse(
                                 mapOfAllPrices[currentAlertInstrument]
                                     ['current_price']);
@@ -1497,49 +1519,68 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
                                 index == listOfExistingAlerts.length - 1;
 
                             return Dismissible(
-                              key: ValueKey(
-                                  "$currentAlertInstrument$currentPairLatestPrice"
-                              ),
+                              key: UniqueKey(),
                               direction: DismissDirection.endToStart,
-                              onDismissed: (dismissDirection){
+                              onDismissed: (dismissDirection) async {
+                                print("dismissDirection: ${dismissDirection}");
+                                print(
+                                    "dismissDirection index: ${dismissDirection.index}");
+                                print(
+                                    "dismissDirection name: ${dismissDirection.name}");
+
+                                /// remove alert from the local list of all
+                                /// alerts
+                                setState(() {
+                                  listOfExistingAlerts.removeAt(index);
+                                  print(
+                                      "listOfExistingAlerts: $listOfExistingAlerts");
+                                });
+
                                 /// removing alert from the map of all alert
                                 dataProvider!.muteUnMuteOrRemoveAlert(
                                   alertOperationType: AlertOperationType.remove,
                                   currencyPair: currentAlertInstrument,
-                                  alertPrice: currentAlertInstrumentAlertPriceString,
+                                  alertPrice:
+                                      currentAlertInstrumentAlertPriceString,
                                 );
+
+                                /// saving the changes locally
+                                await dataProvider!
+                                    .savePriceAlertsToLocalStorage();
+
+                                /// signalling to "Mute All" button that no
+                                /// alert exists if all alerts have been deleted
+                                dataProvider!.muteUnMuteAllOrCalcIsAllMuted(
+                                    alertOperationType: AlertOperationType
+                                        .calcIsAllAlertsMuted);
                               },
                               background: Container(
-                                alignment: Alignment.centerRight,
-                                padding: EdgeInsets.only(
-                                  right: widget.paddingRightTrailing,
-                                ),
-                                margin: EdgeInsets.only(
-                                    bottom: isLastAlert
-                                        ? 0
-                                        : widget.paddingBottomListTile
-                                ),
-                                decoration: BoxDecoration(
-                                  /// Dismissible widget's background - colored red
-                                    color: const Color(0xFFFC8955),
-                                    border: Border.all(
-                                        color: Colors.grey,
-                                        width: widget.borderWidthGridTile / 5.4
-                                    ),
-                                  borderRadius: BorderRadius.circular(
-                                      widget.radiusGridTile
-                                  )
-                                ),
-                                child: Text(
+                                  alignment: Alignment.centerRight,
+                                  padding: EdgeInsets.only(
+                                    right: widget.paddingRightTrailing,
+                                  ),
+                                  margin: EdgeInsets.only(
+                                      bottom: isLastAlert
+                                          ? 0
+                                          : widget.paddingBottomListTile),
+                                  decoration: BoxDecoration(
+
+                                      /// Dismissible widget's background - colored red
+                                      color: const Color(0xFFFC8955),
+                                      border: Border.all(
+                                          color: Colors.grey,
+                                          width:
+                                              widget.borderWidthGridTile / 5.4),
+                                      borderRadius: BorderRadius.circular(
+                                          widget.radiusGridTile)),
+                                  child: Text(
                                     "Delete",
                                     style: TextStyle(
-                                      fontFamily: "PT-Mono",
-                                      fontSize: widget.fontSizeAListTile,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white
-                                    ),
-                                )
-                              ),
+                                        fontFamily: "PT-Mono",
+                                        fontSize: widget.fontSizeAListTile,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white),
+                                  )),
                               child: Container(
                                 // color: Colors.red,
                                 height: widget.heightListTile,
@@ -1563,11 +1604,12 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
                                         widget.radiusGridTile),
                                     border: Border.all(
                                         color: Colors.grey,
-                                        width: widget.borderWidthGridTile / 5.4)),
+                                        width:
+                                            widget.borderWidthGridTile / 5.4)),
                                 child: ListTile(
-                                  key: ValueKey(
-                                      "$currentAlertInstrument$currentPairLatestPrice"
-                                  ),
+                                  // key: ValueKey(
+                                  //     "listTile$currentAlertInstrument$currentPairLatestPrice"
+                                  // ),
                                   // dense: true,
                                   contentPadding: EdgeInsets.zero,
                                   minVerticalPadding: 0,
@@ -1582,11 +1624,14 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
                                       alignment: Alignment.center,
                                       margin: EdgeInsets.zero,
                                       padding: EdgeInsets.zero,
-                                      child: Text(currentAlertInstrument,
-                                          style: TextStyle(
-                                              fontFamily: "PT-Mono",
-                                              fontSize:
-                                                  widget.fontSizeAListTile))),
+                                      child: Text(
+                                        currentAlertInstrument,
+                                        style: TextStyle(
+                                          fontFamily: "PT-Mono",
+                                          fontSize: widget.fontSizeAListTile,
+                                        ),
+                                        textAlign: TextAlign.left,
+                                      )),
 
                                   /// title - Alert Price
                                   title: Container(
@@ -1628,8 +1673,8 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
                                       /// the current currency pair's latest
                                       /// price?
                                       SizedBox(
-                                          width:
-                                              widget.widthPriceUpOrDownIndicator,
+                                          width: widget
+                                              .widthPriceUpOrDownIndicator,
                                           child: Image.asset(
                                               alertPriceRelativePositionIndicatorImageString)),
 
@@ -1640,15 +1685,55 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
                                       ),
 
                                       /// mute / unmute button
-                                      SizedBox(
-                                          width: isMuted == false
-                                              ? widget
-                                                  .widthMutePauseOrUnallowButton
-                                              : widget
-                                                  .widthUnMutePlayOrAllowButton,
-                                          child: Image.asset(isMuted == false
-                                              ? "assets/images/price_mute_button.png"
-                                              : "assets/images/price_unmute_button.png")),
+                                      GestureDetector(
+                                        onTap: () async {
+                                          /// mute or un-mute the alert
+                                          isMuted
+                                              ? dataProvider!
+                                                  .muteUnMuteOrRemoveAlert(
+                                                  alertOperationType:
+                                                      AlertOperationType.unMute,
+                                                  currencyPair:
+                                                      currentAlertInstrument,
+                                                  alertPrice:
+                                                      currentAlertInstrumentAlertPriceString,
+                                                )
+                                              : dataProvider!
+                                                  .muteUnMuteOrRemoveAlert(
+                                                  alertOperationType:
+                                                      AlertOperationType.mute,
+                                                  currencyPair:
+                                                      currentAlertInstrument,
+                                                  alertPrice:
+                                                      currentAlertInstrumentAlertPriceString,
+                                                );
+
+                                          /// saving the changes locally
+                                          await dataProvider!
+                                              .savePriceAlertsToLocalStorage();
+
+                                          /// calculate whether all price alerts (in _mapOfAllAlerts within data_provider.dart) have been
+                                          /// muted
+                                          ///
+                                          /// updates _isAllPriceAlertsMuted within data_provider.dart when the an alert gets muted or unmuted
+                                          dataProvider!
+                                              .muteUnMuteAllOrCalcIsAllMuted(
+                                                  alertOperationType:
+                                                      AlertOperationType
+                                                          .calcIsAllAlertsMuted);
+                                        },
+                                        child: SizedBox(
+                                            width: widget
+                                                .widthUnMutePlayOrAllowButton,
+                                            // width: isMuted == false
+                                            //     ? widget
+                                            //         .widthMutePauseOrUnallowButton
+                                            //     : widget
+                                            //         .widthUnMutePlayOrAllowButton,
+                                            child: Image.asset(isMuted == false
+                                                ? "assets/images/price_mute_button.png"
+                                                : "assets/images/price_unmute_button.png")),
+                                      ),
 
                                       /// spacing between the mute / unmute
                                       /// button and the delete button
@@ -1657,12 +1742,45 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
                                       ),
 
                                       /// the delete button
-                                      SizedBox(
-                                          width: widget.widthDeleteButton,
-                                          child: Image.asset(
-                                            "assets/images/price_delete_button.png",
-                                            color: Colors.black,
-                                          )),
+                                      GestureDetector(
+                                        onTap: () async {
+                                          /// remove alert from the local list of all
+                                          /// alerts
+                                          setState(() {
+                                            listOfExistingAlerts
+                                                .removeAt(index);
+                                            print(
+                                                "listOfExistingAlerts: $listOfExistingAlerts");
+                                          });
+
+                                          /// removing alert from the map of all alert
+                                          dataProvider!.muteUnMuteOrRemoveAlert(
+                                            alertOperationType:
+                                                AlertOperationType.remove,
+                                            currencyPair:
+                                                currentAlertInstrument,
+                                            alertPrice:
+                                                currentAlertInstrumentAlertPriceString,
+                                          );
+
+                                          /// saving the changes locally
+                                          await dataProvider!
+                                              .savePriceAlertsToLocalStorage();
+
+                                          /// signalling to "Mute All" button that no
+                                          /// alert exists if all alerts have been deleted
+                                          dataProvider!.muteUnMuteAllOrCalcIsAllMuted(
+                                              alertOperationType: AlertOperationType
+                                                  .calcIsAllAlertsMuted
+                                          );
+                                        },
+                                        child: SizedBox(
+                                            width: widget.widthDeleteButton,
+                                            child: Image.asset(
+                                              "assets/images/price_delete_button.png",
+                                              color: Colors.black,
+                                            )),
+                                      ),
                                     ]),
                                   ),
                                 ),
@@ -1680,6 +1798,7 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
                   // color: Colors.blueAccent
                   child: Center(
                     child: Text(listOfExistingAlerts.length <= 2 ? "" : "Swipe",
+                        // listOfExistingAlerts.length
                         style: TextStyle(
                             fontFamily: "PT-Mono",
                             fontSize: widget.fontSizeSwipeNotification,
@@ -2273,7 +2392,6 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
         /// and prices have been retrieved at least once
         if (widget.isCurrencyPairTextField == false &&
             isFirstValueInMapOfAllInstrumentsContainsFetching == false) {
-
           /// adding alert
           dataProvider!.addAlertToMapOfAllAlerts();
 
@@ -2282,6 +2400,14 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
           dataProvider!.updateHasFocusCurrencyPairTextField(hasFocus: false);
           dataProvider!.updateHasFocusAlertPriceTextField(hasFocus: false);
           FocusScope.of(context).unfocus();
+
+          /// calculate whether all price alerts (in _mapOfAllAlerts,
+          /// data_provider.dart) are currently muted
+          ///
+          /// updates _isAllPriceAlertsMuted in data_provider.dart when the app
+          /// gets started or updated
+          dataProvider!.muteUnMuteAllOrCalcIsAllMuted(
+              alertOperationType: AlertOperationType.calcIsAllAlertsMuted);
         }
       },
       child: Container(

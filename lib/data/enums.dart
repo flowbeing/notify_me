@@ -18,5 +18,6 @@ enum Filter {
 enum AlertOperationType {
   mute,
   unMute,
-  remove
+  remove,
+  calcIsAllAlertsMuted
 }
