@@ -92,7 +92,8 @@ class _CustomTextButtonState extends State<CustomTextButton> {
                 false) {
           print("reflecting this");
           widget.functionUpdateSelectedFilter!(
-              selectedFilter: widget.currentFilter);
+              selectedFilter: widget.currentFilter
+          );
         }
 
         /// else if this is a "Mute All" button, signal that it has been tapped
@@ -108,26 +109,28 @@ class _CustomTextButtonState extends State<CustomTextButton> {
             setState(() {
               isCustomTextButtonActivated = !isCustomTextButtonActivated;
 
-              /// if the "mute all" button has been activated and should be
-              /// highlighted, mute all alerts
-              if (isCustomTextButtonActivated == true) {
-                /// muting all alerts
-                dataProvider!.muteUnMuteAllOrCalcIsAllMuted(
-                    alertOperationType: AlertOperationType.mute);
-              }
-
-              /// ... else if "mute all" button has been deactivated, un-mute
-              /// all alerts
-              else if (isCustomTextButtonActivated == false) {
-                /// un-muting all alerts
-                dataProvider!.muteUnMuteAllOrCalcIsAllMuted(
-                    alertOperationType: AlertOperationType.unMute);
-              }
-
-              /// calculate and update whether all button have been muted
-              dataProvider!.muteUnMuteAllOrCalcIsAllMuted(
-                  alertOperationType: AlertOperationType.calcIsAllAlertsMuted);
             });
+
+            /// if the "mute all" button has been activated and should be
+            /// highlighted, mute all alerts
+            if (isCustomTextButtonActivated == true) {
+              /// muting all alerts
+              dataProvider!.muteUnMuteAllOrCalcIsAllMutedOrIsPriceAlertFulfilled(
+                  alertOperationType: AlertOperationType.mute);
+            }
+
+            /// ... else if "mute all" button has been deactivated, un-mute
+            /// all alerts
+            else if (isCustomTextButtonActivated == false) {
+              /// un-muting all alerts
+              dataProvider!.muteUnMuteAllOrCalcIsAllMutedOrIsPriceAlertFulfilled(
+                  alertOperationType: AlertOperationType.unMute);
+            }
+
+            /// calculate and update whether all button have been muted
+            dataProvider!.muteUnMuteAllOrCalcIsAllMutedOrIsPriceAlertFulfilled(
+                alertOperationType: AlertOperationType.calcIsAllAlertsMuted);
+            
           }
         }
 

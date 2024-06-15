@@ -610,8 +610,8 @@ class _CurrencyPriceAdjustmentContainerState
   /// bool that signals whether the current alert price is valid or not
   bool isValidCurrentAlertPrice = true;
 
-  /// the currently selected pair's price structure
-  String currentPairPriceStructure = "";
+  /// the currently selected pair's latest price
+  String currentPairLatestPrice = "";
 
   /// setting the current entered alert price text, whether valid or not,
   /// selected, updated, or entered
@@ -654,8 +654,7 @@ class _CurrencyPriceAdjustmentContainerState
       /// field's valueKey and alert price.. a mouthful
       selectedInstrument = dataProvider!.getCurrentlySelectedInstrument();
 
-      /// ensuring that the initial alert price will be one unit more than the
-      /// currently selected currency pair's price
+      /// setting the initial alert price
       initialValuePrice =
           dataProvider!.getAlertPriceCurrencyPriceTextField();
 
@@ -664,13 +663,12 @@ class _CurrencyPriceAdjustmentContainerState
       focusNodeAlertPrice = FocusNode(
           debugLabel: "alertPrice$selectedInstrument", skipTraversal: true);
 
-      /// setting the currently selected pair's price structure - whether
-      /// selected, updated, or entered..
-      currentPairPriceStructure = initialValuePrice!;
+      /// setting the currently selected pair's latest price
+      currentPairLatestPrice = initialValuePrice!;
 
       /// setting the current entered alert price text, whether selected,
       /// updated, or entered
-      enteredAlertPriceText = currentPairPriceStructure;
+      enteredAlertPriceText = currentPairLatestPrice;
 
       /// saving the original alert price in the data provider class for use
       /// (addition to map of all alerts when triggered) later..
@@ -697,6 +695,21 @@ class _CurrencyPriceAdjustmentContainerState
     String currentlySelectedInstrumentPrice =
         dataProvider!.getAlertPriceCurrencyPriceTextField();
 
+    /// setting the currently selected pair's latest price:
+    ///
+    /// used to:
+    /// 1. calculate the number of dots the current pair's original price
+    ///    has
+    /// 2. holds the latest price of the selected currency pair. Hence,
+    ///    it's used to signal to the user that the selected currency pair's
+    ///    latest price cannot be added as an alert price..
+    ///
+    ///    Ability to do so will cause the app to play a price alert sound
+    ///    whenever an alert gets added to the list of alerts. Now, that
+    ///    would be annoying..
+    currentPairLatestPrice = dataProvider!.getCurrentlySelectedInstrumentPrice();
+
+    print("currentPairLatestPrice get: ${currentPairLatestPrice}");
 
 
     if (currentSelectedInstrument.toLowerCase() ==
@@ -724,22 +737,12 @@ class _CurrencyPriceAdjustmentContainerState
           initialValuePrice = currentlySelectedInstrumentPrice;
         }
 
-        /// setting the currently selected pair's price structure or
-        ///
-        /// used to:
-        /// 1. calculate the number of dots the current pair's original
-        /// price has
-        // 2. ensure that the user cannot set a price alert with the latest
-        // price of the current currency. Ability to do so will cause the
-        // app to play a price alert sound whenever an alert gets added to
-        // the list of alerts. Now, that would be annoying..
-        currentPairPriceStructure = initialValuePrice!;
-
-        /// if prices have been fetched at least once, ie. when the grid view
-        /// widget has loaded all currency pairs and their prices correctly,
-        /// set the alert price one unit of price higher than the current or
-        /// updated price..
-        if (isFirstTimeFetching==false){
+        /// if prices have been fetched at least once and the current alert price
+        /// does not belong to a "demo" priced currency pair, ie. when the
+        /// grid view widget has loaded all currency pairs and their prices
+        /// correctly, set the alert price one unit of price higher than the
+        /// current or updated price..
+        if (isFirstTimeFetching==false && initialValuePrice!="0.00000"){
           /// ensuring that the initial alert price will be one unit more than the
           /// currently selected currency pair's price
           initialValuePrice =
@@ -791,22 +794,11 @@ class _CurrencyPriceAdjustmentContainerState
       print("initialValuePrice: $initialValuePrice");
       print("updatedFilters?b");
 
-      /// setting the currently selected pair's price structure or
-      ///
-      /// used to:
-      /// 1. calculate the number of dots the current pair's original
-      /// price has
-      // 2. ensure that the user cannot set a price alert with the latest
-      // price of the current currency. Ability to do so will cause the
-      // app to play a price alert sound whenever an alert gets added to
-      // the list of alerts. Now, that would be annoying..
-      currentPairPriceStructure = initialValuePrice!;
-
       /// if prices have been fetched at least once, ie. when the grid view
       /// widget has loaded all currency pairs and their prices correctly,
       /// set the alert price one unit of price higher than the current or
       /// updated price..
-      if (isFirstTimeFetching==false){
+      if (isFirstTimeFetching==false && initialValuePrice!="0.00000"){
         /// ensuring that the initial alert price will be one unit more than the
         /// currently selected currency pair's price
         initialValuePrice =
@@ -875,22 +867,11 @@ class _CurrencyPriceAdjustmentContainerState
           print(
               "currentlySelectedInstrumentPrice == previouslyEnteredErrorText: ${currentlySelectedInstrumentPrice == previouslyEnteredErrorText}");
 
-          /// setting the currently selected pair's price structure or
-          ///
-          /// used to:
-          /// 1. calculate the number of dots the current pair's original
-          /// price has
-          // 2. ensure that the user cannot set a price alert with the latest
-          // price of the current currency. Ability to do so will cause the
-          // app to play a price alert sound whenever an alert gets added to
-          // the list of alerts. Now, that would be annoying..
-          currentPairPriceStructure = initialValuePrice!;
-
           /// if prices have been fetched at least once, ie. when the grid view
           /// widget has loaded all currency pairs and their prices correctly,
           /// set the alert price one unit of price higher than the current or
           /// updated price..
-          if (isFirstTimeFetching==false){
+          if (isFirstTimeFetching==false && initialValuePrice!="0.00000"){
             /// ensuring that the initial alert price will be one unit more than the
             /// currently selected currency pair's price
             initialValuePrice =
@@ -938,7 +919,7 @@ class _CurrencyPriceAdjustmentContainerState
     if (isValidCurrentAlertPrice) {
       String decreasedOrIncreasedAlertPrice = dataProvider!
           .subtractOrAddOneOrFiveUnitsFromAlertPrice(
-              currentPairPriceStructure: currentPairPriceStructure,
+              currentPairPriceStructure: currentPairLatestPrice,
               alertPrice: enteredAlertPriceText,
               isSubtract: isSubtract ? true : false);
 
@@ -1112,7 +1093,7 @@ class _CurrencyPriceAdjustmentContainerState
                           enabled: isFirstTimeFetching ? false : true,
                           focusNode: focusNodeAlertPrice,
                           keyboardType: TextInputType.number,
-                          maxLength: initialValuePrice!.length,
+                          maxLength: currentPairLatestPrice.length,
                           // expands: false,
                           // maxLines: 1,
                           onTap: () {
@@ -1216,9 +1197,9 @@ class _CurrencyPriceAdjustmentContainerState
                             fontWeight: FontWeight.normal,
                             fontSize: widget.fontSizePrice,
                             /// if the current alert price is the same as the
-                            /// current price of the alert instrument, signal
-                            /// to the user that it cannot be added
-                            color: currentPairPriceStructure==initialValuePrice ? Colors.grey : textColor,
+                            /// current price of the selected (alert) instrument,
+                            /// signal to the user that it cannot be added
+                            color: currentPairLatestPrice==initialValuePrice ? Colors.grey : textColor,
                             overflow: TextOverflow.fade,
                           ),
                           textAlign: TextAlign.center,
@@ -1444,11 +1425,15 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
       for (var alertsData in alertsForCurrentPair) {
         String currentAlertPrice = alertsData['price'];
         bool isMuted = alertsData['isMuted'];
+        bool isFulfilledAlertPrice= alertsData['isFulfilledAlertPrice'];
+        bool hasFulfilledAlertPriceOnce=alertsData['hasFulfilledAlertPriceOnce'];
 
         Map<String, dynamic> alertDataToAdd = {
           "currencyPair": currentPair,
           "price": currentAlertPrice,
-          "isMuted": isMuted
+          "isMuted": isMuted,
+          "isFulfilledAlertPrice": isFulfilledAlertPrice,
+          "hasFulfilledAlertPriceOnce": hasFulfilledAlertPriceOnce
         };
 
         // print("alertDataToAdd: ${alertDataToAdd.toString()}");
@@ -1478,6 +1463,11 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
 
   @override
   Widget build(BuildContext context) {
+
+    print("mapOfExistingAlerts.isEmpty: ${mapOfExistingAlerts.isEmpty}");
+    print("mapOfExistingAlerts: ${mapOfExistingAlerts}");
+    print("isFirstTimeFetchingPrices == true: ${isFirstTimeFetchingPrices == true}");
+
     return Stack(
       // fit: StackFit.loose,
       children: [
@@ -1578,14 +1568,18 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
                             /// alert as a string
                             ///
                             /// price structure
-                            String currentAlertInstrumentPriceString =
+                            String currentAlertInstrumentLatestPriceString =
                                 mapOfAllPrices[currentAlertInstrument]
                                     ['current_price'];
+                            if (currentAlertInstrumentLatestPriceString=="demo"){
+                              currentAlertInstrumentLatestPriceString="0.00000";
+                            }
+
                             int dotPositionCurrentAlertInstrumentPrice =
-                                currentAlertInstrumentPriceString.indexOf(".") +
+                                currentAlertInstrumentLatestPriceString.indexOf(".") +
                                     1;
                             int numOfDecimalNumbersCurrentInstrumentOriginalPrice =
-                                currentAlertInstrumentPriceString.length -
+                                currentAlertInstrumentLatestPriceString.length -
                                     dotPositionCurrentAlertInstrumentPrice;
 
                             /// alert price of the current alert as a double
@@ -1603,15 +1597,15 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
                             /// will not contain fetched because of the ternary
                             /// statement I specified above..
                             // print("mapOfAllPrices: $mapOfAllPrices");
-                            double currentPairLatestPrice = double.parse(
-                                mapOfAllPrices[currentAlertInstrument]
-                                    ['current_price']);
+                            double doubleCurrentPairLatestPrice = double.parse(
+                                currentAlertInstrumentLatestPriceString);
+
 
                             /// is the alert price above or below the current
                             /// currency pair's latest price
                             String diffAlertPriceAndLatestPrice =
                                 (currentAlertInstrumentAlertPrice -
-                                        currentPairLatestPrice)
+                                        doubleCurrentPairLatestPrice)
                                     .toString();
                             double diffAlertPriceAndLatestPriceDouble =
                                 double.parse(diffAlertPriceAndLatestPrice);
@@ -1619,15 +1613,16 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
                             /// icon that signals whether the alert price is
                             /// above or below the current currency pair's
                             /// latest price
-                            String
-                                alertPriceRelativePositionIndicatorImageString =
-                                diffAlertPriceAndLatestPrice.contains("-")
-                                    ? "assets/images/alert_price_below_current_price.png"
-                                    : "assets/images/alert_price_above_current_price.png";
+                            String alertPriceRelativePositionIndicatorImageString="";
 
                             if (diffAlertPriceAndLatestPriceDouble == 0) {
                               alertPriceRelativePositionIndicatorImageString =
-                                  "assets/images/alert_price_no_price_diff_three.png";
+                              "assets/images/alert_price_no_price_diff_three.png";
+
+                            } else if (diffAlertPriceAndLatestPrice.contains("-")){
+                              alertPriceRelativePositionIndicatorImageString="assets/images/alert_price_below_current_price.png";
+                            }else if (!diffAlertPriceAndLatestPrice.contains("-")){
+                              alertPriceRelativePositionIndicatorImageString="assets/images/alert_price_above_current_price.png";
                             }
 
                             print(
@@ -1643,6 +1638,11 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
                             /// is the last alert in the list of existing alerts
                             bool isLastAlert =
                                 index == listOfExistingAlerts.length - 1;
+
+                            /// a bool that signals if the current price alert
+                            /// has been fulfilled at least once
+                            bool isPriceAlertFulfilledOnce=
+                            listOfExistingAlerts[index]["hasFulfilledAlertPriceOnce"];
 
                             return Dismissible(
                               key: UniqueKey(),
@@ -1676,7 +1676,7 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
 
                                 /// signalling to "Mute All" button that no
                                 /// alert exists if all alerts have been deleted
-                                dataProvider!.muteUnMuteAllOrCalcIsAllMuted(
+                                dataProvider!.muteUnMuteAllOrCalcIsAllMutedOrIsPriceAlertFulfilled(
                                     alertOperationType: AlertOperationType
                                         .calcIsAllAlertsMuted);
                               },
@@ -1778,7 +1778,10 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
                                           style: TextStyle(
                                               fontFamily: "PT-Mono",
                                               fontSize:
-                                                  widget.fontSizeAListTile))),
+                                                  widget.fontSizeAListTile,
+                                              // color: isPriceAlertFulfilledOnce ?
+
+                                          ))),
 
                                   /// Buttons & Icons
                                   /// a. alert price's relative direction
@@ -1802,7 +1805,9 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
                                           width: widget
                                               .widthPriceUpOrDownIndicator,
                                           child: Image.asset(
-                                              alertPriceRelativePositionIndicatorImageString)),
+                                              alertPriceRelativePositionIndicatorImageString
+                                          )
+                                      ),
 
                                       /// spacing between alert price's relative
                                       /// position and the mute / unmute button
@@ -1843,7 +1848,7 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
                                           ///
                                           /// updates _isAllPriceAlertsMuted within data_provider.dart when the an alert gets muted or unmuted
                                           dataProvider!
-                                              .muteUnMuteAllOrCalcIsAllMuted(
+                                              .muteUnMuteAllOrCalcIsAllMutedOrIsPriceAlertFulfilled(
                                                   alertOperationType:
                                                       AlertOperationType
                                                           .calcIsAllAlertsMuted);
@@ -1895,7 +1900,7 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
 
                                           /// signalling to "Mute All" button that no
                                           /// alert exists if all alerts have been deleted
-                                          dataProvider!.muteUnMuteAllOrCalcIsAllMuted(
+                                          dataProvider!.muteUnMuteAllOrCalcIsAllMutedOrIsPriceAlertFulfilled(
                                               alertOperationType: AlertOperationType
                                                   .calcIsAllAlertsMuted
                                           );
@@ -2540,7 +2545,7 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
           ///
           /// updates _isAllPriceAlertsMuted in data_provider.dart when the app
           /// gets started or updated
-          dataProvider!.muteUnMuteAllOrCalcIsAllMuted(
+          dataProvider!.muteUnMuteAllOrCalcIsAllMutedOrIsPriceAlertFulfilled(
               alertOperationType: AlertOperationType.calcIsAllAlertsMuted
           );
         }
