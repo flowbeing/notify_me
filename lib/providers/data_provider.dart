@@ -33,19 +33,20 @@ class DataProvider with ChangeNotifier {
   /// number of fulfilled alerts
   ///
   /// i.e alerts that have been met
-  int _countFulfilledUnMutedAlerts=0;
+  int _countFulfilledUnMutedAlerts = 0;
 
   /// an instance of audio player
   ///
   /// used to play a sound when a price alert has been fulfilled
-  AudioPlayer audioPlayer= AudioPlayer();
+  AudioPlayer audioPlayer = AudioPlayer();
 
   /// bool that tracks whether the alert is currently playing
-  bool _isPlayingAlertSound=false;
-  
-  /// timer -plays an audio at regular intervals when a price alert has been 
+  bool _isPlayingAlertSound = false;
+
+  /// timer -plays an audio at regular intervals when a price alert has been
   /// fulfilled
-  Timer timerAudioPlayer=Timer.periodic(const Duration(microseconds: 1), (timer) { 
+  Timer timerAudioPlayer =
+      Timer.periodic(const Duration(microseconds: 1), (timer) {
     timer.cancel();
   });
 
@@ -131,7 +132,7 @@ class DataProvider with ChangeNotifier {
   int _indexSelectedGridTile = 3;
 
   /// a unit of the currently selected pair's price
-  String _selectedCurrencyPairOneUnitOfPrice="";
+  String _selectedCurrencyPairOneUnitOfPrice = "";
 
   /// SELECTED GRID TILE INDEXES FOR EACH FILTER
   // Map<Filter, dynamic> _indexSelectedGridTileMap = {
@@ -272,12 +273,11 @@ class DataProvider with ChangeNotifier {
       /// reset the number of fulfilled alerts that have not been muted
       /// to avoid repetitive addition when
       /// muteUnMuteAllOrCalcIsAllMutedOrIsPriceAlertFulfilled gets called
-      _countFulfilledUnMutedAlerts=0;
+      _countFulfilledUnMutedAlerts = 0;
 
       /// determine the number of fulfilled alerts that have not been muted
       await muteUnMuteAllOrCalcIsAllMutedOrIsPriceAlertFulfilled(
-          alertOperationType: AlertOperationType.setIsAlertFulfilled
-      );
+          alertOperationType: AlertOperationType.setIsAlertFulfilled);
 
       notifyListeners();
     }
@@ -471,20 +471,21 @@ class DataProvider with ChangeNotifier {
 
     String currentlySelectedCurrencyPairPrice = "";
 
-    if (isFirstTimeFetchingPrices){
-      currentlySelectedCurrencyPairPrice="0.00000";
+    if (isFirstTimeFetchingPrices) {
+      currentlySelectedCurrencyPairPrice = "0.00000";
     } else {
-      currentlySelectedCurrencyPairPrice=_allForexAndCryptoPrices[currentlySelectCurrencyPair]['current_price'];
+      currentlySelectedCurrencyPairPrice =
+          _allForexAndCryptoPrices[currentlySelectCurrencyPair]
+              ['current_price'];
 
       /// if price equals "demo" after prices have been fetched at least once,
       /// set currentlySelectedCurrencyPairPrice to "0.00000"
-      if (currentlySelectedCurrencyPairPrice=="demo"){
-        currentlySelectedCurrencyPairPrice="0.00000";
+      if (currentlySelectedCurrencyPairPrice == "demo") {
+        currentlySelectedCurrencyPairPrice = "0.00000";
       }
     }
 
     return currentlySelectedCurrencyPairPrice;
-
   }
 
   /// sets the alert price of the currently selected currency pair
@@ -500,7 +501,7 @@ class DataProvider with ChangeNotifier {
     //
     // }
 
-    _alertPriceCurrencyPriceTextField=getCurrentlySelectedInstrumentPrice();
+    _alertPriceCurrencyPriceTextField = getCurrentlySelectedInstrumentPrice();
   }
 
   /// updates the alert price of the currently selected currency pair
@@ -881,20 +882,22 @@ class DataProvider with ChangeNotifier {
 
       /// to determine the actual unit price of the entered alert price
       required String currentPairPriceStructure,
+
       /// the entered alert price, regardless of whether the price structure
       /// of the user has changed the currently selected pair's price by editing
       /// it..
-      String alertPrice="",
+      String alertPrice = "",
+
       /// should the method be used to subtract or add a unit price of the
       /// current currency's alert price
-      isSubtract=false,
+      isSubtract = false,
+
       /// useful when only using this method to determine a unit of the alert
       /// price..
       ///
       /// the above arguments are not necessary when this method will only be
       /// used to determine a unit of the alert price..
-      AlertOperationType alertOperationType=AlertOperationType.none
-      }) {
+      AlertOperationType alertOperationType = AlertOperationType.none}) {
     /// obtaining the original count of numbers that exist after the "." symbol
     /// - currentPairPriceStructure
     List<String> alertPriceOriginalStructureSplit =
@@ -925,8 +928,8 @@ class DataProvider with ChangeNotifier {
       /// 1. aUnitOfTheAlertPrice
       /// 2. countOfNumAfterDot...
       /// and exit this method
-      if (alertOperationType==AlertOperationType.calcUnitPrice){
-        _selectedCurrencyPairOneUnitOfPrice=aUnitOfTheAlertPrice;
+      if (alertOperationType == AlertOperationType.calcUnitPrice) {
+        _selectedCurrencyPairOneUnitOfPrice = aUnitOfTheAlertPrice;
         return {
           "aUnitOfTheAlertPrice": aUnitOfTheAlertPrice,
           "countOfNumAfterDot": countOfNumAfterDot
@@ -990,14 +993,71 @@ class DataProvider with ChangeNotifier {
     return mapOfAllAlerts;
   }
 
+  /// helps present notification to the user visually
+  ScaffoldFeatureController showNotification({
+    required BuildContext context,
+    required String message,
+  }){
+
+    /// media query data
+    MediaQueryData mediaQuery=MediaQuery.of(context);
+
+    /// device's height
+    double deviceHeight = mediaQuery.size.height;
+
+    /// device's width
+    double deviceWidth=mediaQuery.size.width;
+
+    /// snack bar's margin left and right
+    double snackBarPaddingLeftAndRight=0.02325581395 * deviceWidth;
+
+    /// snack bar's font size
+    double fontSizeMessage=0.01716738197*deviceHeight;
+
+    /// snack bar's padding bottom
+    double paddingBottomSnackBar=0.847639485*deviceHeight;
+
+    /// hiding all visible snack bars
+    ScaffoldMessenger.of(context).clearSnackBars();
+
+    /// displaying a snack bar with a custom message
+    return ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.black,
+            margin: EdgeInsets.only(
+              left: snackBarPaddingLeftAndRight,
+              right: snackBarPaddingLeftAndRight,
+              bottom: paddingBottomSnackBar,
+            ),
+            dismissDirection: DismissDirection.none,
+            duration: const Duration(milliseconds: 2000),
+            behavior: SnackBarBehavior.floating,
+            content: Text(
+              message,
+              style: TextStyle(
+                fontFamily: "PT-Mono",
+                fontSize: fontSizeMessage,
+                color: Colors.white
+              ),
+              textAlign: TextAlign.center,
+            )),
+
+    );
+  }
+
   /// adds the currently displayed alert price to the map of all alerts, if
   /// it has not already been added..
-  void addAlertToMapOfAllAlerts() {
+  void addAlertToMapOfAllAlerts({
+    /// used with scaffold messenger to notify the user whenever an alert
+    /// cannot be added to the list / map of all alerts..
+    required BuildContext context
+  }) {
     /// currently selected currency pair
     String currentlySelectedCurrencyPair = getCurrentlySelectedInstrument();
     String currentlyDisplayedAlertPrice =
         _originalOrEditedAlertPriceCurrencyPriceTextField;
-    String currentlySelectedCurrencyPairPrice= getCurrentlySelectedInstrumentPrice();
+    String currentlySelectedCurrencyPairPrice =
+        getCurrentlySelectedInstrumentPrice();
 
     print("currentlySelectedCurrencyPair:${currentlySelectedCurrencyPair}");
     print("currentlyDisplayedAlertPrice: ${currentlyDisplayedAlertPrice}");
@@ -1048,31 +1108,84 @@ class DataProvider with ChangeNotifier {
     /// 1. the current price of the alert instrument is not the same as the alert
     /// price to be saved..
     /// 2. it does not already exist
-    if (
-      currentlySelectedCurrencyPairPrice!=currentlyDisplayedAlertPrice
-          && isAlertAlreadyExist == false
-    ) {
-      _mapOfAllAlerts[currentlySelectedCurrencyPair]!.insert(keyCurrentAlert,
-          {
-            "price": currentlyDisplayedAlertPrice,
-            "isMuted": false,
-            /// signals whether the current price of the instrument is equal to
-            /// its alert price
-            "isFulfilledAlertPrice": false,
-            "hasFulfilledAlertPriceOnce": false
-          });
+    if (currentlySelectedCurrencyPairPrice != currentlyDisplayedAlertPrice &&
+        isAlertAlreadyExist == false) {
+      /// determining the alert price position..
+      String initialAlertPricePosition = "none";
+
+      /// currentlySelectedCurrencyPairPrice as double
+      double doubleCurrentlySelectedCurrencyPairPrice =
+          double.parse(currentlySelectedCurrencyPairPrice);
+      double doubleCurrentlyDisplayedAlertPrice =
+          double.parse(currentlyDisplayedAlertPrice);
+
+      /// if the alert instrument's (currently selected currency pair) price
+      /// is greater than the alert price and vice versa, register it
+      if (doubleCurrentlySelectedCurrencyPairPrice >
+          doubleCurrentlyDisplayedAlertPrice) {
+        initialAlertPricePosition = "down";
+      } else if (doubleCurrentlySelectedCurrencyPairPrice <
+          doubleCurrentlyDisplayedAlertPrice) {
+        initialAlertPricePosition = "up";
+      }
+
+      _mapOfAllAlerts[currentlySelectedCurrencyPair]!.insert(keyCurrentAlert, {
+        "price": currentlyDisplayedAlertPrice,
+        "isMuted": false,
+        /// signals whether the current price of the instrument is equal to
+        /// its alert price
+        "isFulfilledAlertPrice": false,
+        "hasFulfilledAlertPriceOnce": false,
+        "initialAlertPricePosition": initialAlertPricePosition
+      });
     }
+
     /// ... else if:
     /// 1. the current price of the alert instrument is the same as the alert
     /// price &&
-    /// 2. no previous price alerts exist for the currently selected
+    /// 2. no previous price alert exists for the currently selected
     /// currency pair,
-    /// ... remove the currency pair from the map of all alerts
+    /// ... remove the currency pair from the map of all alerts and notify the
+    /// user that the current price of the alert instrument cannot be added to
+    /// the list
     else if (
       currentlySelectedCurrencyPairPrice==currentlyDisplayedAlertPrice
-      && listOfAlertsDataCurrentCurrencyPair.isEmpty
-    ){
+          && listOfAlertsDataCurrentCurrencyPair.isEmpty
+    ) {
+      /// removing the currency pair from the map of all alerts
       _mapOfAllAlerts.remove(currentlySelectedCurrencyPair);
+
+      /// notifying user visually that the current price of the alert instrument
+      /// cannot be added to the list (or map) of all alerts, which helps avoid
+      /// alert sound chaos
+      showNotification(
+          context: context,
+          message: "Alert can't have pair's current price!"
+      );
+
+    }
+    /// ... if:
+    /// 1. the current price of the alert instrument is the same as the alert
+    ///    price &&
+    /// 2. at least one price alert exists for the currently selected pair
+    /// ... only notify the user that the
+    else if (currentlySelectedCurrencyPairPrice==currentlyDisplayedAlertPrice){
+
+      /// notifying user visually that the current price of the alert instrument
+      /// cannot be added to the list (or map) of all alerts, which helps avoid
+      /// alert sound chaos
+      showNotification(
+          context: context,
+          message: "Alert can't havex pair's current price!"
+      );
+    }
+    /// if the alert already exists, notify the user
+    else if (isAlertAlreadyExist){
+      /// notifying the user that the alert already exists
+      showNotification(
+          context: context,
+          message: "The alert already exists!"
+      );
     }
 
     /// save all price alerts locally asynchronously
@@ -1089,49 +1202,51 @@ class DataProvider with ChangeNotifier {
   /// 2. no alert has been fulfilled
   /// 3. all fulfilled price alerts have been muted
   Future _playOrStopAudio() async {
-
-    print("_countFulfilledUnMutedAlerts within _playOrStopAudio: ${_countFulfilledUnMutedAlerts}");
+    print(
+        "_countFulfilledUnMutedAlerts within _playOrStopAudio: ${_countFulfilledUnMutedAlerts}");
 
     /// play alert sound at regular intervals (every 3 seconds) if the specified \
     /// price alert has been fulfilled and is currently not muted.  Otherwise,
     /// stop any alert sound that's playing, if any..
-    if (
-    _countFulfilledUnMutedAlerts>0
-    // && alertOperationType==AlertOperationType.setIsAlertFulfilled
-    ){
+    if (_countFulfilledUnMutedAlerts > 0
+        // && alertOperationType==AlertOperationType.setIsAlertFulfilled
+        ) {
       /// creating audio playing timer
-      if (_isPlayingAlertSound==false){
-        timerAudioPlayer=Timer.periodic(const Duration(milliseconds: 1500), (timer) async {
-          await audioPlayer.play(
-              AssetSource("/sounds/notification_sound.mp3")
-          );
+      if (_isPlayingAlertSound == false) {
+        timerAudioPlayer =
+            Timer.periodic(const Duration(milliseconds: 1500), (timer) async {
+          await audioPlayer.play(AssetSource("/sounds/notification_sound.mp3"));
         });
       }
+
       /// vibrate the device
       // HapticFeedback.vibrate();
       // HapticFeedback.heavyImpact();
       /// signalling that the price alert sound is currently being played
-      _isPlayingAlertSound=true;
+      _isPlayingAlertSound = true;
       // return _isAllPriceAlertsMuted;
-    } else if (
-    _countFulfilledUnMutedAlerts==0
-    // && alertOperationType==AlertOperationType.setIsAlertFulfilled
-    ){
+    } else if (_countFulfilledUnMutedAlerts == 0
+        // && alertOperationType==AlertOperationType.setIsAlertFulfilled
+        ) {
       /// cancelling audio playing timer
       timerAudioPlayer.cancel();
+
       /// stopping the audio player
       await audioPlayer.stop();
+
       /// resetting _isPlayingAlertSound
-      _isPlayingAlertSound=false;
+      _isPlayingAlertSound = false;
       // _isSoundAlertAlarm=false;
       // return _isSoundAlertAlarm;
-    } else if (_isAllPriceAlertsMuted==true){
+    } else if (_isAllPriceAlertsMuted == true) {
       /// cancelling audio playing timer
       timerAudioPlayer.cancel();
+
       /// stopping the audio player
       await audioPlayer.stop();
+
       /// resetting _isPlayingAlertSound
-      _isPlayingAlertSound=false;
+      _isPlayingAlertSound = false;
       // _isSoundAlertAlarm=false;
     }
   }
@@ -1174,48 +1289,53 @@ class DataProvider with ChangeNotifier {
           print("here5");
 
           /// bool that signals whether the specified alert is currently muted
-          bool isMutedCurrentPriceAlert=_mapOfAllAlerts[currencyPair]![indexOfAlertIfAlreadyExists]['isMuted'];
+          bool isMutedCurrentPriceAlert =
+              _mapOfAllAlerts[currencyPair]![indexOfAlertIfAlreadyExists]
+                  ['isMuted'];
 
           /// bool that signals whether the specified alert has been fulfilled
-          bool isFulfilledCurrentPriceAlert=_mapOfAllAlerts[currencyPair]![indexOfAlertIfAlreadyExists]['isFulfilledAlertPrice'];
+          bool isFulfilledCurrentPriceAlert =
+              _mapOfAllAlerts[currencyPair]![indexOfAlertIfAlreadyExists]
+                  ['isFulfilledAlertPrice'];
 
           /// mute the current price alert if the alert operation type has been
           /// set to AlertOperationType.mute..
           if (alertOperationType == AlertOperationType.mute) {
-
             /// if the specified price alert to be muted has been fulfilled
             /// and is currently un-muted...
-            if (isFulfilledCurrentPriceAlert && isMutedCurrentPriceAlert==false){
+            if (isFulfilledCurrentPriceAlert &&
+                isMutedCurrentPriceAlert == false) {
               /// decrease the number of fulfilled & un-muted price alerts
-              _countFulfilledUnMutedAlerts-=1;
+              _countFulfilledUnMutedAlerts -= 1;
             }
 
             _mapOfAllAlerts[currencyPair]![indexOfAlertIfAlreadyExists]
                 ['isMuted'] = true;
           }
+
           /// un-mute the current price alert if the alert operation type has
           /// been set to AlertOperationType.unMute..
           else if (alertOperationType == AlertOperationType.unMute) {
-
             /// if the specified price alert to be un-muted has been fulfilled
             /// and is currently muted...
-            if (isFulfilledCurrentPriceAlert && isMutedCurrentPriceAlert){
+            if (isFulfilledCurrentPriceAlert && isMutedCurrentPriceAlert) {
               /// increase the number of fulfilled & un-muted price alerts
-              _countFulfilledUnMutedAlerts+=1;
+              _countFulfilledUnMutedAlerts += 1;
             }
 
             _mapOfAllAlerts[currencyPair]![indexOfAlertIfAlreadyExists]
                 ['isMuted'] = false;
           }
+
           /// remove the current price alert if the alert operation type has
           /// been set to AlertOperationType.remove..
           else if (alertOperationType == AlertOperationType.remove) {
-
             /// if the specified price alert to be removed has been fulfilled
             /// and is currently un-muted...
-            if (isFulfilledCurrentPriceAlert && isMutedCurrentPriceAlert==false){
+            if (isFulfilledCurrentPriceAlert &&
+                isMutedCurrentPriceAlert == false) {
               /// decrease the number of fulfilled & un-muted price alerts
-              _countFulfilledUnMutedAlerts-=1;
+              _countFulfilledUnMutedAlerts -= 1;
             }
 
             /// remove the alert from the map of all alerts
@@ -1272,11 +1392,10 @@ class DataProvider with ChangeNotifier {
     int countMutedAlerts = 0;
 
     /// is this the first time prices are being fetched?
-    bool isFirstTimeFetchingPrices=false;
+    bool isFirstTimeFetchingPrices = false;
 
     /// muting all price alerts
     _mapOfAllAlerts.forEach((currencyPair, listOfPriceAlertsCurrentPair) {
-
       /// index of the current currency pair's price alert
       int indexAlertCurrentPair = 0;
 
@@ -1293,39 +1412,37 @@ class DataProvider with ChangeNotifier {
             true;
 
         /// bool that signals whether the current price alert has been fulfilled
-        bool isFulfilledCurrentPriceAlert=
-        _mapOfAllAlerts[currencyPair][indexAlertCurrentPair]['isFulfilledAlertPrice'];
+        bool isFulfilledCurrentPriceAlert = _mapOfAllAlerts[currencyPair]
+            [indexAlertCurrentPair]['isFulfilledAlertPrice'];
 
         /// current alert price
-        String currentAlertPrice=alertData['price'];
+        String currentAlertPrice = alertData['price'];
 
         if (alertOperationType == AlertOperationType.mute) {
-
           /// if the current price alert to be muted was been fulfilled and
           /// is currently un-muted...
-          if (isFulfilledCurrentPriceAlert && isMutedCurrentPriceAlert==false){
+          if (isFulfilledCurrentPriceAlert &&
+              isMutedCurrentPriceAlert == false) {
             /// decrease the number of fulfilled & un-muted price alerts
-            _countFulfilledUnMutedAlerts-=1;
+            _countFulfilledUnMutedAlerts -= 1;
           }
 
           /// set isMuted to true for the current price alert
           _mapOfAllAlerts[currencyPair][indexAlertCurrentPair]['isMuted'] =
               true;
-
         } else if (alertOperationType == AlertOperationType.unMute) {
-
           /// if the current price alert to be un-muted has been fulfilled and
           /// is currently muted...
-          if (isFulfilledCurrentPriceAlert && isMutedCurrentPriceAlert){
+          if (isFulfilledCurrentPriceAlert && isMutedCurrentPriceAlert) {
             /// increase the number of fulfilled & un-muted price alerts
-            _countFulfilledUnMutedAlerts+=1;
+            _countFulfilledUnMutedAlerts += 1;
           }
 
           /// set isMuted to false for the current price alert
           _mapOfAllAlerts[currencyPair][indexAlertCurrentPair]['isMuted'] =
               false;
-
         }
+
         /// increase the number of muted alerts if this alert has been muted..
         else if (alertOperationType ==
             AlertOperationType.calcIsAllAlertsMuted) {
@@ -1334,38 +1451,40 @@ class DataProvider with ChangeNotifier {
             countMutedAlerts += 1;
           }
         }
+
         /// determine if the current alert has been triggered, fulfilled
         /// and update isFulfilledAlertPrice accordingly
-        else if (
-          alertOperationType==AlertOperationType.setIsAlertFulfilled
-          && isFirstTimeFetchingPrices==false
-        ){
+        else if (alertOperationType == AlertOperationType.setIsAlertFulfilled &&
+            isFirstTimeFetchingPrices == false) {
           /// the latest price of the alert currency pair
-          String currentPairPrice=_allForexAndCryptoPrices[currencyPair]['current_price'];
+          String currentPairPrice =
+              _allForexAndCryptoPrices[currencyPair]['current_price'];
 
           /// if the current alert's price has been fulfilled, register that it
           /// has been fulfilled. Otherwise, register that it has not been
           /// fulfilled..
-          if (currentPairPrice==currentAlertPrice){
-            _mapOfAllAlerts[currencyPair][indexAlertCurrentPair]['isFulfilledAlertPrice']=true;
+          if (currentPairPrice == currentAlertPrice) {
+            _mapOfAllAlerts[currencyPair][indexAlertCurrentPair]
+                ['isFulfilledAlertPrice'] = true;
 
             /// registering that the current alert has been fulfilled at least once
-            _mapOfAllAlerts[currencyPair][indexAlertCurrentPair]['hasFulfilledAlertPriceOnce']=true;
-
-          }else{
-            _mapOfAllAlerts[currencyPair][indexAlertCurrentPair]['isFulfilledAlertPrice']=false;
+            _mapOfAllAlerts[currencyPair][indexAlertCurrentPair]
+                ['hasFulfilledAlertPriceOnce'] = true;
+          } else {
+            _mapOfAllAlerts[currencyPair][indexAlertCurrentPair]
+                ['isFulfilledAlertPrice'] = false;
           }
 
           /// if the current alert's price has been fulfilled and is not muted,
           /// increase the number of fulfilled alerts that have not been muted
           /// by 1 unit
-          if (currentPairPrice==currentAlertPrice && isMutedCurrentPriceAlert==false){
-            _countFulfilledUnMutedAlerts+=1;
+          if (currentPairPrice == currentAlertPrice &&
+              isMutedCurrentPriceAlert == false) {
+            _countFulfilledUnMutedAlerts += 1;
           }
           // else if (currentPairPrice==currentAlertPrice && isMutedCurrentPriceAlert==false){
           //
           // }
-
 
           /// if the current alert's price has not been fulfilled, set
           /// isFulfilledAlertPrice to false
@@ -1390,8 +1509,8 @@ class DataProvider with ChangeNotifier {
       _isAllPriceAlertsMuted = true;
 
       print("_isAllPriceAlertsMuted: $_isAllPriceAlertsMuted");
-
     }
+
     /// no alert is muted when this condition is true since no alert exists
     else if (countAllAlerts == countMutedAlerts &&
         _mapOfAllAlerts.isEmpty &&
@@ -1421,7 +1540,6 @@ class DataProvider with ChangeNotifier {
     print('_mapOfAllAlerts.length: ${_mapOfAllAlerts.length}');
     print("_isAllPriceAlertsMuted: ${_isAllPriceAlertsMuted}");
     notifyListeners();
-
   }
 
   /// returns the bool whether that signals whether all alert have been muted
@@ -1440,18 +1558,18 @@ class DataProvider with ChangeNotifier {
     return _mapOfAllAlerts.isEmpty;
   }
 
-  // /// get whether an alert price has been fulfilled
-  // ///
-  // /// i.e if the latest price of at least one price alert's currency pair
-  // /// equals its alert price..
-  // getisFulfilledAlertPrice(){
-  //
-  //   bool isFulfilledAlertPrice=false;
-  //
-  //   if (_mapOfAllAlerts.isNotEmpty){
-  //     _mapOfAllAlerts.forEach((currencyPair, listOfAllAlertsCurrentPair) {
-  //
-  //     });
-  //   }
-  // }
+// /// get whether an alert price has been fulfilled
+// ///
+// /// i.e if the latest price of at least one price alert's currency pair
+// /// equals its alert price..
+// getisFulfilledAlertPrice(){
+//
+//   bool isFulfilledAlertPrice=false;
+//
+//   if (_mapOfAllAlerts.isNotEmpty){
+//     _mapOfAllAlerts.forEach((currencyPair, listOfAllAlertsCurrentPair) {
+//
+//     });
+//   }
+// }
 }

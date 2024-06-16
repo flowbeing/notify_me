@@ -1427,13 +1427,15 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
         bool isMuted = alertsData['isMuted'];
         bool isFulfilledAlertPrice= alertsData['isFulfilledAlertPrice'];
         bool hasFulfilledAlertPriceOnce=alertsData['hasFulfilledAlertPriceOnce'];
+        String initialAlertPricePosition=alertsData['initialAlertPricePosition'];
 
         Map<String, dynamic> alertDataToAdd = {
           "currencyPair": currentPair,
           "price": currentAlertPrice,
           "isMuted": isMuted,
           "isFulfilledAlertPrice": isFulfilledAlertPrice,
-          "hasFulfilledAlertPriceOnce": hasFulfilledAlertPriceOnce
+          "hasFulfilledAlertPriceOnce": hasFulfilledAlertPriceOnce,
+          "initialAlertPricePosition": initialAlertPricePosition
         };
 
         // print("alertDataToAdd: ${alertDataToAdd.toString()}");
@@ -1639,10 +1641,24 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
                             bool isLastAlert =
                                 index == listOfExistingAlerts.length - 1;
 
+                            /// DETERMINING A COLOR TO APPLY TO THE PRICE IF
+                            /// THE CURRENT ALERT HAS PREVIOUSLY BEEN FULFILLED
+                            Color colorAlertPrice=Colors.black;
+
                             /// a bool that signals if the current price alert
                             /// has been fulfilled at least once
                             bool isPriceAlertFulfilledOnce=
                             listOfExistingAlerts[index]["hasFulfilledAlertPriceOnce"];
+
+                            String alertPricePosition=listOfExistingAlerts[index]['initialAlertPricePosition'];
+
+                            if (isPriceAlertFulfilledOnce && alertPricePosition=="up"){
+                              colorAlertPrice=const Color(0xFF069D91);
+                            }
+                            else if (isPriceAlertFulfilledOnce && alertPricePosition=="down"){
+                              colorAlertPrice=const Color(0xFFFC8955);
+                            }
+
 
                             return Dismissible(
                               key: UniqueKey(),
@@ -1754,6 +1770,7 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
                                         currentAlertInstrument,
                                         style: TextStyle(
                                           fontFamily: "PT-Mono",
+                                          fontWeight: isPriceAlertFulfilledOnce ? FontWeight.bold : FontWeight.normal,
                                           fontSize: widget.fontSizeAListTile,
                                         ),
                                         textAlign: TextAlign.left,
@@ -1777,9 +1794,10 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
                                                   numOfDecimalNumbersCurrentInstrumentOriginalPrice),
                                           style: TextStyle(
                                               fontFamily: "PT-Mono",
+                                              fontWeight: isPriceAlertFulfilledOnce ? FontWeight.bold : FontWeight.normal,
                                               fontSize:
                                                   widget.fontSizeAListTile,
-                                              // color: isPriceAlertFulfilledOnce ?
+                                              color: Colors.black
 
                                           ))),
 
@@ -2532,7 +2550,7 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
         if (widget.isCurrencyPairTextField == false &&
             isFirstValueInMapOfAllInstrumentsContainsFetching == false) {
           /// adding alert to the map of all alerts
-          dataProvider!.addAlertToMapOfAllAlerts();
+          dataProvider!.addAlertToMapOfAllAlerts(context: context);
 
           /// un-blurring the screen if it is currently blurred and making the
           /// keyboard invisible if it's currently visible..
