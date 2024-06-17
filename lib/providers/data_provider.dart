@@ -1176,7 +1176,7 @@ class DataProvider with ChangeNotifier {
       /// alert sound chaos
       showNotification(
           context: context,
-          message: "Alert can't havex pair's current price!"
+          message: "Can't add pair's current price!"
       );
     }
     /// if the alert already exists, notify the user
@@ -1266,7 +1266,7 @@ class DataProvider with ChangeNotifier {
 
     /// if at least one alert exists for the specified...
     if (isCurrencyPairInMapOfAllAlerts) {
-      List<dynamic>? listOfAlertsSpecifiedPair = _mapOfAllAlerts[currencyPair];
+      List<dynamic>? listOfAlertsSpecifiedPair = [..._mapOfAllAlerts[currencyPair]];
 
       print("here2");
 
