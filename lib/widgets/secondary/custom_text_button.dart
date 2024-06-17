@@ -106,10 +106,11 @@ class _CustomTextButtonState extends State<CustomTextButton> {
           if (dataProvider!
                   .getIsFirstValueInMapOfAllInstrumentsContainsFetching() ==
               false) {
-            setState(() {
-              isCustomTextButtonActivated = !isCustomTextButtonActivated;
 
-            });
+            /// updating the "mute all" button's state to ensure that all
+            /// alerts
+            isCustomTextButtonActivated = !isCustomTextButtonActivated;
+
 
             /// if the "mute all" button has been activated and should be
             /// highlighted, mute all alerts

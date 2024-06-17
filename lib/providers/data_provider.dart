@@ -16,6 +16,11 @@ enum UpdatePricesState { isIdle, isUpdating, isDoneUpdating }
 
 /// This class retrieves and forwards much needed data to the app..
 class DataProvider with ChangeNotifier {
+  
+  /// this boolean signals whether the application is active or has been
+  /// minimized
+  // bool _isAppMinimized=false;
+  
   /// Data object
   Data? _data;
 
@@ -38,14 +43,14 @@ class DataProvider with ChangeNotifier {
   /// an instance of audio player
   ///
   /// used to play a sound when a price alert has been fulfilled
-  AudioPlayer audioPlayer = AudioPlayer();
+  AudioPlayer _audioPlayer = AudioPlayer();
 
   /// bool that tracks whether the alert is currently playing
   bool _isPlayingAlertSound = false;
 
   /// timer -plays an audio at regular intervals when a price alert has been
   /// fulfilled
-  Timer timerAudioPlayer =
+  Timer _timerAudioPlayer =
       Timer.periodic(const Duration(microseconds: 1), (timer) {
     timer.cancel();
   });
@@ -112,6 +117,11 @@ class DataProvider with ChangeNotifier {
   /// hold an original or edited alert price for the currently selected
   /// currency
   String _originalOrEditedAlertPriceCurrencyPriceTextField = "";
+  
+  /// updates the boolean that signals whether the app has been minimized
+  // updateIsAppMinimised({required bool isAppMinimized}){
+  //   _isAppMinimized=isAppMinimized;
+  // }
 
   /// loads this app's configuration file and creates all relevant File objects
   Future _initialDataAndDotEnv() async {
@@ -157,130 +167,134 @@ class DataProvider with ChangeNotifier {
 
   /// This method retrieves the prices of forex and crypto pairs periodically
   Future updatePrices() async {
-    /// signalling that updatePrices method in data provider
-    /// is currently running
-    _isUpdatingPrices = true;
-    // _isUpdatingPrices = UpdatePricesState.isUpdating;
+    print("called updatePrices");
 
-    if (_isFirstValueInMapOfAllInstrumentsContainsFetching == true) {
-      /// setting a dummy alert price for the initially selected currency pair
-      /// (4th pair) in the map of all prices when prices are being fetched for
-      /// the first time..
-      setAlertPriceCurrencyPriceTextField();
 
-      /// retrieve locally saved price alerts data if any
-      _mapOfAllAlerts = await retrievePriceAlertsFromLocalStorage();
+      /// signalling that updatePrices method in data provider
+      /// is currently running
+      _isUpdatingPrices = true;
+      // _isUpdatingPrices = UpdatePricesState.isUpdating;
 
-      /// calculate whether all price alerts (in _mapOfAllAlerts) are currently
-      /// muted
-      ///
-      /// updates _isAllPriceAlertsMuted when the app gets started or updated
-      muteUnMuteAllOrCalcIsAllMutedOrIsPriceAlertFulfilled(
-          alertOperationType: AlertOperationType.calcIsAllAlertsMuted);
-    }
+      if (_isFirstValueInMapOfAllInstrumentsContainsFetching == true) {
+        /// setting a dummy alert price for the initially selected currency pair
+        /// (4th pair) in the map of all prices when prices are being fetched for
+        /// the first time..
+        setAlertPriceCurrencyPriceTextField();
 
-    print(
-        "--------------------------------------------------------------------------------");
-    print("");
-    print("UPDATEPRICES METHOD - START");
+        /// retrieve locally saved price alerts data if any
+        _mapOfAllAlerts = await retrievePriceAlertsFromLocalStorage();
 
-    /// initializing dotenv, creating necessary files and folders, and
-    /// updating instruments / symbols..
-    await _initialDataAndDotEnv();
+        /// calculate whether all price alerts (in _mapOfAllAlerts) are currently
+        /// muted
+        ///
+        /// updates _isAllPriceAlertsMuted when the app gets started or updated
+        muteUnMuteAllOrCalcIsAllMutedOrIsPriceAlertFulfilled(
+            alertOperationType: AlertOperationType.calcIsAllAlertsMuted);
+      }
 
-    print("");
-    print("Fetching all instruments' prices every 1 minute (approx)...");
-
-    _countPricesRetrieval += 1;
-    print("Called UpdatePrices Method (Provider) $_countPricesRetrieval times");
-
-    /// retrieving all prices..
-    /// if successful, a map of all prices will be returned. Otherwise, an empty
-    /// map will be returned..
-    DateTime startTime = DateTime.now();
-    Map<dynamic, dynamic> mapOfAllPrices = await _data!.getRealTimePriceAll();
-    DateTime finishTime = DateTime.now();
-
-    print("");
-    print("updatePricesCompletionTime: ${finishTime.difference(startTime)}");
-    print("");
-
-    /// setting all prices to string value - "fetching"..
-    /// useful when initializing the app for the first time..
-    // if (_allForexAndCryptoPrices.isEmpty && mapOfAllPrices.isEmpty){
-    //   print("");
-    //   print("_allForexAndCryptoPrices & mapOfAllPrices are both empty");
-    //   _allForexAndCryptoPrices = _data!.mapOfSymbolsPreInitialPriceFetch;
-    // }
-
-    if (mapOfAllPrices.isNotEmpty) {
+      print(
+          "--------------------------------------------------------------------------------");
       print("");
-      _allForexAndCryptoPrices = mapOfAllPrices;
-      _listOfAllInstruments = mapOfAllPrices.keys.toList();
-    }
+      print("UPDATEPRICES METHOD - START");
 
-    /// signalling that updatePrices method in data provider
-    /// is currently running
+      /// initializing dotenv, creating necessary files and folders, and
+      /// updating instruments / symbols..
+      await _initialDataAndDotEnv();
 
-    _isUpdatingPrices = false;
-    // _isUpdatingPrices = UpdatePricesState.isDoneUpdating;
-
-    print("UPDATEPRICES METHOD - END");
-    print("");
-    print(
-        "--------------------------------------------------------------------------------");
-    print("");
-
-    /// note: if _allForexAndCryptoPrices.isNotEmpty &&
-    /// mapOfAllPrices.isNotEmpty, the previous value of
-    /// _allForexAndCryptoPrices will be used in the homepage..
-
-    // print("timer: ${timer}");
-    // print("timer tick: ${timer.tick}");
-
-    /// if the values of mapOfAllPrices are Strings, which
-    /// will only happen when the prices are being displayed for the
-    /// first time or have not been fetched, create future timers and
-    /// notify listeners..
-    defineIsFirstValueInMapOfAllInstrumentsContainsFetching();
-
-    if (_isFirstValueInMapOfAllInstrumentsContainsFetching) {
-      print('priceAllInstruments contains "fetching"');
       print("");
-      print("HOMEPAGE - END - 5s");
+      print("Fetching all instruments' prices every 1 minute (approx)...");
+
+      _countPricesRetrieval += 1;
+      print("Called UpdatePrices Method (Provider) $_countPricesRetrieval times");
+
+      /// retrieving all prices..
+      /// if successful, a map of all prices will be returned. Otherwise, an empty
+      /// map will be returned..
+      DateTime startTime = DateTime.now();
+      Map<dynamic, dynamic> mapOfAllPrices = await _data!.getRealTimePriceAll();
+      DateTime finishTime = DateTime.now();
+
+      print("");
+      print("updatePricesCompletionTime: ${finishTime.difference(startTime)}");
+      print("");
+
+      /// setting all prices to string value - "fetching"..
+      /// useful when initializing the app for the first time..
+      // if (_allForexAndCryptoPrices.isEmpty && mapOfAllPrices.isEmpty){
+      //   print("");
+      //   print("_allForexAndCryptoPrices & mapOfAllPrices are both empty");
+      //   _allForexAndCryptoPrices = _data!.mapOfSymbolsPreInitialPriceFetch;
+      // }
+
+      if (mapOfAllPrices.isNotEmpty) {
+        print("");
+        _allForexAndCryptoPrices = mapOfAllPrices;
+        _listOfAllInstruments = mapOfAllPrices.keys.toList();
+      }
+
+      /// signalling that updatePrices method in data provider
+      /// is currently running
+
+      _isUpdatingPrices = false;
+      // _isUpdatingPrices = UpdatePricesState.isDoneUpdating;
+
+      print("UPDATEPRICES METHOD - END");
+      print("");
       print(
           "--------------------------------------------------------------------------------");
       print("");
 
-      /// updating timers
-      updateTimers(isOneMin: false);
-      notifyListeners();
-    }
+      /// note: if _allForexAndCryptoPrices.isNotEmpty &&
+      /// mapOfAllPrices.isNotEmpty, the previous value of
+      /// _allForexAndCryptoPrices will be used in the homepage..
 
-    /// ... otherwise,
-    /// 1. wait for 1 minute (approx) future timers and notify
-    ///    listeners
-    /// 2. determine the number of fulfilled alerts that have not been muted.
-    ///    if any, play an alert sound..
-    else {
-      /// setting the alert price for the currently selected currency pair
-      /// after prices have been fetched at least once
-      setAlertPriceCurrencyPriceTextField();
+      // print("timer: ${timer}");
+      // print("timer tick: ${timer.tick}");
 
-      /// updating timers
-      updateTimers(isOneMin: true);
+      /// if the values of mapOfAllPrices are Strings, which
+      /// will only happen when the prices are being displayed for the
+      /// first time or have not been fetched, create future timers and
+      /// notify listeners..
+      defineIsFirstValueInMapOfAllInstrumentsContainsFetching();
 
-      /// reset the number of fulfilled alerts that have not been muted
-      /// to avoid repetitive addition when
-      /// muteUnMuteAllOrCalcIsAllMutedOrIsPriceAlertFulfilled gets called
-      _countFulfilledUnMutedAlerts = 0;
+      if (_isFirstValueInMapOfAllInstrumentsContainsFetching) {
+        print('priceAllInstruments contains "fetching"');
+        print("");
+        print("HOMEPAGE - END - 5s");
+        print(
+            "--------------------------------------------------------------------------------");
+        print("");
 
-      /// determine the number of fulfilled alerts that have not been muted
-      await muteUnMuteAllOrCalcIsAllMutedOrIsPriceAlertFulfilled(
-          alertOperationType: AlertOperationType.setIsAlertFulfilled);
+        /// updating timers
+        updateTimers(isOneMin: false);
+        notifyListeners();
+      }
 
-      notifyListeners();
-    }
+      /// ... otherwise,
+      /// 1. wait for 1 minute (approx) future timers and notify
+      ///    listeners
+      /// 2. determine the number of fulfilled alerts that have not been muted.
+      ///    if any, play an alert sound..
+      else {
+        /// setting the alert price for the currently selected currency pair
+        /// after prices have been fetched at least once
+        setAlertPriceCurrencyPriceTextField();
+
+        /// updating timers
+        updateTimers(isOneMin: true);
+
+        /// reset the number of fulfilled alerts that have not been muted
+        /// to avoid repetitive addition when
+        /// muteUnMuteAllOrCalcIsAllMutedOrIsPriceAlertFulfilled gets called
+        _countFulfilledUnMutedAlerts = 0;
+
+        /// determine the number of fulfilled alerts that have not been muted
+        await muteUnMuteAllOrCalcIsAllMutedOrIsPriceAlertFulfilled(
+            alertOperationType: AlertOperationType.setIsAlertFulfilled);
+
+        notifyListeners();
+      }
+      
   }
 
   /// a method to retrieve the value of _isUpdatingPrices
@@ -911,7 +925,7 @@ class DataProvider with ChangeNotifier {
       countOfNumAfterDot = lengthOfCurrentPairPriceStructure - (positionOfDot);
     }
 
-    /// determining one unit of the current alert price
+    /// determining a unit of the current alert price
     String aUnitOfTheAlertPrice = "1";
 
     if (countOfNumAfterDot != 0) {
@@ -1213,9 +1227,9 @@ class DataProvider with ChangeNotifier {
         ) {
       /// creating audio playing timer
       if (_isPlayingAlertSound == false) {
-        timerAudioPlayer =
+        _timerAudioPlayer =
             Timer.periodic(const Duration(milliseconds: 1500), (timer) async {
-          await audioPlayer.play(AssetSource("/sounds/notification_sound.mp3"));
+          await _audioPlayer.play(AssetSource("/sounds/notification_sound.mp3"));
         });
       }
 
@@ -1229,10 +1243,10 @@ class DataProvider with ChangeNotifier {
         // && alertOperationType==AlertOperationType.setIsAlertFulfilled
         ) {
       /// cancelling audio playing timer
-      timerAudioPlayer.cancel();
+      _timerAudioPlayer.cancel();
 
       /// stopping the audio player
-      await audioPlayer.stop();
+      await _audioPlayer.stop();
 
       /// resetting _isPlayingAlertSound
       _isPlayingAlertSound = false;
@@ -1240,10 +1254,10 @@ class DataProvider with ChangeNotifier {
       // return _isSoundAlertAlarm;
     } else if (_isAllPriceAlertsMuted == true) {
       /// cancelling audio playing timer
-      timerAudioPlayer.cancel();
+      _timerAudioPlayer.cancel();
 
       /// stopping the audio player
-      await audioPlayer.stop();
+      await _audioPlayer.stop();
 
       /// resetting _isPlayingAlertSound
       _isPlayingAlertSound = false;
@@ -1430,6 +1444,7 @@ class DataProvider with ChangeNotifier {
           /// set isMuted to true for the current price alert
           _mapOfAllAlerts[currencyPair][indexAlertCurrentPair]['isMuted'] =
               true;
+
         } else if (alertOperationType == AlertOperationType.unMute) {
           /// if the current price alert to be un-muted has been fulfilled and
           /// is currently muted...
