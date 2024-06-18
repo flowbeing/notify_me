@@ -5,7 +5,7 @@ import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 import 'package:device_frame/device_frame.dart';
 import 'package:flutter/foundation.dart';
-import 'package:firebase_core/firebase_core.dart';
+// import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
 import 'providers/data_provider.dart';
@@ -28,8 +28,6 @@ class NotifyMeApp extends StatelessWidget {
 
   Widget build(BuildContext context) {
 
-
-
     print("defaultTargetPlatform: ${defaultTargetPlatform}");
 
     if (defaultTargetPlatform != TargetPlatform.iOS &&
@@ -50,4 +48,5 @@ class NotifyMeApp extends StatelessWidget {
       child: MaterialApp(title: "Notify Me", home: homepage),
     );
   }
+
 }

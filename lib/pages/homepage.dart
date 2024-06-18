@@ -200,13 +200,16 @@ class HomepageState extends State<Homepage> with WidgetsBindingObserver {
     fontSizeMinus = 0.02682403433 * deviceHeight;
 
     /// symbol & price boxes' dimensions
-    heightSymbolSizedBox = fontSizeSymbols;
+    print("fontSizeSymbols: $fontSizeSymbols");
+
+    heightSymbolSizedBox =  0.0321888412 * deviceHeight; // fontSizeSymbols;
     heightPriceSizedBox = 0.0321888412 * deviceHeight;
 
     /// 1. price direction icon & currency pair
     /// 2. currency pair & currency price
     marginPriceDirectionAndCurrencyPair = 0.01716738197 * deviceHeight;
     marginCurrencyPairAndCurrencyPrice = 0.01287553648 * deviceHeight;
+    print("marginCurrencyPairAndCurrencyPrice: $marginCurrencyPairAndCurrencyPrice");
 
     print("widthGridTile: ${widthGridTile}");
     print("heightGridTile: $heightGridTile");
@@ -217,14 +220,14 @@ class HomepageState extends State<Homepage> with WidgetsBindingObserver {
 
     /// dimensions and other measurements - alerts and other menu items SizedBox
     heightAlertsAndOtherMenuItemsSizedBox = 0.04291845494 * deviceHeight;
-    marginTopAlertsAndOtherMenuItemsSizedBox = 0.01394849785 * deviceHeight;
-    marginBottomAlertsAndOtherMenuItemsSizedBox = 0.01072961373 * deviceHeight;
+    marginTopAlertsAndOtherMenuItemsSizedBox = 0.01233905579 * deviceHeight; // 0.01394849785
+    marginBottomAlertsAndOtherMenuItemsSizedBox = 0.01233905579 * deviceHeight; // 0.01072961373
 
     fontSizeAlertsAndOtherMenuItemsSizedBox = 0.0160944206 * deviceHeight;
     widthDotDivider = 0.04418604651 * deviceWidth;
     iconSizeDotDivider = 0.003755364807 * deviceHeight;
 
-    widthSpaceInBetweenAlertsMenu = 0.232 * deviceWidth; // 0.2348837208
+    widthSpaceInBetweenAlertsMenu = 0.215 * deviceWidth; // 0.2348837208
 
     /// dimensions - alerts ListView Builder
     heightAlertsListViewBuilder = 0.1201716738 * deviceHeight;
@@ -259,7 +262,7 @@ class HomepageState extends State<Homepage> with WidgetsBindingObserver {
     heightCreateNewAlertContainer = 0.05364806867 * deviceHeight;
     widthCreateNewAlertContainer = 0.4093023256 * deviceWidth;
 
-    widthCurrencyPairTextField = 0.2488372093 * deviceWidth;
+    widthCurrencyPairTextField = 0.245 * deviceWidth; // 0.2488372093
     widthPriceTextField = 0.4093023256 * deviceWidth;
     widthAddAlertButton = widthCurrencyPairTextField;
     borderTopLeftOrRightRadiusCreateAlert = 0.004291845494 * deviceHeight;
@@ -407,245 +410,86 @@ class HomepageState extends State<Homepage> with WidgetsBindingObserver {
         appBar: null,
         backgroundColor: Colors.white,
         resizeToAvoidBottomInset: true,
-        body:HomepageContent(
-            paddingTopScreen: paddingTopScreen,
-            paddingLeftAndRightScreen: paddingLeftAndRightScreen,
-            heightFirstSixGridTiles: heightFirstSixGridTiles,
-            crossAxisSpacing: crossAxisSpacing,
-            mainAxisSpacing: mainAxisSpacing,
-            widthGridTile: widthGridTile,
-            heightGridTile: heightGridTile,
-            paddingTopGridTile: paddingTopGridTile,
-            borderWidthGridTile: borderWidthGridTile,
-            radiusGridTile: radiusGridTile,
-            heightPriceDirectionIcon: heightPriceDirectionIcon,
-            marginPriceDirectionAndCurrencyPair:
-            marginPriceDirectionAndCurrencyPair,
-            heightSymbolSizedBox: heightSymbolSizedBox,
-            fontSizeSymbols: fontSizeSymbols,
-            marginCurrencyPairAndCurrencyPrice:
-            marginCurrencyPairAndCurrencyPrice,
-            heightPriceSizedBox: heightPriceSizedBox,
-            fontSizePrices: fontSizePrices,
-            heightAlertsAndOtherMenuItemsSizedBox:
-            heightAlertsAndOtherMenuItemsSizedBox,
-            marginTopAlertsAndOtherMenuItemsSizedBox:
-            marginTopAlertsAndOtherMenuItemsSizedBox,
-            marginBottomAlertsAndOtherMenuItemsSizedBox:
-            marginBottomAlertsAndOtherMenuItemsSizedBox,
-            dataProvider: dataProvider,
-            fontSizeAlertsAndOtherMenuItemsSizedBox:
-            fontSizeAlertsAndOtherMenuItemsSizedBox,
-            widthDotDivider: widthDotDivider,
-            iconSizeDotDivider: iconSizeDotDivider,
-            widthSpaceInBetweenAlertsMenu: widthSpaceInBetweenAlertsMenu,
-            heightSwipeNotification: heightSwipeNotification,
-            fontSizeSwipeNotification: fontSizeSwipeNotification,
-            heightAlertsListViewBuilder: heightAlertsListViewBuilder,
-            fontSizeAlertsListTile: fontSizeAlertsListTile,
-            heightListTile: heightListTile,
-            widthListTileLeading: widthListTileLeading,
-            widthListTileTitle: widthListTileTitle,
-            widthListTileTrailing: widthListTileTrailing,
-            paddingLeftTrailing: paddingLeftTrailing,
-            paddingRightTrailing: paddingRightTrailing,
-            paddingMiddleTrailing: paddingMiddleTrailing,
-            paddingBottomListTile: paddingBottomListTile,
-            widthPriceUpOrDownIndicator: widthPriceUpOrDownIndicator,
-            widthMutePauseOrUnallowButton: widthMutePauseOrUnallowButton,
-            widthUnMutePlayOrAllowButton: widthUnMutePlayOrAllowButton,
-            heightCreateNewAlertContainer: heightCreateNewAlertContainer,
-            widthCurrencyPairTextField: widthCurrencyPairTextField,
-            borderTopLeftOrRightRadiusCreateAlert:
-            borderTopLeftOrRightRadiusCreateAlert,
-            borderBottomLeftOrRightRadiusCreateAlert:
-            borderBottomLeftOrRightRadiusCreateAlert,
-            widthCreateNewAlertContainer: widthCreateNewAlertContainer,
-            fontSizeMinus: fontSizeMinus
-        )
-    );
-  }
-}
+        body: SingleChildScrollView(
+          child: Container(
+            // color: Colors.white,
+              padding: EdgeInsets.only(
+                  top: paddingTopScreen,
+                  left: paddingLeftAndRightScreen,
+                  right: paddingLeftAndRightScreen),
 
-class HomepageContent extends StatelessWidget {
-  const HomepageContent({
-    Key? key,
-    required this.paddingTopScreen,
-    required this.paddingLeftAndRightScreen,
-    required this.heightFirstSixGridTiles,
-    required this.crossAxisSpacing,
-    required this.mainAxisSpacing,
-    required this.widthGridTile,
-    required this.heightGridTile,
-    required this.paddingTopGridTile,
-    required this.borderWidthGridTile,
-    required this.radiusGridTile,
-    required this.heightPriceDirectionIcon,
-    required this.marginPriceDirectionAndCurrencyPair,
-    required this.heightSymbolSizedBox,
-    required this.fontSizeSymbols,
-    required this.marginCurrencyPairAndCurrencyPrice,
-    required this.heightPriceSizedBox,
-    required this.fontSizePrices,
-    required this.heightAlertsAndOtherMenuItemsSizedBox,
-    required this.marginTopAlertsAndOtherMenuItemsSizedBox,
-    required this.marginBottomAlertsAndOtherMenuItemsSizedBox,
-    required this.dataProvider,
-    required this.fontSizeAlertsAndOtherMenuItemsSizedBox,
-    required this.widthDotDivider,
-    required this.iconSizeDotDivider,
-    required this.widthSpaceInBetweenAlertsMenu,
-    required this.heightSwipeNotification,
-    required this.fontSizeSwipeNotification,
-    required this.heightAlertsListViewBuilder,
-    required this.fontSizeAlertsListTile,
-    required this.heightListTile,
-    required this.widthListTileLeading,
-    required this.widthListTileTitle,
-    required this.widthListTileTrailing,
-    required this.paddingLeftTrailing,
-    required this.paddingRightTrailing,
-    required this.paddingMiddleTrailing,
-    required this.paddingBottomListTile,
-    required this.widthPriceUpOrDownIndicator,
-    required this.widthMutePauseOrUnallowButton,
-    required this.widthUnMutePlayOrAllowButton,
-    required this.heightCreateNewAlertContainer,
-    required this.widthCurrencyPairTextField,
-    required this.borderTopLeftOrRightRadiusCreateAlert,
-    required this.borderBottomLeftOrRightRadiusCreateAlert,
-    required this.widthCreateNewAlertContainer,
-    required this.fontSizeMinus,
-  }) : super(key: key);
-
-  final double paddingTopScreen;
-  final double paddingLeftAndRightScreen;
-  final double heightFirstSixGridTiles;
-  final double crossAxisSpacing;
-  final double mainAxisSpacing;
-  final double widthGridTile;
-  final double heightGridTile;
-  final double paddingTopGridTile;
-  final double borderWidthGridTile;
-  final double radiusGridTile;
-  final double heightPriceDirectionIcon;
-  final double marginPriceDirectionAndCurrencyPair;
-  final double heightSymbolSizedBox;
-  final double fontSizeSymbols;
-  final double marginCurrencyPairAndCurrencyPrice;
-  final double heightPriceSizedBox;
-  final double fontSizePrices;
-  final double heightAlertsAndOtherMenuItemsSizedBox;
-  final double marginTopAlertsAndOtherMenuItemsSizedBox;
-  final double marginBottomAlertsAndOtherMenuItemsSizedBox;
-  final DataProvider? dataProvider;
-  final double fontSizeAlertsAndOtherMenuItemsSizedBox;
-  final double widthDotDivider;
-  final double iconSizeDotDivider;
-  final double widthSpaceInBetweenAlertsMenu;
-  final double heightSwipeNotification;
-  final double fontSizeSwipeNotification;
-  final double heightAlertsListViewBuilder;
-  final double fontSizeAlertsListTile;
-  final double heightListTile;
-  final double widthListTileLeading;
-  final double widthListTileTitle;
-  final double widthListTileTrailing;
-  final double paddingLeftTrailing;
-  final double paddingRightTrailing;
-  final double paddingMiddleTrailing;
-  final double paddingBottomListTile;
-  final double widthPriceUpOrDownIndicator;
-  final double widthMutePauseOrUnallowButton;
-  final double widthUnMutePlayOrAllowButton;
-  final double heightCreateNewAlertContainer;
-  final double widthCurrencyPairTextField;
-  final double borderTopLeftOrRightRadiusCreateAlert;
-  final double borderBottomLeftOrRightRadiusCreateAlert;
-  final double widthCreateNewAlertContainer;
-  final double fontSizeMinus;
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Container(
-          // color: Colors.white,
-          padding: EdgeInsets.only(
-              top: paddingTopScreen,
-              left: paddingLeftAndRightScreen,
-              right: paddingLeftAndRightScreen),
-
-          /// a column - holds all elements on the screen
-          child: Column(
-            children: [
-              /// every widget above CreateAlertWidget
-              BlurrableWidgetsAboveCreateAlertWidget(
-                  heightFirstSixGridTiles: heightFirstSixGridTiles,
-                  crossAxisSpacing: crossAxisSpacing,
-                  mainAxisSpacing: mainAxisSpacing,
-                  widthGridTile: widthGridTile,
-                  heightGridTile: heightGridTile,
-                  paddingTopGridTile: paddingTopGridTile,
-                  borderWidthGridTile: borderWidthGridTile,
-                  radiusGridTile: radiusGridTile,
-                  heightPriceDirectionIcon: heightPriceDirectionIcon,
-                  marginPriceDirectionAndCurrencyPair:
+              /// a column - holds all elements on the screen
+              child: Column(
+                children: [
+                  /// every widget above CreateAlertWidget
+                  BlurrableWidgetsAboveCreateAlertWidget(
+                      heightFirstSixGridTiles: heightFirstSixGridTiles,
+                      crossAxisSpacing: crossAxisSpacing,
+                      mainAxisSpacing: mainAxisSpacing,
+                      widthGridTile: widthGridTile,
+                      heightGridTile: heightGridTile,
+                      paddingTopGridTile: paddingTopGridTile,
+                      borderWidthGridTile: borderWidthGridTile,
+                      radiusGridTile: radiusGridTile,
+                      heightPriceDirectionIcon: heightPriceDirectionIcon,
+                      marginPriceDirectionAndCurrencyPair:
                       marginPriceDirectionAndCurrencyPair,
-                  heightSymbolSizedBox: heightSymbolSizedBox,
-                  fontSizeSymbols: fontSizeSymbols,
-                  marginCurrencyPairAndCurrencyPrice:
+                      heightSymbolSizedBox: heightSymbolSizedBox,
+                      fontSizeSymbols: fontSizeSymbols,
+                      marginCurrencyPairAndCurrencyPrice:
                       marginCurrencyPairAndCurrencyPrice,
-                  heightPriceSizedBox: heightPriceSizedBox,
-                  fontSizePrices: fontSizePrices,
-                  heightAlertsAndOtherMenuItemsSizedBox:
+                      heightPriceSizedBox: heightPriceSizedBox,
+                      fontSizePrices: fontSizePrices,
+                      heightAlertsAndOtherMenuItemsSizedBox:
                       heightAlertsAndOtherMenuItemsSizedBox,
-                  marginTopAlertsAndOtherMenuItemsSizedBox:
+                      marginTopAlertsAndOtherMenuItemsSizedBox:
                       marginTopAlertsAndOtherMenuItemsSizedBox,
-                  marginBottomAlertsAndOtherMenuItemsSizedBox:
+                      marginBottomAlertsAndOtherMenuItemsSizedBox:
                       marginBottomAlertsAndOtherMenuItemsSizedBox,
-                  dataProvider: dataProvider,
-                  fontSizeAlertsAndOtherMenuItemsSizedBox:
+                      dataProvider: dataProvider,
+                      fontSizeAlertsAndOtherMenuItemsSizedBox:
                       fontSizeAlertsAndOtherMenuItemsSizedBox,
-                  widthDotDivider: widthDotDivider,
-                  iconSizeDotDivider: iconSizeDotDivider,
-                  widthSpaceInBetweenAlertsMenu: widthSpaceInBetweenAlertsMenu,
-                  heightSwipeNotification: heightSwipeNotification,
-                  fontSizeSwipeNotification: fontSizeSwipeNotification,
-                  heightAlertsListViewBuilder: heightAlertsListViewBuilder,
-                  fontSizeAListTile: fontSizeAlertsListTile,
-                  heightListTile: heightListTile,
-                  widthListTileLeading: widthListTileLeading,
-                  widthListTileTitle: widthListTileTitle,
-                  widthListTileTrailing: widthListTileTrailing,
-                  paddingLeftTrailing: paddingLeftTrailing,
-                  paddingRightTrailing: paddingRightTrailing,
-                  paddingMiddleTrailing: paddingMiddleTrailing,
-                  paddingBottomListTile: paddingBottomListTile,
-                  widthPriceUpOrDownIndicator: widthPriceUpOrDownIndicator,
-                  widthMutePauseOrUnallowButton: widthMutePauseOrUnallowButton,
-                  widthUnMutePlayOrAllowButton: widthUnMutePlayOrAllowButton,
-                  widthDeleteButton: widthUnMutePlayOrAllowButton),
+                      widthDotDivider: widthDotDivider,
+                      iconSizeDotDivider: iconSizeDotDivider,
+                      widthSpaceInBetweenAlertsMenu: widthSpaceInBetweenAlertsMenu,
+                      heightSwipeNotification: heightSwipeNotification,
+                      fontSizeSwipeNotification: fontSizeSwipeNotification,
+                      heightAlertsListViewBuilder: heightAlertsListViewBuilder,
+                      fontSizeAListTile: fontSizeAlertsListTile,
+                      heightListTile: heightListTile,
+                      widthListTileLeading: widthListTileLeading,
+                      widthListTileTitle: widthListTileTitle,
+                      widthListTileTrailing: widthListTileTrailing,
+                      paddingLeftTrailing: paddingLeftTrailing,
+                      paddingRightTrailing: paddingRightTrailing,
+                      paddingMiddleTrailing: paddingMiddleTrailing,
+                      paddingBottomListTile: paddingBottomListTile,
+                      widthPriceUpOrDownIndicator: widthPriceUpOrDownIndicator,
+                      widthMutePauseOrUnallowButton: widthMutePauseOrUnallowButton,
+                      widthUnMutePlayOrAllowButton: widthUnMutePlayOrAllowButton,
+                      widthDeleteButton: widthUnMutePlayOrAllowButton),
 
-              /// Create New Alert's Sized Box
-              CreateNewAlert(
-                heightCreateNewAlertContainer: heightCreateNewAlertContainer,
-                widthCurrencyPairTextField: widthCurrencyPairTextField,
-                borderTopLeftOrRightRadiusCreateAlert:
+                  /// Create New Alert's Sized Box
+                  CreateNewAlert(
+                    heightCreateNewAlertContainer: heightCreateNewAlertContainer,
+                    widthCurrencyPairTextField: widthCurrencyPairTextField,
+                    borderTopLeftOrRightRadiusCreateAlert:
                     borderTopLeftOrRightRadiusCreateAlert,
-                borderBottomLeftOrRightRadiusCreateAlert:
+                    borderBottomLeftOrRightRadiusCreateAlert:
                     borderBottomLeftOrRightRadiusCreateAlert,
-                borderWidthGridTile: borderWidthGridTile,
-                fontSizeAlertsListTile: fontSizeAlertsListTile,
-                marginBottomAlertsAndOtherMenuItemsSizedBox:
+                    borderWidthGridTile: borderWidthGridTile,
+                    fontSizeAlertsListTile: fontSizeAlertsListTile,
+                    marginBottomAlertsAndOtherMenuItemsSizedBox:
                     marginBottomAlertsAndOtherMenuItemsSizedBox,
-                widthCreateNewAlertContainer: widthCreateNewAlertContainer,
-                fontSizeAlertsAndOtherMenuItemsSizedBox:
+                    widthCreateNewAlertContainer: widthCreateNewAlertContainer,
+                    fontSizeAlertsAndOtherMenuItemsSizedBox:
                     fontSizeAlertsAndOtherMenuItemsSizedBox,
-                fontSizePlus: fontSizePrices,
-                fontSizeMinus: fontSizeMinus,
-              )
-            ],
-          )),
+                    fontSizePlus: fontSizePrices,
+                    fontSizeMinus: fontSizeMinus,
+                  )
+                ],
+              )),
+        )
     );
   }
 }
@@ -2282,11 +2126,13 @@ class _AlertsAndOtherMenuItemsState extends State<AlertsAndOtherMenuItems> {
         // - widget.mainAxisSpacing,
         width: double.infinity,
         // color: Colors.green,
-        child: Padding(
-          padding: EdgeInsets.only(
-              top: widget.marginTopAlertsAndOtherMenuItemsSizedBox,
-              // - widget.mainAxisSpacing,
-              bottom: widget.marginBottomAlertsAndOtherMenuItemsSizedBox),
+        child: Container(
+          alignment: Alignment.center,
+          height: widget.marginTopAlertsAndOtherMenuItemsSizedBox + widget.marginBottomAlertsAndOtherMenuItemsSizedBox,
+          // padding: EdgeInsets.only(
+          //     top: widget.marginTopAlertsAndOtherMenuItemsSizedBox,
+          //     // - widget.mainAxisSpacing,
+          //     bottom: widget.marginBottomAlertsAndOtherMenuItemsSizedBox),
           child: Row(children: <Widget>[
             /// title - "Alert"
             Text("Alerts",
@@ -2822,7 +2668,7 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
 }
 
 /// Text Widget - Currency Symbol/Instrument/Pair or Price
-Text currencyPairOrPrice(
+Widget currencyPairOrPrice(
     {required String currentSymbolOrInstrumentOrPrice,
     required FontWeight fontWeight,
     required double fontSize,
@@ -2834,7 +2680,9 @@ Text currencyPairOrPrice(
         fontFamily: "PT-Mono",
         fontWeight: fontWeight,
         fontSize: fontSize, // isFetching == true ? 16 : fontSize
-        color: fontColor),
+        color: fontColor,
+    ),
+    textAlign: TextAlign.justify,
   );
 }
 

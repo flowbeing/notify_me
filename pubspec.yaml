@@ -40,10 +40,13 @@ dependencies:
   lottie: ^2.3.2
   keyboard_detection: ^0.6.3
   flutter_keyboard_visibility: ^6.0.0
+  shared_preferences: ^2.2.0
+  audioplayers: ^4.1.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
+  firebase_core: ^2.24.2
 
 dev_dependencies:
   flutter_test:
@@ -79,9 +82,15 @@ flutter:
     - assets/images/price_increase_turquoise.png
     - assets/images/price_increase_darker_turquoise.png
     - assets/images/price_fetching.png
-    - assets/images/price_decrease_alert.png
-    - assets/images/price_increase_alert.png
     - assets/images/no_alerts.png
+    - assets/images/alert_price_below_current_price.png
+    - assets/images/alert_price_above_current_price.png
+    - assets/images/alert_price_no_price_diff.png
+    - assets/images/alert_price_no_price_diff_two.png
+    - assets/images/alert_price_no_price_diff_three.png
+    - assets/images/price_delete_button.png
+    - assets/images/price_mute_button.png
+    - assets/images/price_unmute_button.png
 
     # lottie animation assets
     - assets/lottie_animations/loading_price.json
@@ -89,17 +98,20 @@ flutter:
     - assets/lottie_animations/no_alerts.json
     - assets/lottie_animations/no_alerts.lottie
 
+    # notification sound
+    - assets/sounds/notification_sound.mp3
+
   fonts:
     - family: PT-Mono
       fonts:
-#        - asset: assets/fonts/pt-mono_regular.ttf
-#          weight: 300
-#        - asset: assets/fonts/pt-mono_bold.ttf
-#          weight: 700
-         - asset: assets/fonts/pt-mono_regular.otf
-           weight: 300
-         - asset: assets/fonts/pt-mono_bold.otf
-           weight: 700
+        #        - asset: assets/fonts/pt-mono_regular.ttf
+        #          weight: 300
+        #        - asset: assets/fonts/pt-mono_bold.ttf
+        #          weight: 700
+        - asset: assets/fonts/pt-mono_regular.otf
+          weight: 300
+        - asset: assets/fonts/pt-mono_bold.otf
+          weight: 700
 
   # To add assets to your application, add an assets section, like this:
   # assets:

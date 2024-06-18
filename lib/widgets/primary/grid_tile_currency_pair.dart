@@ -60,7 +60,9 @@ class _GridTileCurrencyPairState extends State<GridTileCurrencyPair> {
         alignment: Alignment.center,
         width: widget.widthGridTile,
         height: widget.heightGridTile,
-        padding: EdgeInsets.only(top: widget.paddingTopGridTile),
+        padding: EdgeInsets.only(
+            top: widget.paddingTopGridTile * .97
+        ),
         decoration: BoxDecoration(
             color: widget.gridTileColor,
             border: Border.all(
@@ -131,8 +133,10 @@ class _GridTileCurrencyPairState extends State<GridTileCurrencyPair> {
           ),
 
           /// currency name / currency name holder
-          SizedBox(
-            height: widget.heightSymbolSizedBox,
+          Container(
+            alignment: Alignment.center,
+            // color: Colors.yellow,
+            height: widget.heightSymbolSizedBox, //
             child: widget.isFetchingPrices
                 ?
 
@@ -145,13 +149,14 @@ class _GridTileCurrencyPairState extends State<GridTileCurrencyPair> {
                     currentSymbolOrInstrumentOrPrice: widget.currentSymbolOrInstrument,
                     fontWeight: FontWeight.bold,
                     fontSize: widget.fontSizeSymbols,
-                    fontColor: widget.isSelected ? Colors.white : Colors.black),
+                    fontColor: widget.isSelected ? Colors.white : Colors.black
+                ),
           ),
 
           /// margin - currency pair and currency
           /// price
           SizedBox(
-            height: widget.marginCurrencyPairAndCurrencyPrice,
+            height: widget.marginCurrencyPairAndCurrencyPrice * .75,
           ),
 
           /// currency price / currency price holder
