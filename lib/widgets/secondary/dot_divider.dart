@@ -21,7 +21,10 @@ class DotDivider extends StatelessWidget {
         icon: const Icon(Icons.circle),
         iconSize: iconSizeDotDivider,
         padding: EdgeInsets.zero,
-        highlightColor: Colors.transparent
+        highlightColor: Colors.transparent,
+        focusColor: Colors.transparent,
+        hoverColor: Colors.transparent,
+        splashColor: Colors.transparent,
       ),
     );
   }
