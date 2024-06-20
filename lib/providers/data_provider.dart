@@ -1052,7 +1052,7 @@ class DataProvider with ChangeNotifier {
               bottom: paddingBottomSnackBar,
             ),
             dismissDirection: DismissDirection.none,
-            duration: const Duration(milliseconds: 2000),
+            duration: const Duration(milliseconds: 3000),
             behavior: SnackBarBehavior.floating,
             content: Text(
               message,

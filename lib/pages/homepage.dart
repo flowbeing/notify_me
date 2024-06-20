@@ -330,7 +330,7 @@ class HomepageState extends State<Homepage> with WidgetsBindingObserver {
     /// displays a welcome message whenever the app gets re-opened
     if (state == AppLifecycleState.resumed) {
       dataProvider!.showNotification(
-          context: context, message: "Hey you! Welcome back!");
+          context: context, message: "Hiya! Welcome back!");
     }
 
     print("AppLifecycleState: ${state}");

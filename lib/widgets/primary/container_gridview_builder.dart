@@ -357,11 +357,17 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
           /// determining whether the current instrument's
           /// price should not be displayed or whether there
           /// was no price movement..
-          bool isNotDisplayedPriceOrNoPriceMovement =
+          bool isNotDisplayedPrice =
               currentInstrumentsData.runtimeType != String &&
                   !priceDifferenceIfAny.startsWith("-") &&
-                  (priceDifferenceIfAny == "0" ||
-                      priceDifferenceIfAny == "demo");
+                  priceDifferenceIfAny == "demo";
+
+          /// determining whether the current instrument's
+          /// price had no price movement..
+          bool isNoPriceMovement =
+              currentInstrumentsData.runtimeType != String &&
+                  !priceDifferenceIfAny.startsWith("-") &&
+                  priceDifferenceIfAny == "0";
 
           /// determining whether the current tile has been or
           /// should be selected
@@ -376,7 +382,7 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
           }
 
           /// defining each grid tile's colors
-          Color pureColorGridTile = const Color(0xFF0066FF);
+          Color pureColorGridTile = Colors.transparent;
           Color? gridTileColor;
           Color? gridBorderColor;
 
@@ -384,10 +390,15 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
             gridTileColor = Colors.black.withOpacity(.02); //  Colors.white
             // gridTileColor = Colors.white;
             gridBorderColor = Colors.black.withOpacity(0.1); //gridTileColor
-          } else if (isNotDisplayedPriceOrNoPriceMovement) {
+          } else if (isNotDisplayedPrice){
             gridTileColor = Colors.black.withOpacity(.01);
             gridBorderColor = gridTileColor;
-          } else if (isUpwardPriceMovement) {
+          } else if (isNoPriceMovement){
+            pureColorGridTile=Color(0xFFF5F4FB).withRed(80).withBlue(80).withGreen(80); //Colors.black.withOpacity(1);
+            gridTileColor = Color(0xFFF5F4FB); // Colors.black.withOpacity(.05);
+            gridBorderColor = Colors.black.withOpacity(.01);
+          }
+          else if (isUpwardPriceMovement) {
             pureColorGridTile =
                 const Color(0xFF069D91).withOpacity(1); // 0xFF0066FF // .67
             gridTileColor = const Color(0xFF069D91).withOpacity(.05);
@@ -446,8 +457,9 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
                     heightPriceDirectionIcon: widget.heightPriceDirectionIcon,
                     isDownwardPriceMovement: isDownwardPriceMovement,
                     isUpwardPriceMovement: isUpwardPriceMovement,
-                    isNotDisplayedPriceOrNoPriceMovement:
-                        isNotDisplayedPriceOrNoPriceMovement,
+                    isNotDisplayedPrice:
+                        isNotDisplayedPrice,
+                    isNoPriceMovement: isNoPriceMovement,
                     marginPriceDirectionAndCurrencyPair:
                         widget.marginPriceDirectionAndCurrencyPair,
                     heightSymbolSizedBox: widget.heightSymbolSizedBox,

@@ -14,7 +14,8 @@ class GridTileCurrencyPair extends StatefulWidget {
       required this.heightPriceDirectionIcon,
       required this.isDownwardPriceMovement,
       required this.isUpwardPriceMovement,
-      required this.isNotDisplayedPriceOrNoPriceMovement,
+      required this.isNotDisplayedPrice,
+      required this.isNoPriceMovement,
       required this.marginPriceDirectionAndCurrencyPair,
       required this.heightSymbolSizedBox,
       required this.currencyPairLazyLoading,
@@ -38,7 +39,8 @@ class GridTileCurrencyPair extends StatefulWidget {
   final double heightPriceDirectionIcon;
   final bool isDownwardPriceMovement;
   final bool isUpwardPriceMovement;
-  final bool isNotDisplayedPriceOrNoPriceMovement;
+  final bool isNotDisplayedPrice;
+  final bool isNoPriceMovement;
   final double marginPriceDirectionAndCurrencyPair;
   final double heightSymbolSizedBox;
   final Function currencyPairLazyLoading;
@@ -115,14 +117,25 @@ class _GridTileCurrencyPairState extends State<GridTileCurrencyPair> {
           ///
           /// if the app isn't fetching the current
           /// instrument's price, and the current
-          /// price does not reflect any change in the
-          /// instrument's value OR the current
           /// instrument's price should and will not be
           /// displayed, show a black downward price
           /// movement (image) icon..
-          if (widget.isNotDisplayedPriceOrNoPriceMovement)
+          if (widget.isNotDisplayedPrice)
             Image.asset(
               "assets/images/price_fetching.png",
+              height: widget.heightPriceDirectionIcon,
+            ),
+
+          /// PRICE NO PRICE CHANGE
+          /// if the app isn't fetching the current
+          /// instrument's price, and the current reflects
+          /// no change in price, display a white downward
+          /// price movement (image) icon
+          if (widget.isNoPriceMovement)
+            Image.asset(
+              widget.isSelected
+                  ? "assets/images/price_decrease_white.png"
+                  : "assets/images/price_fetching.png",
               height: widget.heightPriceDirectionIcon,
             ),
 
