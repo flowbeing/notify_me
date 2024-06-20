@@ -238,7 +238,7 @@ class Data {
 
           // print("now: $now");
           await dataUpdateSessionsRef
-              .set({now: "initializedDataUpdateSessionsRef"});
+              .set("{}");
         }
 
         if (dataFetchingErrorLogSnap.exists == false) {
@@ -693,13 +693,19 @@ class Data {
       try{
         DataSnapshot dataUpdateSessionsSnap = await dataUpdateSessionsRef.get();
         print("dataUpdateSessionsSnap.value: ${dataUpdateSessionsSnap.value.runtimeType}");
-        updateSessions=jsonDecode(jsonEncode(dataUpdateSessionsSnap.value!));
+
+        /// obtaining the update sessions map from a firebase string object
+        /// Steps:
+        /// 1. convert the (json string) Object to a json string
+        /// 2. decode the decode the json string back to a json string which
+        ///    the (json string) Object was supposed to be formatted as initial
+        /// 3. decode the proper json string to a map..
+        updateSessions=jsonDecode(jsonDecode(jsonEncode(dataUpdateSessionsSnap.value!)));
         print("updateSessions firebase: $updateSessions, ${updateSessions.runtimeType}");
       }catch(error){
         print(error);
       }
     }
-    /// SEAL ELSE-IF
     else {
       updateSessions=json.decode(await _dataUpdateSessionsFile!.readAsString());
     }
@@ -802,7 +808,19 @@ class Data {
       /// database..
       if (!isUseLocalStorage){
         try{
-          await dataUpdateSessionsRef.child("last_symbols_data_update_time").set(lastUpdateTimeString);
+          /// data update session (map) json string
+          DataSnapshot dataUpdateSessionSnap=await dataUpdateSessionsRef.get();
+          var updateSessions=jsonDecode(jsonDecode(jsonEncode(dataUpdateSessionSnap.value!)));
+          // var updateSessions=jsonDecode(jsonEncode(dataUpdateSessionSnap.value!));
+
+          /// updating the last symbols data update time
+          updateSessions["last_symbols_data_update_time"] =
+              lastUpdateTimeString;
+
+          /// saving the changes to firebase realtime database
+          dataUpdateSessionsRef.set(jsonEncode(updateSessions));
+
+          // await dataUpdateSessionsRef.child("last_symbols_data_update_time").set(lastUpdateTimeString);
         }catch(error){
           print(error);
         }
@@ -824,16 +842,36 @@ class Data {
       print("AN ERROR OCCURRED WHILE UPDATING AND SAVING ALL SYMBOLS' DATA!");
 
       /// logging symbols' data update and update error time for current session
+      /// .. to firebase
       if (!isUseLocalStorage){
         try{
-          await dataUpdateSessionsRef.child("last_symbols_data_update_time").set(lastUpdateTimeString);
-          await dataUpdateSessionsRef.child("last_symbols_data_update_error_time").set(lastUpdateTimeString);
+          /// data update session (map) json string
+          DataSnapshot dataUpdateSessionSnap=await dataUpdateSessionsRef.get();
+          var updateSessions=jsonDecode(jsonDecode(jsonEncode(dataUpdateSessionSnap.value!)));
+
+
+          // var updateSessions=jsonDecode(jsonEncode(dataUpdateSessionSnap.value!));
+
+          /// making sure that the last prices data update time and error time
+          /// are the same to ensure that another fetching attempt will be
+          /// made, so that the latest symbols data will be available..
+          updateSessions["last_symbols_data_update_time"] =
+              lastUpdateTimeString;
+          updateSessions["last_symbols_data_update_error_time"] =
+              lastUpdateTimeString;
+
+          /// saving the changes to firebase realtime database
+          dataUpdateSessionsRef.set(jsonEncode(updateSessions));
+
+          // await dataUpdateSessionsRef.child("last_symbols_data_update_time").set(lastUpdateTimeString);
+          // await dataUpdateSessionsRef.child("last_symbols_data_update_error_time").set(lastUpdateTimeString);
         }catch(error){
           print(error);
         }
 
       }
       /// SEAL ELSE-IF
+      /// ... to filesystem
       else {
         var updateSessions =
         json.decode(await _dataUpdateSessionsFile!.readAsString());
@@ -1097,8 +1135,9 @@ class Data {
     if (!isUseLocalStorage){
       try{
         DataSnapshot dataUpdateSessionsSnap=await dataUpdateSessionsRef.get();
+        lastUpdateSessionsMap=jsonDecode(jsonDecode(jsonEncode(dataUpdateSessionsSnap.value!)));
 
-        lastUpdateSessionsMap=jsonDecode(jsonEncode(dataUpdateSessionsSnap.value!));
+        // lastUpdateSessionsMap=jsonDecode(jsonEncode(dataUpdateSessionsSnap.value!));
       } catch(error){
         print(error);
       }
@@ -1511,7 +1550,7 @@ class Data {
 
             if(!isUseLocalStorage){
               try{
-                await dataUpdateSessionsRef.set(lastUpdateSessionsMap);
+                await dataUpdateSessionsRef.set(jsonEncode(lastUpdateSessionsMap));
                 // await dataUpdateSessionsRef.update(lastUpdateSessionsMap);
               }catch(error){
                 print(error);
@@ -1734,7 +1773,7 @@ class Data {
 
           if (!isUseLocalStorage){
             try{
-              await dataUpdateSessionsRef.set(lastUpdateSessionsMap);
+              await dataUpdateSessionsRef.set(jsonEncode(lastUpdateSessionsMap));
               // await dataUpdateSessionsRef.update(lastUpdateSessionsMap);
             }catch(error){
               print(error);
@@ -1889,7 +1928,9 @@ class Data {
       if (!isUseLocalStorage){
         try{
           print('HERE D');
-          await dataUpdateSessionsRef.set(lastUpdateSessionsMap);
+          print(lastUpdateSessionsMap);
+          
+          await dataUpdateSessionsRef.set(jsonEncode(lastUpdateSessionsMap));
         }catch(error){
           print(error);
         }

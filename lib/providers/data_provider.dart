@@ -1236,7 +1236,7 @@ class DataProvider with ChangeNotifier {
       /// creating audio playing timer
       if (_isPlayingAlertSound == false) {
         _timerAudioPlayer =
-            Timer.periodic(const Duration(milliseconds: 1500), (timer) async {
+            Timer.periodic(const Duration(milliseconds: 3000), (timer) async {
           await _audioPlayer.play(AssetSource("/sounds/notification_sound.mp3"));
         });
       }
