@@ -44,7 +44,7 @@ class _CustomTextButtonState extends State<CustomTextButton> {
   @override
   void didChangeDependencies() {
     /// defining data provider
-    dataProvider = Provider.of(context, listen: true);
+    dataProvider = Provider.of<DataProvider>(context, listen: true);
 
     /// updating bool that signals whether all existing alerts, if any, are
     /// currently muted..

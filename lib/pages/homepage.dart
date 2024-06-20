@@ -1439,6 +1439,7 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
   void didChangeDependencies() {
     print("didChangeDependencies Blurrable");
     dataProvider = Provider.of<DataProvider>(context, listen: true);
+
     isFocusedAnyTextField =
         dataProvider!.getHasFocusCurrencyPairOrAlertPriceTextField();
 

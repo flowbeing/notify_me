@@ -3,9 +3,11 @@ import 'dart:convert';
 
 import "package:flutter/material.dart";
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import "package:flutter_dotenv/flutter_dotenv.dart";
 import 'package:shared_preferences/shared_preferences.dart';
 import "package:audioplayers/audioplayers.dart";
+
 
 import "../data/data.dart";
 import '../data/enums.dart';
@@ -124,15 +126,21 @@ class DataProvider with ChangeNotifier {
   // }
 
   /// loads this app's configuration file and creates all relevant File objects
-  Future _initialDataAndDotEnv() async {
+  Future _initialDataAndDotEnv({required bool isUseLocalStorage}) async {
     /// loading configuration file
     await dotenv.load(fileName: "config.env");
 
     /// initializing Data class
-    _data = Data();
-    await _data!.createAppFilesAndFolders();
+    _data = Data(isUseLocalStorage: isUseLocalStorage);
+    /// creating files, folders or firebase realtime database references
+    /// based on whether local or online storage should be used
+    await _data!.createFilesAndFoldersOrFirebaseRefs();
     await _data!.updateAndSaveAllSymbolsData();
-    _data!.getUriAppDirectory();
+
+    /// used to obtain the app directory's URI when local storage is used
+    if (isUseLocalStorage){
+      _data!.getUriAppDirectory();
+    }
   }
 
   /// CURRENTLY SELECTED GRID TILE INDEX
@@ -154,8 +162,8 @@ class DataProvider with ChangeNotifier {
   /// returns a map of all instrument with all values set to "fetching"
   Future allSymbolsWithFetchingNotification() async {
     /// setting an interim value for _allForexAndCryptoPrices (Map)
-    _allForexAndCryptoPrices =
-        await _data!.getMapOfAllPairsWithFetchingNotification();
+    // _allForexAndCryptoPrices =
+    //     await _data!.getMapOfAllPairsWithFetchingNotification();
 
     return _allForexAndCryptoPrices;
   }
@@ -199,7 +207,7 @@ class DataProvider with ChangeNotifier {
 
       /// initializing dotenv, creating necessary files and folders, and
       /// updating instruments / symbols..
-      await _initialDataAndDotEnv();
+      await _initialDataAndDotEnv(isUseLocalStorage: false);
 
       print("");
       print("Fetching all instruments' prices every 1 minute (approx)...");
