@@ -64,6 +64,7 @@ class _InstrumentFiltersState extends State<InstrumentFilters> {
 
   Widget build(BuildContext context) {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
       children: <Widget>[
         /// FILTERS
         ///

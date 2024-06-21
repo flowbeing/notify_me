@@ -5,7 +5,7 @@ class GridTileCurrencyPair extends StatefulWidget {
       {required this.isSelected,
       required this.widthGridTile,
       required this.heightGridTile,
-      required this.paddingTopGridTile,
+      // required this.paddingTopGridTile,
       required this.gridTileColor,
       required this.gridBorderColor,
       required this.borderWidthGridTile,
@@ -30,7 +30,7 @@ class GridTileCurrencyPair extends StatefulWidget {
   final bool isSelected;
   final double widthGridTile;
   final double heightGridTile;
-  final double paddingTopGridTile;
+  // final double paddingTopGridTile;
   final Color gridTileColor;
   final Color gridBorderColor;
   final double borderWidthGridTile;
@@ -62,9 +62,9 @@ class _GridTileCurrencyPairState extends State<GridTileCurrencyPair> {
         alignment: Alignment.center,
         width: widget.widthGridTile,
         height: widget.heightGridTile,
-        padding: EdgeInsets.only(
-            top: widget.paddingTopGridTile * .97
-        ),
+        // padding: EdgeInsets.only(
+        //     top: widget.paddingTopGridTile * .97
+        // ),
         decoration: BoxDecoration(
             color: widget.gridTileColor,
             border: Border.all(
@@ -77,7 +77,9 @@ class _GridTileCurrencyPairState extends State<GridTileCurrencyPair> {
         /// 1. A price direction icon
         /// 2. The currency pair
         /// 3. The currency's price
-        child: Column(children: <Widget>[
+        child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
           /// Icon - fetching prices
           if (widget.isFetchingPrices)
             Image.asset(

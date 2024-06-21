@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:ui';
 
 import "package:flutter/material.dart";
@@ -9,12 +10,13 @@ import "./grid_tile_currency_pair.dart";
 
 class ContainerGridViewBuilder extends StatefulWidget {
   ContainerGridViewBuilder(
-      {required this.heightFirstSixGridTiles,
+      {required this.heightGridView,
       required this.crossAxisSpacing,
       required this.mainAxisSpacing,
       required this.widthGridTile,
       required this.heightGridTile,
-      required this.paddingTopGridTile,
+      required this.aspectRatioGridTile,
+      // required this.paddingTopGridTile,
       required this.borderWidthGridTile,
       required this.radiusGridTile,
       required this.heightPriceDirectionIcon,
@@ -36,13 +38,14 @@ class ContainerGridViewBuilder extends StatefulWidget {
       // required this.isErrorEnteredTextCurrencyPairTextFormFieldWidget
       });
 
-  final double heightFirstSixGridTiles;
+  final double heightGridView;
 
   final double crossAxisSpacing;
   final double mainAxisSpacing;
   final double widthGridTile;
   final double heightGridTile;
-  final double paddingTopGridTile;
+  final double aspectRatioGridTile;
+  // final double paddingTopGridTile;
   final double borderWidthGridTile;
   final double radiusGridTile;
   final double heightPriceDirectionIcon;
@@ -263,7 +266,7 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
       // key: ValueKey("gridViewBuilderContainer$indexSelectedGridTile"),
       // color: Colors.yellow,
       width: double.infinity,
-      height: widget.heightFirstSixGridTiles, //+ widget.mainAxisSpacing + .1,
+      height: widget.heightGridView, //+ widget.mainAxisSpacing + .1,
       // margin: const EdgeInsets.all(0),
       padding: const EdgeInsets.all(0),
 
@@ -299,7 +302,10 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
             crossAxisSpacing: widget.crossAxisSpacing,
-            mainAxisSpacing: widget.mainAxisSpacing),
+            mainAxisSpacing: widget.mainAxisSpacing,
+            childAspectRatio: widget.aspectRatioGridTile
+
+        ),
         itemCount:
         // listOfAllInstruments.isEmpty ? 6 :
         listOfAllInstruments.length,
@@ -332,21 +338,57 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
             /// movement. Otherwise, set
             /// priceDifferenceIfAny to "demo"
             try {
+              /// obtaining the longest string of price (old, new price)
+              bool isCurrentPriceLongerThanOldPrice=current_price!.length > old_price!.length;
+              /// obtaining the length of the longest string of price (old, new price)
+              // int longestStringCurrentAndOldPrice=max(current_price.length, old_price.length);
+
+              /// the index of "."
+              /// note that "."'s index cannot be 0
+              int indexOfDot=0;
+              /// the number of decimal numbers, if any
+              int numDecimalNumbersLongestPriceString=0;
+              /// longest price string (old, new price)
+              String longestStringOldCurrentPrice="";
+
+              /// obtaining the index of "." in the longest price string
+              if (isCurrentPriceLongerThanOldPrice && current_price.contains(".")){
+                longestStringOldCurrentPrice=current_price;
+                indexOfDot=current_price.indexOf(".");
+                numDecimalNumbersLongestPriceString=current_price.substring(indexOfDot+1).length;
+
+              } else if (!isCurrentPriceLongerThanOldPrice && old_price.contains(".")){
+                longestStringOldCurrentPrice=old_price;
+                indexOfDot=old_price.indexOf(".");
+                numDecimalNumbersLongestPriceString=old_price.substring(indexOfDot+1).length;
+              }
+
+              print("");
+              print("longestStringOldCurrentPrice: $longestStringOldCurrentPrice");
+              print("indexOfDot: $indexOfDot");
+              print("numDecimalNumbersLongestPriceString: $numDecimalNumbersLongestPriceString");
+              print("old_price: $old_price, new_price: $current_price");
+
               priceDifferenceIfAny =
-                  (double.parse(current_price!) - double.parse(old_price!))
-                      .toString();
+                  (double.parse(current_price) - double.parse(old_price))
+                      .toStringAsFixed(numDecimalNumbersLongestPriceString);
+                  print("priceDifferenceIfAny: ${priceDifferenceIfAny}");
             } catch (error) {
               priceDifferenceIfAny = current_price!;
+              print("priceDifferenceIfAny_error: ${priceDifferenceIfAny}");
             }
           }
 
+
           /// determining whether there was an upward price
           /// movement
-          bool isUpwardPriceMovement =
-              currentInstrumentsData.runtimeType != String &&
-                  !priceDifferenceIfAny.startsWith("-") &&
-                  priceDifferenceIfAny != "0" &&
-                  priceDifferenceIfAny != "demo";
+          bool isUpwardPriceMovement = false;
+          if (priceDifferenceIfAny!="demo"){
+            isUpwardPriceMovement=currentInstrumentsData.runtimeType != String &&
+                !priceDifferenceIfAny.startsWith("-") &&
+                double.parse(priceDifferenceIfAny) != 0 &&
+                priceDifferenceIfAny != "demo";
+          }
 
           /// determining whether there was a downward price
           /// movement
@@ -364,10 +406,18 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
 
           /// determining whether the current instrument's
           /// price had no price movement..
-          bool isNoPriceMovement =
-              currentInstrumentsData.runtimeType != String &&
-                  !priceDifferenceIfAny.startsWith("-") &&
-                  priceDifferenceIfAny == "0";
+          bool isNoPriceMovement = false;
+          if (priceDifferenceIfAny!="demo"){
+            isNoPriceMovement=currentInstrumentsData.runtimeType != String &&
+                !priceDifferenceIfAny.startsWith("-") &&
+                double.parse(priceDifferenceIfAny) == 0;
+          }
+
+
+          print("isUpwardPriceMovement: ${isUpwardPriceMovement}");
+          print("isDownwardPriceMovement: ${isDownwardPriceMovement}");
+          print("isNotDisplayedPrice: ${isNotDisplayedPrice}");
+          print("isNoPriceMovement: ${isNoPriceMovement}");
 
           /// determining whether the current tile has been or
           /// should be selected
@@ -386,24 +436,36 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
           Color? gridTileColor;
           Color? gridBorderColor;
 
+          /// grid tile color configuration for when prices get fetched for
+          /// the first time
           if (isFetchingPrices == true) {
             gridTileColor = Colors.black.withOpacity(.02); //  Colors.white
             // gridTileColor = Colors.white;
             gridBorderColor = Colors.black.withOpacity(0.1); //gridTileColor
-          } else if (isNotDisplayedPrice){
+          }
+          /// grid tile color configuration for 'demo' priced currency pairs
+          else if (isNotDisplayedPrice){
             gridTileColor = Colors.black.withOpacity(.01);
             gridBorderColor = gridTileColor;
-          } else if (isNoPriceMovement){
+          }
+          /// grid tile color configuration for when current and previous price
+          /// are the same
+          else if (isNoPriceMovement){
             pureColorGridTile=Color(0xFFF5F4FB).withRed(80).withBlue(80).withGreen(80); //Colors.black.withOpacity(1);
             gridTileColor = Color(0xFFF5F4FB); // Colors.black.withOpacity(.05);
             gridBorderColor = Colors.black.withOpacity(.01);
           }
+          /// grid tile color configuration for when there's an upward price
+          /// movement
           else if (isUpwardPriceMovement) {
             pureColorGridTile =
                 const Color(0xFF069D91).withOpacity(1); // 0xFF0066FF // .67
             gridTileColor = const Color(0xFF069D91).withOpacity(.05);
             gridBorderColor = const Color(0xFF069D91).withOpacity(.1);
-          } else if (isDownwardPriceMovement) {
+          }
+          /// grid tile color configuration for when there's an downward price
+          /// movement
+          else if (isDownwardPriceMovement) {
             pureColorGridTile = const Color(0xFFFC8955);
             gridTileColor = const Color(0xFFFC8955).withOpacity(0.07);
             gridBorderColor = const Color(0xFFFC8955).withOpacity(0.1);
@@ -447,7 +509,7 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
                     isSelected: isSelectedTile,
                     widthGridTile: widget.widthGridTile,
                     heightGridTile: widget.heightGridTile,
-                    paddingTopGridTile: widget.paddingTopGridTile,
+                    // paddingTopGridTile: widget.paddingTopGridTile,
                     gridTileColor:
                         isSelectedTile ? pureColorGridTile : gridTileColor!,
                     gridBorderColor: gridBorderColor!,
