@@ -45,7 +45,7 @@ class DataProvider with ChangeNotifier {
   /// an instance of audio player
   ///
   /// used to play a sound when a price alert has been fulfilled
-  AudioPlayer _audioPlayer = AudioPlayer();
+  final AudioPlayer _audioPlayer = AudioPlayer();
 
   /// bool that tracks whether the alert is currently playing
   bool _isPlayingAlertSound = false;
@@ -75,27 +75,27 @@ class DataProvider with ChangeNotifier {
 
   // UpdatePricesState _isUpdatingPrices = UpdatePricesState.isIdle;
 
-  /// Number of times prices have been retrieved from the relevant data provider
-  int _countPricesRetrieval = 0;
+  /// Number of times the updatePrices method has been called
+  int _countUpdatePricesCall = 0;
 
   /// determine whether the prices data have not been fetched
   bool _isFirstValueInMapOfAllInstrumentsContainsFetching = true;
 
   /// timer - updatePrices method..
   Timer _relevantTimer =
-      Timer.periodic(const Duration(microseconds: 1), (timer) {
+      Timer.periodic(const Duration(microseconds: 0), (timer) {
     timer.cancel();
   });
 
   /// timer - check if prices have finished updating
   Timer _isPricesUpdatedCheckingTimer =
-      Timer.periodic(const Duration(microseconds: 1), (timer) {
+      Timer.periodic(const Duration(microseconds: 0), (timer) {
     timer.cancel();
   });
 
   /// timer to set manually entered currency pair, if any
   Timer _updateCurrencyPairManually =
-      Timer.periodic(const Duration(microseconds: 1), (timer) {
+      Timer.periodic(const Duration(microseconds: 0), (timer) {
     timer.cancel();
   });
 
@@ -170,12 +170,25 @@ class DataProvider with ChangeNotifier {
 
   /// returns the number of times updatePrices has been called
   int countPriceRetrieval() {
-    return _countPricesRetrieval;
+    return _countUpdatePricesCall;
   }
 
   /// This method retrieves the prices of forex and crypto pairs periodically
   Future updatePrices() async {
-    print("called updatePrices");
+
+    /// if...:
+    /// 1. the updatePrices timer (relevantTimer) has finished counting down the
+    ///    time and this method is not already running OR
+    /// 2. this app is running for the first time,
+    /// ... update prices' data..
+    ///
+    /// Also, the conditions below prevent this method from being called each
+    /// time the user selects a new device..
+    if (
+        (!_relevantTimer.isActive && _isUpdatingPrices==false)
+            || _countUpdatePricesCall==0
+    ){
+      print("called updatePrices");
 
 
       /// signalling that updatePrices method in data provider
@@ -190,7 +203,7 @@ class DataProvider with ChangeNotifier {
         setAlertPriceCurrencyPriceTextField();
 
         /// retrieve locally saved price alerts data if any
-        _mapOfAllAlerts = await retrievePriceAlertsFromLocalStorage();
+        _mapOfAllAlerts = await retrievePriceAlertsFromUserDeviceStorage();
 
         /// calculate whether all price alerts (in _mapOfAllAlerts) are currently
         /// muted
@@ -212,8 +225,8 @@ class DataProvider with ChangeNotifier {
       print("");
       print("Fetching all instruments' prices every 1 minute (approx)...");
 
-      _countPricesRetrieval += 1;
-      print("Called UpdatePrices Method (Provider) $_countPricesRetrieval times");
+      _countUpdatePricesCall += 1;
+      print("Called UpdatePrices Method (Provider) $_countUpdatePricesCall times");
 
       /// retrieving all prices..
       /// if successful, a map of all prices will be returned. Otherwise, an empty
@@ -302,6 +315,7 @@ class DataProvider with ChangeNotifier {
 
         notifyListeners();
       }
+    }
       
   }
 
@@ -998,7 +1012,7 @@ class DataProvider with ChangeNotifier {
   }
 
   /// this helps retrieve all locally saved price alerts
-  Future<Map<dynamic, dynamic>> retrievePriceAlertsFromLocalStorage() async {
+  Future<Map<dynamic, dynamic>> retrievePriceAlertsFromUserDeviceStorage() async {
     // <Map<String, List<dynamic>>>
 
     /// retrieving the map of all alerts from the user's local storage
