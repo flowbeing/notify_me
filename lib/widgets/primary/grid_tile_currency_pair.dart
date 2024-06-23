@@ -62,6 +62,8 @@ class _GridTileCurrencyPairState extends State<GridTileCurrencyPair> {
         alignment: Alignment.center,
         width: widget.widthGridTile,
         height: widget.heightGridTile,
+        padding: null,
+        margin: null,
         // padding: EdgeInsets.only(
         //     top: widget.paddingTopGridTile * .97
         // ),

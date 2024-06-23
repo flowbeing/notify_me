@@ -194,16 +194,14 @@ class HomepageState extends State<Homepage> with WidgetsBindingObserver {
     paddingLeftAndRightScreen = 0.02325581395 * deviceWidth;
 
     /// GridView & Grid Tile's Dimensions
-    heightGridView = 0.7380952381 *
-        safeAreaHeight; // 0.7416666667*safeAreaHeight; // 0.6652360515 * deviceHeight;
+    heightGridView = 0.7380952381*safeAreaHeight; // 0.7416666667*safeAreaHeight; // 0.6652360515 * deviceHeight;
     widthGridView=0.9534883721*deviceWidth;
-    widthGridTile = 0.4651162791 * deviceWidth;
-    heightGridTile = 0.32*heightGridView; // 0.3225806452 * heightGridView; // 0.2380952381*safeAreaHeight; // 0.2145922747 * deviceHeight;
-    aspectRatioGridtile = widthGridTile / heightGridTile;
+
+    widthGridTile = 0.487804878*widthGridView;
+    heightGridTile = 0.3225806452*heightGridView; // 0.3225806452 * heightGridView; // 0.2380952381*safeAreaHeight; // 0.2145922747 * deviceHeight;
     // paddingTopGridTile = 0.05595238095*safeAreaHeight; // 0.04721030043 * deviceHeight;
-    mainAxisSpacing = 0.01612903226 *
-        heightGridView; // 0.0119047615*safeAreaHeight;// 0.01072961373 * deviceHeight;
-    crossAxisSpacing = 0.02325581395*deviceWidth; // 0.02325581395 * deviceWidth;
+    mainAxisSpacing = 0.01612903226*heightGridView; // 0.0119047615*safeAreaHeight;// 0.01072961373 * deviceHeight;
+    crossAxisSpacing = 0.0243902439*widthGridView; // 0.02325581395 * deviceWidth;
 
     print("safeAreaHeight: $safeAreaHeight");
     print("heightGridView: $heightGridView");
@@ -216,6 +214,7 @@ class HomepageState extends State<Homepage> with WidgetsBindingObserver {
 
     radiusGridTile = 0.01162790698 * deviceWidth;
     borderWidthGridTile = 0.001290322581*heightGridTile; // 0.0008583690987 * deviceHeight;
+    aspectRatioGridtile = widthGridTile/heightGridTile;
 
     /// price direction icon's height
     heightPriceDirectionIcon = 0.02575107296 * deviceHeight;

@@ -1027,8 +1027,18 @@ class DataProvider with ChangeNotifier {
     /// device's height
     double deviceHeight = mediaQuery.size.height;
 
+    /// SafeArea's height
+    double paddingTop=mediaQuery.padding.top;
+    double paddingBottom=mediaQuery.padding.bottom;
+    double safeAreaHeight=deviceHeight-paddingTop-paddingBottom;
+
     /// device's width
     double deviceWidth=mediaQuery.size.width;
+
+    /// snackbar's height
+    ///
+    /// same as the height of the CreateNewAlert widget
+    double heightSnackBar=0.05833333333*safeAreaHeight;
 
     /// snack bar's margin left and right
     double snackBarPaddingLeftAndRight=0.02325581395 * deviceWidth;
@@ -1042,29 +1052,38 @@ class DataProvider with ChangeNotifier {
     /// hiding all visible snack bars
     ScaffoldMessenger.of(context).clearSnackBars();
 
-    /// displaying a snack bar with a custom message
-    return ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: Colors.black,
-            margin: EdgeInsets.only(
-              left: snackBarPaddingLeftAndRight,
-              right: snackBarPaddingLeftAndRight,
-              bottom: paddingBottomSnackBar,
-            ),
-            dismissDirection: DismissDirection.none,
-            duration: const Duration(milliseconds: 3000),
-            behavior: SnackBarBehavior.floating,
-            content: Text(
-              message,
-              style: TextStyle(
+    /// snackbar
+    SnackBar snackBar=SnackBar(
+        // backgroundColor: Colors.black,
+        margin: EdgeInsets.only(
+            left: snackBarPaddingLeftAndRight,
+            right: snackBarPaddingLeftAndRight,
+            bottom: safeAreaHeight-heightSnackBar,
+            // top: 0
+        ),
+        padding: EdgeInsets.zero,
+        dismissDirection: DismissDirection.none,
+        duration: const Duration(milliseconds: 3000),
+        behavior: SnackBarBehavior.floating,
+        content: Container(
+          alignment: Alignment.center,
+          // color: Colors.yellow,
+          /// height of the createNewAlert widget
+          height: heightSnackBar,
+          // width: double.infinity,
+          child: Text(
+            message,
+            style: TextStyle(
                 fontFamily: "PT-Mono",
                 fontSize: fontSizeMessage,
                 color: Colors.white
-              ),
-              textAlign: TextAlign.center,
-            )),
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ));
 
-    );
+    /// displaying a snack bar with a custom message
+    return ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
   /// adds the currently displayed alert price to the map of all alerts, if
@@ -1182,7 +1201,7 @@ class DataProvider with ChangeNotifier {
       /// alert sound chaos
       showNotification(
           context: context,
-          message: "Alert can't have pair's current price!"
+          message: "Can't add pair's current price!"
       );
 
     }
