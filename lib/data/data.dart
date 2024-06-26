@@ -11,6 +11,7 @@ import "package:path_provider/path_provider.dart";
 import "package:firebase_database/firebase_database.dart";
 
 import "enums.dart";
+import "../helper_functions/helper_functions.dart";
 
 enum PriceDataType { realtime, quote }
 
@@ -135,6 +136,7 @@ class Data {
       dotenv.env["OTHER_ERRORS_LOG_FILE_NAME"]!;
   final String _urlRealTimePrice = dotenv.env["URL_REAL_TIME_PRICE"]!;
   final String _urlQuote = dotenv.env["URL_LATEST_ONE_MIN_QUOTE"]!;
+  final String _urlAPIUsage=dotenv.env['URL_API_USAGE']!;
 
   File? _dataFetchingErrorLogFile;
   File? _allSymbolsDataFile;
@@ -150,7 +152,7 @@ class Data {
 
   /// DATA UPDATE SESSIONS "DatabaseReference"
   DatabaseReference dataUpdateSessionsRef =
-      FirebaseDatabase.instance.ref("dataUpdateSessions");
+      FirebaseDatabase.instance.ref("dataUpdateSessionsRef");
 
   /// DATA FETCHING ERROR LOG 'DatabaseReference'
   DatabaseReference dataFetchingErrorLogRef =
@@ -159,32 +161,6 @@ class Data {
   /// OTHER ERROR LOG  'DatabaseReference'
   DatabaseReference otherErrorLogRef =
       FirebaseDatabase.instance.ref("otherErrorLogRef");
-
-  /// This method clean a DateTime string so that it can be used as a firebase
-  /// realtime database map key
-  ///
-  /// '_" represents "." - a dot
-  /// "__" represents " " - a space
-  String cleanDateTimeAndReturnString({required DateTime dateTime}) {
-    return dateTime
-        .toString()
-        .replaceAll(" ", "__")
-        .replaceAll(".", "_");
-        // .replaceAll("#", "_")
-        // .replaceAll("\$", "_")
-        // .replaceAll("[", "_")
-        // .replaceAll("]", "_")
-
-        // .replaceAll("-", "_")
-        // .replaceAll(":", "_");
-  }
-
-  /// retrieves the DateTime object (as string) from a cleaned DateTime string..
-  String retrieveDatetimeStringFromCleanedDateTimeString({required String cleanedDateTimeString}){
-    return cleanedDateTimeString
-          .replaceAll("__", " ")
-          .replaceAll("_", ".");
-  }
 
   /// This method creates the app's files and folders
   Future createFilesAndFoldersOrFirebaseRefs() async {
@@ -252,6 +228,7 @@ class Data {
           // String now=DateTime.now().toString();
           await otherErrorLogRef.set({now: "initializedOtherErrorLogRef"});
         }
+        
       }catch(error){
         print(error);
       }
@@ -1211,6 +1188,8 @@ class Data {
     print("lengthMapOfAllPrices 1: ${mapOfAllPrices.length}");
 
     print('PRE FOR! 2');
+
+    DateTime startTimeUpdatePrices = DateTime.now();
     try {
       /// checking whether the last prices' data session was updated over 1 min
       /// ago.
@@ -1577,6 +1556,11 @@ class Data {
         await updateAndSaveAllSymbolsData(unconditionally: true);
       }
     }
+
+    DateTime finishTimeUpdatePrices = DateTime.now();
+    Duration durationUpdatePrice =
+    finishTimeUpdatePrices.difference(startTimeUpdatePrices);
+    print("durationUpdatePrice: $durationUpdatePrice");
 
     // print("Out here!");
     // print("mapLastSavedPricesOneMinInterval: $mapLastSavedPricesOneMinInterval}");

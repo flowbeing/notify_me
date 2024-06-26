@@ -17,7 +17,7 @@ class DotDivider extends StatelessWidget {
       width: widthDotDivider,
       // color: Colors.tealAccent,
       child: IconButton(
-        onPressed: () => {},
+        onPressed: null,
         icon: const Icon(Icons.circle),
         iconSize: iconSizeDotDivider,
         padding: EdgeInsets.zero,

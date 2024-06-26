@@ -6,7 +6,7 @@ import 'package:notify_me/data/data.dart';
 import "package:provider/provider.dart";
 import 'package:device_frame/device_frame.dart';
 import 'package:flutter/foundation.dart';
-import "package:share_plus/share_plus.dart";
+// import "package:share_plus/share_plus.dart";
 import "package:url_launcher/url_launcher.dart";
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -78,7 +78,7 @@ class _NotifyMeAppState extends State<NotifyMeApp> {
   List<DeviceInfo> allDevices= Devices.ios.all;
 
   /// index of the current device
-  int countCurrentDeviceIndex=0;
+  int countCurrentDeviceIndex=5;
 
   /// current OS
   OS currentDeviceOS=OS.iOS;
@@ -88,6 +88,42 @@ class _NotifyMeAppState extends State<NotifyMeApp> {
   bool isShowDeviceBorders=true;
 
   final Uri _uri=Uri.parse('https://facebook.com');
+
+  /// Custom Elevated Button
+  customElevationButton({
+    required Color color,
+    void Function()? onPressed,
+    void Function(bool trueOrFalse)? onHover,
+    /// defines whether the child element is a text or image
+    bool isChildImage=false,
+    required String textOrImageString,
+  }){
+
+    return ElevatedButton(
+      onPressed: onPressed,
+      onHover: onHover,
+      style: ButtonStyle(
+          backgroundColor: WidgetStateProperty.all(color),
+          foregroundColor: WidgetStateProperty.all(color),
+          overlayColor: WidgetStateProperty.all(color),
+          shadowColor: WidgetStateProperty.all(color),
+          elevation: WidgetStateProperty.all(0),
+          shape: WidgetStateProperty.all(RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(5)
+          ))
+      ),
+      child: isChildImage ? Image.asset(
+        textOrImageString
+      ) : Text(
+        textOrImageString,// isShowDeviceBorders==false ? "Show Borders 📱": "Hide Borders 📱",
+        style: const TextStyle(
+            fontFamily: "PT-Mono",
+            fontWeight: FontWeight.bold,
+            color: Colors.white
+        ),
+      ),
+    );
+  }
 
   Widget build(BuildContext context) {
 
@@ -344,27 +380,42 @@ class _NotifyMeAppState extends State<NotifyMeApp> {
                         height: 10,
                       ),
                       
-                      /// "Hire Author" button
-                      ElevatedButton(
-                        onPressed: null,
-                        onHover: null,
-                        style: ButtonStyle(
-                            backgroundColor: WidgetStateProperty.all(const Color(0xFF069D91)),
-                            foregroundColor: WidgetStateProperty.all(const Color(0xFF069D91)),
-                            overlayColor: WidgetStateProperty.all(const Color(0xFF069D91)),
-                            shadowColor: WidgetStateProperty.all(const Color(0xFF069D91)),
-                            shape: WidgetStateProperty.all(RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(5)
-                            ))
-                        ),
-                        child: const Text(
-                          "Hire Author 🤝",
-                          style: TextStyle(
-                              fontFamily: "PT-Mono",
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white
-                          ),
-                        ),
+                      /// "Hire The Developer" button
+                      // ElevatedButton(
+                      //   onPressed: (null),
+                      //   onHover: null,
+                      //   style: ButtonStyle(
+                      //       backgroundColor: WidgetStateProperty.all(const Color(0xFF069D91)),
+                      //       foregroundColor: WidgetStateProperty.all(const Color(0xFF069D91)),
+                      //       overlayColor: WidgetStateProperty.all(const Color(0xFF069D91)),
+                      //       shadowColor: WidgetStateProperty.all(const Color(0xFF069D91)),
+                      //       shape: WidgetStateProperty.all(RoundedRectangleBorder(
+                      //           borderRadius: BorderRadius.circular(5)
+                      //       ))
+                      //   ),
+                      //   child: const Text(
+                      //     "Hire Daniel 🤝",
+                      //     style: TextStyle(
+                      //         fontFamily: "PT-Mono",
+                      //         fontWeight: FontWeight.bold,
+                      //         color: Colors.white
+                      //     ),
+                      //   ),
+                      // ),
+
+                      /// "Hire Daniel" button
+                      customElevationButton(
+                          onPressed: () async{
+                            print("launching url");
+
+                            // Uri uri=Uri.parse("https://www.linkedin.com/feed/?shareActive=true&text=Check out this cool app demo by @danieloyebolu - ${Uri.base}");
+                            Uri uri=Uri.parse("https://linkedin.com/in/daniel-oyebolu");
+
+                            await launchUrl(uri);
+                            // await Share.share("A great app: ${Uri.base}");
+                          },
+                          color: const Color(0xFF069D91),
+                          textOrImageString: "Hire Daniel 🤝"
                       ),
 
                       /// Spacing
@@ -372,31 +423,76 @@ class _NotifyMeAppState extends State<NotifyMeApp> {
                         height: 10,
                       ),
 
-                      /// Share button
-                      ElevatedButton(
-                        onPressed: () async{
-                          print("launching url");
-                          // await launchUrl(_uri);
-                          await Share.share("A great app: ${Uri.base}");
-                        },
-                        style: ButtonStyle(
-                            backgroundColor: WidgetStateProperty.all(const Color(0xFFFC8955)),
-                            foregroundColor: WidgetStateProperty.all(const Color(0xFFFC8955)),
-                            overlayColor: WidgetStateProperty.all(const Color(0xFFFC8955)),
-                            shadowColor: WidgetStateProperty.all(const Color(0xFFFC8955)),
-                            elevation: WidgetStateProperty.all(0),
-                            shape: WidgetStateProperty.all(RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(5)
-                            ))
-                        ),
-                        child: const Text(
-                          "Share",// isShowDeviceBorders==false ? "Show Borders 📱": "Hide Borders 📱",
-                          style: TextStyle(
-                              fontFamily: "PT-Mono",
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white
+                      /// a row of share buttons
+                      ///     - assets/images/facebook.png
+                      //     - assets/images/instagram.png
+                      //     - assets/images/linkedin.png
+                      //     - assets/images/twitter.png
+                      Row(
+                        children: [
+
+                          /// Share to LinkedIn Button
+                          customElevationButton(
+                              onPressed: () async{
+                                print("launching url");
+
+                                // Uri uri=Uri.parse("https://www.linkedin.com/feed/?shareActive=true&text=Check out this cool app demo by @danieloyebolu - ${Uri.base}");
+                                Uri uri=Uri.parse("https://www.linkedin.com/feed/?shareActive=true&text="
+                                    "→ Check out this beautiful app by 👊Daniel Oyebolu 😍 - ${Uri.base}\n"
+                                    "→ It's financial markets application he coded using Flutter, Firebase and Rest API. 👨🏾‍💻\n"
+                                    "→ Sharing for reach! \n\n"
+                                    "→ P.S: Help Daniel get hired by sharing! 🥂\n"
+                                    "#innovator #helphimgethired #flutter #firebase #RESTAPI"
+                                );
+
+                                await launchUrl(uri);
+                                // await Share.share("A great app: ${Uri.base}");
+                              },
+                              color: const Color(0xFFFC8955),
+                              textOrImageString: "LinkedIn"
                           ),
-                        ),
+
+                          /// Spacing
+                          const SizedBox(
+                            width: 5,
+                          ),
+
+                          /// Share to FB Button
+                          customElevationButton(
+                              onPressed: () async{
+                                print("launching url");
+
+                                Uri uri=Uri.parse("https://www.facebook.com/sharer/sharer.php?u=${Uri.base}");
+
+                                await launchUrl(uri);
+                                // await Share.share("A great app: ${Uri.base}");
+                              },
+                              color: const Color(0xFFFC8955),
+                              textOrImageString: "FB"
+                          ),
+
+                          /// Spacing
+                          const SizedBox(
+                            width: 5,
+                          ),
+
+                          /// Share to Twitter text
+                          customElevationButton(
+                              onPressed: () async{
+                                print("launching url");
+
+                                Uri uri=Uri.parse("http://twitter.com/share?text=→ Check out this beautiful app by Daniel Oyebolu 😍\n"
+                                    "→ It's financial markets application he coded using Flutter, Firebase and Rest API. 👨🏾‍💻\n"
+                                    "→ P.S: Help Daniel get hired by sharing! 🥂\n\n&url=${Uri.base}&hashtags=innovator,HelpHimGetHired,flutter,firebase,RESTAPI");
+
+                                await launchUrl(uri);
+                                // await Share.share("A great app: ${Uri.base}");
+                              },
+                              color: const Color(0xFFFC8955),
+                              textOrImageString: "X"
+                          ),
+
+                        ],
                       ),
 
                       /// Spacing
@@ -404,49 +500,57 @@ class _NotifyMeAppState extends State<NotifyMeApp> {
                         height: 10,
                       ),
 
-                      /// Emperor color
-                      ElevatedButton(
-                        onPressed: null,
-                        onHover: null,
-                        style: ButtonStyle(
-                            backgroundColor: WidgetStateProperty.all(
-                                Color(0xFFF5F4FB)
-                                    .withRed(80)
-                                    .withBlue(80)
-                                    .withGreen(80)
-                            ),
-                            foregroundColor: WidgetStateProperty.all(
-                                Color(0xFFF5F4FB)
-                                    .withRed(80)
-                                    .withBlue(80)
-                                    .withGreen(80)
-                            ),
-                            overlayColor: WidgetStateProperty.all(
-                                Color(0xFFF5F4FB)
-                                    .withRed(80)
-                                    .withBlue(80)
-                                    .withGreen(80)
-                            ),
-                            shadowColor: WidgetStateProperty.all(
-                                Color(0xFFF5F4FB)
-                                    .withRed(80)
-                                    .withBlue(80)
-                                    .withGreen(80)
-                            ),
-                            elevation: WidgetStateProperty.all(0),
-                            shape: WidgetStateProperty.all(RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(5)
-                            ))
-                        ),
-                        child: const Text(
-                          "About Project 🔖",
-                          style: TextStyle(
-                              fontFamily: "PT-Mono",
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white
-                          ),
-                        ),
+                      customElevationButton(
+                          color: Color(0xFFF5F4FB)
+                              .withRed(80)
+                              .withBlue(80)
+                              .withGreen(80),
+                          textOrImageString: "About Project 🔖"
                       ),
+
+                      // /// Emperor color
+                      // ElevatedButton(
+                      //   onPressed: null,
+                      //   onHover: null,
+                      //   style: ButtonStyle(
+                      //       backgroundColor: WidgetStateProperty.all(
+                      //           Color(0xFFF5F4FB)
+                      //               .withRed(80)
+                      //               .withBlue(80)
+                      //               .withGreen(80)
+                      //       ),
+                      //       foregroundColor: WidgetStateProperty.all(
+                      //           Color(0xFFF5F4FB)
+                      //               .withRed(80)
+                      //               .withBlue(80)
+                      //               .withGreen(80)
+                      //       ),
+                      //       overlayColor: WidgetStateProperty.all(
+                      //           Color(0xFFF5F4FB)
+                      //               .withRed(80)
+                      //               .withBlue(80)
+                      //               .withGreen(80)
+                      //       ),
+                      //       shadowColor: WidgetStateProperty.all(
+                      //           Color(0xFFF5F4FB)
+                      //               .withRed(80)
+                      //               .withBlue(80)
+                      //               .withGreen(80)
+                      //       ),
+                      //       elevation: WidgetStateProperty.all(0),
+                      //       shape: WidgetStateProperty.all(RoundedRectangleBorder(
+                      //           borderRadius: BorderRadius.circular(5)
+                      //       ))
+                      //   ),
+                      //   child: const Text(
+                      //     "About Project 🔖",
+                      //     style: TextStyle(
+                      //         fontFamily: "PT-Mono",
+                      //         fontWeight: FontWeight.bold,
+                      //         color: Colors.white
+                      //     ),
+                      //   ),
+                      // ),
 
                       /// Spacing
                       const SizedBox(

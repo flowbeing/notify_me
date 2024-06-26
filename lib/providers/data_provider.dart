@@ -1,6 +1,8 @@
 import "dart:async";
 import 'dart:convert';
+import "dart:math";
 
+import "package:firebase_database/firebase_database.dart";
 import "package:flutter/material.dart";
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
@@ -8,9 +10,9 @@ import "package:flutter_dotenv/flutter_dotenv.dart";
 import 'package:shared_preferences/shared_preferences.dart';
 import "package:audioplayers/audioplayers.dart";
 
-
 import "../data/data.dart";
 import '../data/enums.dart';
+import "../helper_functions/helper_functions.dart";
 
 import "all_instruments_with_fetching_notification.dart";
 
@@ -18,11 +20,10 @@ enum UpdatePricesState { isIdle, isUpdating, isDoneUpdating }
 
 /// This class retrieves and forwards much needed data to the app..
 class DataProvider with ChangeNotifier {
-  
   /// this boolean signals whether the application is active or has been
   /// minimized
   // bool _isAppMinimized=false;
-  
+
   /// Data object
   Data? _data;
 
@@ -67,6 +68,22 @@ class DataProvider with ChangeNotifier {
   /// list of all forex instruments
   List<dynamic> _listOfAllInstruments = [];
 
+  /// CURRENTLY SELECTED GRID TILE INDEX
+  ///
+  /// initially selected grid tile is set to 3 for Filter.all since Filter.all
+  /// will be the first selection filter option
+  int _indexSelectedGridTile = 3;
+
+  /// a unit of the currently selected pair's price
+  // String _selectedCurrencyPairOneUnitOfPrice = "";
+
+  /// SELECTED GRID TILE INDEXES FOR EACH FILTER
+  // Map<Filter, dynamic> _indexSelectedGridTileMap = {
+  //   Filter.all: 3,
+  //   Filter.forex: null,
+  //   Filter.crypto: null
+  // };
+
   /// filter to apply to _allForexAndCryptoPrices
   Filter _instrumentFilter = Filter.all;
 
@@ -99,6 +116,13 @@ class DataProvider with ChangeNotifier {
     timer.cancel();
   });
 
+  /// timer to check if a user's device that's actively running updatePrices
+  /// method is done
+  Timer _isGlobalUserRunningUpdatePricesDoneTimer =
+      Timer.periodic(const Duration(microseconds: 0), (timer) {
+    timer.cancel();
+  });
+
   /// text that's been entered into the currency pair text form field -
   /// CurrencyPairTextFieldOrCreateAlertButton
   String? _enteredCurrencyPair;
@@ -119,7 +143,11 @@ class DataProvider with ChangeNotifier {
   /// hold an original or edited alert price for the currently selected
   /// currency
   String _originalOrEditedAlertPriceCurrencyPriceTextField = "";
-  
+
+  /// a unique id that helps locate a device's isAllowedTimeExpired value
+  /// in firebase
+  String deviceUniqueId="";
+
   /// updates the boolean that signals whether the app has been minimized
   // updateIsAppMinimised({required bool isAppMinimized}){
   //   _isAppMinimized=isAppMinimized;
@@ -132,32 +160,17 @@ class DataProvider with ChangeNotifier {
 
     /// initializing Data class
     _data = Data(isUseLocalStorage: isUseLocalStorage);
+
     /// creating files, folders or firebase realtime database references
     /// based on whether local or online storage should be used
     await _data!.createFilesAndFoldersOrFirebaseRefs();
     await _data!.updateAndSaveAllSymbolsData();
 
     /// used to obtain the app directory's URI when local storage is used
-    if (isUseLocalStorage){
+    if (isUseLocalStorage) {
       _data!.getUriAppDirectory();
     }
   }
-
-  /// CURRENTLY SELECTED GRID TILE INDEX
-  ///
-  /// initially selected grid tile is set to 3 for Filter.all since Filter.all
-  /// will be the first selection filter option
-  int _indexSelectedGridTile = 3;
-
-  /// a unit of the currently selected pair's price
-  String _selectedCurrencyPairOneUnitOfPrice = "";
-
-  /// SELECTED GRID TILE INDEXES FOR EACH FILTER
-  // Map<Filter, dynamic> _indexSelectedGridTileMap = {
-  //   Filter.all: 3,
-  //   Filter.forex: null,
-  //   Filter.crypto: null
-  // };
 
   /// returns a map of all instrument with all values set to "fetching"
   Future allSymbolsWithFetchingNotification() async {
@@ -173,8 +186,500 @@ class DataProvider with ChangeNotifier {
     return _countUpdatePricesCall;
   }
 
+  Future<Map<dynamic, dynamic>> _getIsCallUpdatePricesFully() async {
+
+    /// map to return
+    Map<dynamic, dynamic> mapIsCallUpdatePricesFully={};
+
+    /// IMPORTANT VARIABLES
+    /// number of devices that made it into getRealtimePricesAll method in
+    /// data.dart (including the ones that slipped in due to the fact that
+    /// two or more devices called updatePrices method at the same time and
+    /// received all the requirements needed to call getRealtimePricesAll to
+    /// update price data)..
+    List<dynamic> listOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll = [];
+    /// time since last price data update
+    int secondsSinceLastPricesDataUpdate=0;
+    /// map of the updated prices from the last update session
+    Map<dynamic, dynamic> lastUpdateSessionMap={};
+
+    /// REFERENCES
+    /// Firebase Database Reference:
+    ///
+    /// list of devices currently updating prices data within
+    /// getRealTimePriceAll method in data.dart
+    DatabaseReference
+        listOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllRef =
+        FirebaseDatabase.instance
+            .ref("listOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllRef");
+    /// last prices update session's data; includes:
+    /// 1. last update session time
+    /// 2. currency and their prices from the last update session
+    DatabaseReference lastUpdateSessionRef=FirebaseDatabase.instance.ref("dataUpdateSessionsRef");
+    /// isAllowedTimeExpired - allowedTimeActiveUpdateDevicesTrackingRef 
+    /// Database Reference:
+    DatabaseReference allowedTimeActiveUpdateDevicesTrackingRef=FirebaseDatabase.instance.ref("allowedTimeActiveUpdateDevicesTrackingMapRef");
+
+
+
+    /// SNAPSHOTS
+    /// Firebase Database Snapshot:
+    /// list of devices currently updating prices data within
+    /// getRealTimePriceAll method in data.dart
+    DataSnapshot listOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllSnap =
+        await listOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllRef.get();
+    /// dataUpdateSessions Snapshot:
+    DataSnapshot lastUpdateSessionSnap=await lastUpdateSessionRef.get();
+    /// allowedTimeActiveUpdateDevicesTracking
+    DataSnapshot allowedTimeActiveUpdateDevicesTrackingSnap=await allowedTimeActiveUpdateDevicesTrackingRef.get();
+
+
+
+    /// RETRIEVING AND DEFINING THE ABOVE "IMPORTANT VARIABLES"
+    /// checking whether the reference that holds the list of devices that are
+    /// currently updating prices data within getRealTimePriceAll method in
+    /// data.dart exists
+    ///
+    /// if it doesn't, create it
+    if (!listOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllSnap.exists) {
+      listOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllRef.set(jsonEncode([]));
+    } else {
+      /// --->
+      /// a list of devices that are currently updating prices data within
+      /// getRealTimePriceAll method
+      listOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll = jsonDecode(
+          jsonEncode(
+              listOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllSnap
+                  .value!
+          )
+      );
+    }
+    
+    /// if dataUpdateSessionsRef does not exist, create it
+    if (!lastUpdateSessionSnap.exists){
+      lastUpdateSessionRef.set(jsonEncode({}));
+    } else{
+      /// setting the prices map using the last price data update session
+      lastUpdateSessionMap=await jsonDecode(jsonDecode(jsonEncode(lastUpdateSessionSnap.value!)));
+
+      List listOfKeysInLastUpdateSessionMap=lastUpdateSessionMap.keys.toList();
+      DateTime? lastUpdateSessionTime;
+
+      /// setting the last prices' update session time if lastUpdateSessionMap
+      /// isn't empty and contains either one of the following keys:
+      /// 1. last_prices_data_update_time
+      /// 2. last_prices_data_update_time_INITIAL
+      if (listOfKeysInLastUpdateSessionMap.contains("last_prices_data_update_time")){
+        /// setting lastUpdateSessionTime
+        String lastUpdateSessionTimeString=lastUpdateSessionMap["last_prices_data_update_time"].keys.toList()[0];
+        String properLastUpdateSessionTimeString=retrieveDatetimeStringFromCleanedDateTimeString(
+            cleanedDateTimeString: lastUpdateSessionTimeString
+        );
+        lastUpdateSessionTime=DateTime.parse(properLastUpdateSessionTimeString);
+      } else if (listOfKeysInLastUpdateSessionMap.contains("last_prices_data_update_time_initial")){
+        /// setting lastUpdateSessionTime
+        String lastUpdateSessionTimeString=lastUpdateSessionMap["last_prices_data_update_time_initial"].keys.toList()[0];
+        String properLastUpdateSessionTimeString=retrieveDatetimeStringFromCleanedDateTimeString(
+            cleanedDateTimeString: lastUpdateSessionTimeString
+        );
+        lastUpdateSessionTime=DateTime.parse(properLastUpdateSessionTimeString);
+      }
+
+      /// if lastUpdateSessionTime exists, calculate how long it's been since
+      /// the last price update session
+      if (lastUpdateSessionTime!=null){
+        DateTime now=DateTime.now();
+        secondsSinceLastPricesDataUpdate=now.difference(lastUpdateSessionTime).inSeconds;
+      }
+    }
+    
+    /// if allowedTimeActiveUpdateDevicesTrackingRef does not exist, create it
+    if(!allowedTimeActiveUpdateDevicesTrackingSnap.exists){
+      allowedTimeActiveUpdateDevicesTrackingRef.set(jsonEncode({}));
+    }
+
+    /// DEFINING WHETHER THIS DEVICE SHOULD PROCEED TO GETREALTIMEPRICEALL
+    /// WITH THE ABILITY TO FETCH PRICE DATA FROM THE RELEVANT FINANCIAL
+    /// MARKETS DATA PROVIDER..
+    /// determining whether the current device should proceed to calling
+    /// updateRealtimePriceAll method within data.dart with the ability to
+    /// update prices
+    ///
+    /// if no price data exists i.e if the app's running for the first time
+    /// for all devices, allow this device to proceed to fully calling
+    /// getRealtimePriceAll i.e with the ability to fetch new price data from
+    /// the relevant financial markets data provider..
+    ///
+    /// Note: if lastUpdateSessionMap is empty, secondsSinceLastPricesDataUpdate
+    /// will also be zero. Hence, it's unnecessary to include it in the condition
+    /// below
+    if (lastUpdateSessionMap.isEmpty){
+      mapIsCallUpdatePricesFully= {
+        "allowDeviceToProceedWithinUpdatePricesMethod": true,
+        "allowDeviceToTryAndFetchDataFromFinancialMarketsDataProviderWithinGetRealTimePriceAll": true
+      };
+    }
+    /// if a full minute has not been registered since the last price data update
+    /// session, allow this device to proceed to calling getRealtimePriceAll, but
+    /// do not allow it to fetch new price data from the relevant financial
+    /// markets data provider..
+    else if (secondsSinceLastPricesDataUpdate<=60 && lastUpdateSessionMap.isNotEmpty){
+      mapIsCallUpdatePricesFully={
+        "allowDeviceToProceedWithinUpdatePricesMethod": true,
+        "allowDeviceToTryAndFetchDataFromFinancialMarketsDataProviderWithinGetRealTimePriceAll": false
+      };
+    }
+    /// if it's been more than a minute since the last price data update and no
+    /// device has retrieved the latest price data from the relevant financial
+    /// market provider, allow this device to do just that..
+    ///
+    /// Note: The conditions below may be true for two or more devices. That
+    /// issue will be handled within getRealtimePriceall method in data.dart
+    else if (secondsSinceLastPricesDataUpdate>60
+        &&listOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll.isEmpty
+    ){
+      mapIsCallUpdatePricesFully={
+        "allowDeviceToProceedWithinUpdatePricesMethod": true,
+        "allowDeviceToTryAndFetchDataFromFinancialMarketsDataProviderWithinGetRealTimePriceAll": true
+      };
+    }
+    /// STOPPED HERE
+    else if (secondsSinceLastPricesDataUpdate>60
+        &&listOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll.isNotEmpty
+    ){
+
+      /// the number of devices that slipped into getRealtimePriceAll method
+      /// in data.dart to retrieve the latest price data from the relevant
+      /// financial market data provider
+      int numberOfDevicesThatSlippedToUpdatePricesDataWithinGetRealTimePriceAll=listOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll.length;
+
+      /// checking if any of the above described devices is still actively
+      /// retrieving the latest price data from the relevant financial market
+      /// data provider after calling updatePrices, and within an acceptable time
+      int indexActiveUpdateDevice=0;
+      for (var activeUpdateDevice in listOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll){
+
+        /// checking if the current active update device is leading i.e if it's
+        /// the one currently fetching the latest price data from the relevant
+        /// financial market data provider
+        /// ---> set in getRealtimePriceAll
+        bool isCurrentDeviceLeading=activeUpdateDevice['isLeading'];
+
+        /// if the current active update device is leading, check whether it has
+        /// exceeded the maximum time allowed for fetching the latest price data
+        /// from the relevant financial market data provider - 10 seconds.
+        ///
+        /// if it has,
+        /// 1. and if it's the only one in the list of devices updating prices
+        /// data within getRealTimePriceAll, perform the relevant specified
+        /// actions below for when there's only one active update device in the
+        /// list of devices updating prices data within getRealTimePriceAll
+        ///
+        /// 2. delete all active devices from the list if it's the last device in
+        /// the list of devices updating prices data within getRealTimePriceAll,
+        /// and allow this device to call updatePrices fully (i.e with permission
+        /// to fetch the latest price data from the relevant financial market
+        /// data provider..
+        /// Note:  1 and 2 above will leave a little room for other devices
+        ///        running this method at the same time, and that find that no
+        ///        active update device exists while its been more than a minute
+        ///        since the last update to slip to getRealtimePriceAll
+        ///        method with the ability to fetch latest price data from the
+        ///        relevant financial market data provider.. --->
+        ///
+        /// 3. only allow this device to call updatePrices partially (i.e
+        /// without the permission to fetch the latest price data from the
+        /// relevant financial market data provider, if the active device:
+        ///   a. is leading
+        ///   b. has exceeded the maximum allowed update time
+        ///   c. it's not the last active device in the list of devices updating
+        ///      prices data within getRealTimePriceAll.
+        if (isCurrentDeviceLeading){
+          /// ---> active update device's id. set in getRealtimePriceAll
+          String activeDeviceUniqueId = activeUpdateDevice['deviceUniqueId'];
+
+          /// ---> check again if this device is the only one trying to update
+          ///      prices within getRealtimePriceAll
+          /// ---> Time device started updating prices within getRealtimePriceAll
+          /// ---> update in getRealtimePriceAll to the time a new device starts
+          ///      leading
+          ///      
+          DateTime timeDeviceCalledUpdatePricesOrStartedLeadingInGetRealtimePriceAll=
+          DateTime.parse(
+              retrieveDatetimeStringFromCleanedDateTimeString(
+                  cleanedDateTimeString: activeUpdateDevice["timeDeviceCalledUpdatePricesOrStartedLeadingInGetRealtimePriceAll"]
+              )
+          );
+
+          /// obtaining how long it's been since the active device called
+          /// updatePrices method in this module and moved to retrieve the latest
+          /// price data from the relevant financial market provider..
+          ///
+          /// this time difference should not exceed 10 seconds as most devices
+          /// with fast internet connection will complete the task within 6 seconds
+          DateTime now=DateTime.now();
+          int diffNowAndTimeDeviceCalledUpdatingPricesOrStartedLeadingInGetRealtimePriceAll=
+              now.difference(
+                  timeDeviceCalledUpdatePricesOrStartedLeadingInGetRealtimePriceAll
+              ).inSeconds;
+
+          /// ---> set in getRealtimePriceAll
+          bool isFinishedUpdatingPrices=activeUpdateDevice['isFinishedUpdatingPrices'];
+
+          /// DETERMINING WHAT HAPPENS..
+          /// 1a. if only one active update device exists and it's finished updating
+          /// prices:
+          ///   - reset the list of devices that are updating prices data within
+          ///     GetRealTimePriceAll
+          ///   - allow this device to call updatePrices fully (i.e with the
+          ///     permission to try and fetch price data from the relevant
+          ///     financial markets data provider in the event that it's been
+          ///     more than another 60 seconds since the last price data update)
+          if (
+            numberOfDevicesThatSlippedToUpdatePricesDataWithinGetRealTimePriceAll==1
+                &&isFinishedUpdatingPrices==true
+          ){
+            /// resetting listOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll
+            /// in firebase
+            listOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllRef.set(jsonEncode([]));
+            /// setting mapIsCallUpdatePricesFully
+            mapIsCallUpdatePricesFully={
+              "allowDeviceToProceedWithinUpdatePricesMethod": true,
+              /// this will allow this device to check whether it's been more
+              /// than one minute since the last price data update again..
+              "allowDeviceToTryAndFetchDataFromFinancialMarketsDataProviderWithinGetRealTimePriceAll": true
+            };
+          }
+          /// 1.b if only one active update device exists, has not finished
+          /// updating prices, and has exceeded the maximum allowed update time,
+          /// delete it from the list of devices currently updating prices data
+          /// within getRealTimePriceAll and allow this device to call
+          /// updatePrices fully (i.e with the permission to fetch price
+          /// data from the relevant financial markets data provider)
+          else if (numberOfDevicesThatSlippedToUpdatePricesDataWithinGetRealTimePriceAll==1
+              &&isFinishedUpdatingPrices==false
+              &&diffNowAndTimeDeviceCalledUpdatingPricesOrStartedLeadingInGetRealtimePriceAll>10
+          ){
+            /// emptying the list of devices currently updating prices data
+            /// within getRealTimePriceAll
+            /// ---> async check 'isAllowedTimeExpired' periodically, and stop the
+            ///      active update device from continuing running
+            ///      getRealtimeUpdatePrices if it comes back online
+            listOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllRef.set(jsonEncode([]));
+
+            /// signalling to the active update device through firebase that
+            /// it's exceeded the max allowed update time so that it can self-stop it's
+            /// price update operation
+            updateIsAllowedTimeExpiredMapInFirebase(
+                allowedTimeActiveUpdateDevicesTrackingRef: allowedTimeActiveUpdateDevicesTrackingRef,
+                deviceUniqueId: activeDeviceUniqueId,
+            );
+
+            /// ---> an extra cost center, since the last device failed to update
+            ///      prices data fully but has used some or most of the minutely
+            ///      API credit. Howbeit, better than having multiple devices
+            ///      trying to fetch prices data directly from the relevant
+            ///      financial markets data provider
+            mapIsCallUpdatePricesFully={
+              "allowDeviceToProceedWithinUpdatePricesMethod": true,
+              /// this will allow this device to check whether it's been more
+              /// than one minute since the last price data update..
+              "allowDeviceToTryAndFetchDataFromFinancialMarketsDataProviderWithinGetRealTimePriceAll": true
+            };
+          }
+          /// if only one active update device exists but it's not finished
+          /// updating prices and has not exceeded the maximum allowed update
+          /// time, all the current device to call updatePrices partially
+          /// (i.e without the permission to fetch price data from the relevant
+          /// financial markets data provider)
+          else if(numberOfDevicesThatSlippedToUpdatePricesDataWithinGetRealTimePriceAll==1
+              &&isFinishedUpdatingPrices==false
+              &&diffNowAndTimeDeviceCalledUpdatingPricesOrStartedLeadingInGetRealtimePriceAll<=10){
+            mapIsCallUpdatePricesFully={
+              "allowDeviceToProceedWithinUpdatePricesMethod": true,
+              /// this will allow this device to check whether it's been more
+              /// than one minute since the last price data update again..
+              /// ---> those without the ability to fetch prices data from the
+              ///      relevant financial markets data provider should be served
+              ///      the previously saved prices data
+              "allowDeviceToTryAndFetchDataFromFinancialMarketsDataProviderWithinGetRealTimePriceAll": false
+            };
+          }
+          /// if more than one active update device exists and the current active
+          /// device, and prices prices data have finished updating,
+          ///
+          /// clear the list of active
+          /// update devices in firebase, and allow this device to call
+          /// updatePrices fully
+          else if (numberOfDevicesThatSlippedToUpdatePricesDataWithinGetRealTimePriceAll>1
+              &&isFinishedUpdatingPrices==true){
+
+            /// if the active update device is the last in the list of active
+            /// update devices, clear the list of active update devices in
+            /// firebase
+            if (indexActiveUpdateDevice==listOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll.length-1){
+              /// clearing the list of active update devices in firebase..
+              listOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllRef.set(jsonEncode([]));
+            } else if (indexActiveUpdateDevice!=listOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll.length-1){
+              /// DO NOTHING
+              /// ---> Unserviced devices will stop and skip their current
+              ///      getRealtimePriceAll process and re-run getRealtimePriceAll
+              ///      without the ability to update prices. Hence, allowing them
+              ///      to fetch the latest update that's been provided by their peer
+            }
+
+            mapIsCallUpdatePricesFully={
+              "allowDeviceToProceedWithinUpdatePricesMethod": true,
+              /// this will allow this device to check whether it's been more
+              /// than one minute since the last price data update..
+              ///
+              /// 'true" here might not really be necessary though
+              "allowDeviceToTryAndFetchDataFromFinancialMarketsDataProviderWithinGetRealTimePriceAll": true
+            };
+          }
+          /// if more than one active update device exists and the current active
+          /// device, is the last in the list of active update devices,
+          /// and has not finished fetching prices data after the maximum allowed
+          /// update time, clear the list of active update devices in firebase,
+          /// signal to th active update device that it has exceeded the max
+          /// allowed update time, and allow this device to call updatePrices
+          /// fully
+          /// ????????????↓↓↓ --->  implement the opposite in getRealtimePriceAll with -
+          /// &&indexActiveUpdateDevice!=listOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll.length-1
+          else if (numberOfDevicesThatSlippedToUpdatePricesDataWithinGetRealTimePriceAll>1
+              &&indexActiveUpdateDevice==listOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll.length-1
+              &&isFinishedUpdatingPrices==false
+              &&diffNowAndTimeDeviceCalledUpdatingPricesOrStartedLeadingInGetRealtimePriceAll>10
+          ){
+            /// clearing the list of active update devices in firebase..
+            listOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllRef.set(jsonEncode([]));
+
+            /// signalling to the active update device through firebase that
+            /// it's exceeded the max allowed update time so that it can
+            /// self-stop it's price update operation
+            updateIsAllowedTimeExpiredMapInFirebase(
+              allowedTimeActiveUpdateDevicesTrackingRef: allowedTimeActiveUpdateDevicesTrackingRef,
+              deviceUniqueId: activeDeviceUniqueId,
+            );
+            /// setting mapIsCallUpdatePricesFully
+            mapIsCallUpdatePricesFully={
+              "allowDeviceToProceedWithinUpdatePricesMethod": true,
+              /// this will allow this device to check it's been more
+              /// than one minute since the last price data update..
+              "allowDeviceToTryAndFetchDataFromFinancialMarketsDataProviderWithinGetRealTimePriceAll": true
+            };
+          }
+          /// if more than one active update device exists and the current active
+          /// device is or is not the last active update device in the list of
+          /// active update devices, and has not finished fetching prices data
+          /// but is still running within the maximum allowed update time,
+          /// allow this device to call updatePrices partially
+          ///
+          /// &&indexActiveUpdateDevice==listOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll.length-1
+          /// || indexActiveUpdateDevice!=listOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll.length-1
+          /// not necessary to include in the conditions below.
+          else if (numberOfDevicesThatSlippedToUpdatePricesDataWithinGetRealTimePriceAll>1
+              &&isFinishedUpdatingPrices==false
+              &&diffNowAndTimeDeviceCalledUpdatingPricesOrStartedLeadingInGetRealtimePriceAll<=10
+          ){
+            /// setting mapIsCallUpdatePricesFully
+            mapIsCallUpdatePricesFully={
+              "allowDeviceToProceedWithinUpdatePricesMethod": true,
+              "allowDeviceToTryAndFetchDataFromFinancialMarketsDataProviderWithinGetRealTimePriceAll": false
+            };
+          }
+
+          /// if the active device has taken too much time to update price data,
+          /// signal to it to stop even if it had a connectivity issue and got
+          /// connected again to ensure that other devices won't have to wait too
+          /// long to start getting the latest prices
+          /// ---> async check 'isAllowedTimeExpired' periodically, and stop the
+          ///      active update device from continuing running
+          ///      getRealtimeUpdatePrices if it comes back online
+          // if (diffNowAndTimeDeviceCalledUpdatingPricesOrStartedLeadingInGetRealtimePriceAll>10 && isFinishedUpdatingPrices==false){
+          //   listOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll[indexActiveUpdateDevice]['isAllowedTimeExpired']=true;
+          // }
+
+          indexActiveUpdateDevice+=1;
+        }
+
+
+      }
+
+    }
+
+    return mapIsCallUpdatePricesFully;
+
+
+  }
+
   /// This method retrieves the prices of forex and crypto pairs periodically
   Future updatePrices() async {
+    // DateTime startTimeUpdatePrices = DateTime.now();
+
+    // // /// if any device that's currently running this app is executing this
+    // // /// method fully, keep other devices from executing it until that
+    // // /// device is done..
+    // // /// IS ANY DEVICE FULLY RUNNING THE UPDATE PRICES METHOD  'DatabaseReference'
+    // // ///
+    // // /// kind of like a global "_isUpdatingPrices" variable for all devices
+    // // DatabaseReference isAnyDeviceFullyRunningUpdatePricesMethodRef =
+    // // FirebaseDatabase.instance.ref("isAnyDeviceFullyRunningUpdatePricesMethod");
+    // //
+    // // /// IS ANY DEVICE FULLY RUNNING THE UPDATE PRICES METHOD  'DataSnapshot'
+    // // DataSnapshot lastUpdatePricesFunctionCallTimeSnap = await isAnyDeviceFullyRunningUpdatePricesMethodRef.get();
+    // //
+    // // /// if the ref that signals whether a user's device is currently running
+    // // /// this method has not been created, create it.
+    // // if (lastUpdatePricesFunctionCallTimeSnap.exists == false) {
+    // //   print('setting isAnyDeviceFullyRunningUpdatePricesMethod');
+    // //
+    // //   /// creating isAnyDeviceFullyRunningUpdatePricesMethodRef to relect that
+    // //   /// a user is currently running updatePrices method
+    // //   await isAnyDeviceFullyRunningUpdatePricesMethodRef.set({
+    // //     "isUpdatePricesMethodRunning": jsonEncode(true),
+    // //     "lastAccessTime": cleanDateTimeAndReturnString(dateTime: DateTime.now())
+    // //   });
+    // // } else if (lastUpdatePricesFunctionCallTimeSnap.exists == true) {
+    // //   /// obtaining bool that signals whether this method has been called by
+    // //   /// a user's device
+    // //   Map isAnyDeviceFullyRunningUpdatePricesMethodMap=jsonDecode(jsonEncode((lastUpdatePricesFunctionCallTimeSnap.value!)));
+    // //   bool isAnyDeviceFullyRunningUpdatePricesMethod=jsonDecode(isAnyDeviceFullyRunningUpdatePricesMethodMap["isUpdatePricesMethodRunning"]);
+    // //
+    // //   /// last time updatePrices method was called globally
+    // //   String lastGlobalAccessTimeUpdatePriceString=jsonDecode(isAnyDeviceFullyRunningUpdatePricesMethodMap["lastAccessTime"]);
+    // //   DateTime lastGlobalAccessTimeUpdatePricesMethod=DateTime.parse(
+    // //       retrieveDatetimeStringFromCleanedDateTimeString(cleanedDateTimeString: lastGlobalAccessTimeUpdatePriceString)
+    // //   );
+    // //   /// difference between now and the last time updatePrices was called
+    // //   /// globally
+    // //   int diffNowAndLastGlobalAccessTimeUpdatePricesMethod=DateTime.now().difference(lastGlobalAccessTimeUpdatePricesMethod).inSeconds;
+    // //   /// if a user's device is currently running this method, create a timer
+    // //   /// that tracks whether that user's device is done. When the user's device
+    // //   /// is done, run this method again.
+    // //   ///
+    // //   /// helps prevent multiple devices from calling the financial markets API
+    // //   /// all at once. Hence conserving API credits
+    //
+    //
+    //   if (isAnyDeviceFullyRunningUpdatePricesMethod==true || diffNowAndLastGlobalAccessTimeUpdatePricesMethod<=2){
+    //     _isGlobalUserRunningUpdatePricesDoneTimer.cancel();
+    //     _isGlobalUserRunningUpdatePricesDoneTimer=Timer.periodic(const Duration(seconds: 5), (timer){
+    //       updatePrices();
+    //     });
+    //     return;
+    //   } else{
+    //     _isGlobalUserRunningUpdatePricesDoneTimer.cancel();
+    //   }
+    // }
+    //
+    // /// if no user is currently executing this method globally, set that this
+    // /// device's user is currently executing it..
+    // isAnyDeviceFullyRunningUpdatePricesMethodRef.set(jsonEncode(true));
+
+    /// obtaining whether this device should proceed to getRealtimePriceAll
+    // Map<dynamic, dynamic> isCallUpdatePricesFullyMap=await _getIsCallUpdatePricesFully();
+    // print("IsCallUpdatePricesFullyMap: ${isCallUpdatePricesFullyMap}");
 
     /// if...:
     /// 1. the updatePrices timer (relevantTimer) has finished counting down the
@@ -184,12 +689,9 @@ class DataProvider with ChangeNotifier {
     ///
     /// Also, the conditions below prevent this method from being called each
     /// time the user selects a new device..
-    if (
-        (!_relevantTimer.isActive && _isUpdatingPrices==false)
-            || _countUpdatePricesCall==0
-    ){
+    if ((!_relevantTimer.isActive && _isUpdatingPrices == false) ||
+        _countUpdatePricesCall == 0) {
       print("called updatePrices");
-
 
       /// signalling that updatePrices method in data provider
       /// is currently running
@@ -226,7 +728,8 @@ class DataProvider with ChangeNotifier {
       print("Fetching all instruments' prices every 1 minute (approx)...");
 
       _countUpdatePricesCall += 1;
-      print("Called UpdatePrices Method (Provider) $_countUpdatePricesCall times");
+      print(
+          "Called UpdatePrices Method (Provider) $_countUpdatePricesCall times");
 
       /// retrieving all prices..
       /// if successful, a map of all prices will be returned. Otherwise, an empty
@@ -316,7 +819,12 @@ class DataProvider with ChangeNotifier {
         notifyListeners();
       }
     }
-      
+
+    // DateTime finishTimeUpdatePrices = DateTime.now();
+
+    // Duration durationUpdatePrice =
+    //     finishTimeUpdatePrices.difference(startTimeUpdatePrices);
+    // print("durationUpdatePrice: $durationUpdatePrice");
   }
 
   /// a method to retrieve the value of _isUpdatingPrices
@@ -338,7 +846,6 @@ class DataProvider with ChangeNotifier {
   /// get instruments - can be all, forex, or crypto
   Map<dynamic, dynamic> getInstruments(
       {
-
       /// allows for retrieving all instrument's prices' data
       ///
       /// especially useful when listing existing price alerts
@@ -915,7 +1422,6 @@ class DataProvider with ChangeNotifier {
   /// selected currency pair...
   dynamic subtractOrAddOneOrFiveUnitsFromAlertPrice(
       {
-
       /// to determine the actual unit price of the entered alert price
       required String currentPairPriceStructure,
 
@@ -965,7 +1471,7 @@ class DataProvider with ChangeNotifier {
       /// 2. countOfNumAfterDot...
       /// and exit this method
       if (alertOperationType == AlertOperationType.calcUnitPrice) {
-        _selectedCurrencyPairOneUnitOfPrice = aUnitOfTheAlertPrice;
+        // _selectedCurrencyPairOneUnitOfPrice = aUnitOfTheAlertPrice;
         return {
           "aUnitOfTheAlertPrice": aUnitOfTheAlertPrice,
           "countOfNumAfterDot": countOfNumAfterDot
@@ -1012,7 +1518,8 @@ class DataProvider with ChangeNotifier {
   }
 
   /// this helps retrieve all locally saved price alerts
-  Future<Map<dynamic, dynamic>> retrievePriceAlertsFromUserDeviceStorage() async {
+  Future<Map<dynamic, dynamic>>
+      retrievePriceAlertsFromUserDeviceStorage() async {
     // <Map<String, List<dynamic>>>
 
     /// retrieving the map of all alerts from the user's local storage
@@ -1033,47 +1540,46 @@ class DataProvider with ChangeNotifier {
   ScaffoldFeatureController showNotification({
     required BuildContext context,
     required String message,
-  }){
-
+  }) {
     /// media query data
-    MediaQueryData mediaQuery=MediaQuery.of(context);
+    MediaQueryData mediaQuery = MediaQuery.of(context);
 
     /// device's height
     double deviceHeight = mediaQuery.size.height;
 
     /// SafeArea's height
-    double paddingTop=mediaQuery.padding.top;
-    double paddingBottom=mediaQuery.padding.bottom;
-    double safeAreaHeight=deviceHeight-paddingTop-paddingBottom;
+    double paddingTop = mediaQuery.padding.top;
+    double paddingBottom = mediaQuery.padding.bottom;
+    double safeAreaHeight = deviceHeight - paddingTop - paddingBottom;
 
     /// device's width
-    double deviceWidth=mediaQuery.size.width;
+    double deviceWidth = mediaQuery.size.width;
 
     /// snackbar's height
     ///
     /// same as the height of the CreateNewAlert widget
-    double heightSnackBar=0.05833333333*safeAreaHeight;
+    double heightSnackBar = 0.05833333333 * safeAreaHeight;
 
     /// snack bar's margin left and right
-    double snackBarPaddingLeftAndRight=0.02325581395 * deviceWidth;
+    double snackBarPaddingLeftAndRight = 0.02325581395 * deviceWidth;
 
     /// snack bar's font size
-    double fontSizeMessage=0.01716738197*deviceHeight;
+    double fontSizeMessage = 0.01716738197 * deviceHeight;
 
     /// snack bar's padding bottom
-    double paddingBottomSnackBar=0.847639485*deviceHeight;
+    double paddingBottomSnackBar = 0.847639485 * deviceHeight;
 
     /// hiding all visible snack bars
     ScaffoldMessenger.of(context).clearSnackBars();
 
     /// snackbar
-    SnackBar snackBar=SnackBar(
+    SnackBar snackBar = SnackBar(
         // backgroundColor: Colors.black,
         margin: EdgeInsets.only(
-            left: snackBarPaddingLeftAndRight,
-            right: snackBarPaddingLeftAndRight,
-            bottom: safeAreaHeight-heightSnackBar,
-            // top: 0
+          left: snackBarPaddingLeftAndRight,
+          right: snackBarPaddingLeftAndRight,
+          bottom: safeAreaHeight - heightSnackBar,
+          // top: 0
         ),
         padding: EdgeInsets.zero,
         dismissDirection: DismissDirection.none,
@@ -1090,8 +1596,7 @@ class DataProvider with ChangeNotifier {
             style: TextStyle(
                 fontFamily: "PT-Mono",
                 fontSize: fontSizeMessage,
-                color: Colors.white
-            ),
+                color: Colors.white),
             textAlign: TextAlign.center,
           ),
         ));
@@ -1102,11 +1607,11 @@ class DataProvider with ChangeNotifier {
 
   /// adds the currently displayed alert price to the map of all alerts, if
   /// it has not already been added..
-  void addAlertToMapOfAllAlerts({
-    /// used with scaffold messenger to notify the user whenever an alert
-    /// cannot be added to the list / map of all alerts..
-    required BuildContext context
-  }) {
+  void addAlertToMapOfAllAlerts(
+      {
+      /// used with scaffold messenger to notify the user whenever an alert
+      /// cannot be added to the list / map of all alerts..
+      required BuildContext context}) {
     /// currently selected currency pair
     String currentlySelectedCurrencyPair = getCurrentlySelectedInstrument();
     String currentlyDisplayedAlertPrice =
@@ -1187,6 +1692,7 @@ class DataProvider with ChangeNotifier {
       _mapOfAllAlerts[currentlySelectedCurrencyPair]!.insert(keyCurrentAlert, {
         "price": currentlyDisplayedAlertPrice,
         "isMuted": false,
+
         /// signals whether the current price of the instrument is equal to
         /// its alert price
         "isFulfilledAlertPrice": false,
@@ -1203,10 +1709,9 @@ class DataProvider with ChangeNotifier {
     /// ... remove the currency pair from the map of all alerts and notify the
     /// user that the current price of the alert instrument cannot be added to
     /// the list
-    else if (
-      currentlySelectedCurrencyPairPrice==currentlyDisplayedAlertPrice
-          && listOfAlertsDataCurrentCurrencyPair.isEmpty
-    ) {
+    else if (currentlySelectedCurrencyPairPrice ==
+            currentlyDisplayedAlertPrice &&
+        listOfAlertsDataCurrentCurrencyPair.isEmpty) {
       /// removing the currency pair from the map of all alerts
       _mapOfAllAlerts.remove(currentlySelectedCurrencyPair);
 
@@ -1214,33 +1719,27 @@ class DataProvider with ChangeNotifier {
       /// cannot be added to the list (or map) of all alerts, which helps avoid
       /// alert sound chaos
       showNotification(
-          context: context,
-          message: "Can't add pair's current price!"
-      );
-
+          context: context, message: "Can't add pair's current price!");
     }
+
     /// ... if:
     /// 1. the current price of the alert instrument is the same as the alert
     ///    price &&
     /// 2. at least one price alert exists for the currently selected pair
     /// ... only notify the user that the
-    else if (currentlySelectedCurrencyPairPrice==currentlyDisplayedAlertPrice){
-
+    else if (currentlySelectedCurrencyPairPrice ==
+        currentlyDisplayedAlertPrice) {
       /// notifying user visually that the current price of the alert instrument
       /// cannot be added to the list (or map) of all alerts, which helps avoid
       /// alert sound chaos
       showNotification(
-          context: context,
-          message: "Can't add pair's current price!"
-      );
+          context: context, message: "Can't add pair's current price!");
     }
+
     /// if the alert already exists, notify the user
-    else if (isAlertAlreadyExist){
+    else if (isAlertAlreadyExist) {
       /// notifying the user that the alert already exists
-      showNotification(
-          context: context,
-          message: "The alert already exists!"
-      );
+      showNotification(context: context, message: "The alert already exists!");
     }
 
     /// save all price alerts locally asynchronously
@@ -1270,7 +1769,8 @@ class DataProvider with ChangeNotifier {
       if (_isPlayingAlertSound == false) {
         _timerAudioPlayer =
             Timer.periodic(const Duration(milliseconds: 3000), (timer) async {
-          await _audioPlayer.play(AssetSource("/sounds/notification_sound.mp3"));
+          await _audioPlayer
+              .play(AssetSource("/sounds/notification_sound.mp3"));
         });
       }
 
@@ -1321,7 +1821,9 @@ class DataProvider with ChangeNotifier {
 
     /// if at least one alert exists for the specified...
     if (isCurrencyPairInMapOfAllAlerts) {
-      List<dynamic>? listOfAlertsSpecifiedPair = [..._mapOfAllAlerts[currencyPair]];
+      List<dynamic>? listOfAlertsSpecifiedPair = [
+        ..._mapOfAllAlerts[currencyPair]
+      ];
 
       print("here2");
 
@@ -1434,7 +1936,6 @@ class DataProvider with ChangeNotifier {
   /// If option 4 is true, this method will return a bool
   Future muteUnMuteAllOrCalcIsAllMutedOrIsPriceAlertFulfilled(
       {
-
       /// must be either mute or un-mute
       required AlertOperationType alertOperationType}) async {
     /// bool that signals whether all price alert have been muted
@@ -1485,7 +1986,6 @@ class DataProvider with ChangeNotifier {
           /// set isMuted to true for the current price alert
           _mapOfAllAlerts[currencyPair][indexAlertCurrentPair]['isMuted'] =
               true;
-
         } else if (alertOperationType == AlertOperationType.unMute) {
           /// if the current price alert to be un-muted has been fulfilled and
           /// is currently muted...
@@ -1547,7 +2047,6 @@ class DataProvider with ChangeNotifier {
           // else if (currencyPair!=currentAlertPrice){
           //   _mapOfAllAlerts[currencyPair][indexAlertCurrentPair]['isFulfilledAlertPrice']=false;
           // }
-
         }
 
         /// increment the currency pair's price alert index
