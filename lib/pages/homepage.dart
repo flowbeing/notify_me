@@ -2525,7 +2525,8 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
         dataProvider!.getIsFirstValueInMapOfAllInstrumentsContainsFetching();
 
     print(
-        "textColor: didChangeDependencies: $textColor, int: ${textColor!.value}");
+        "textColor: didChangeDependencies: $textColor, int: ${textColor!.value}"
+    );
     int colorGreyInt = 4288585374;
 
     /// if instruments' prices have been fetched for the first time,

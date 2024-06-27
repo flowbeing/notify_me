@@ -162,6 +162,19 @@ class Data {
   DatabaseReference otherErrorLogRef =
       FirebaseDatabase.instance.ref("otherErrorLogRef");
 
+  /// IMPORTANT VARIABLES THAT ARE USED WHEN DEVICES HAVE THE PERMISSION TO
+  /// FETCH REALTIME PRICE DATA FROM A RELEVANT FINANCIAL MARKET DATA PROVIDER
+  /// devices that made it into getRealtimePricesAll method in
+  /// data.dart (including the ones that slipped in due to the fact that
+  /// two or more devices called updatePrices method at the same time and
+  /// received all the requirements needed to call getRealtimePricesAll to
+  /// update price data)..
+  Map mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll={};
+  /// this map holds data that stipulates whether active update devices should
+  /// process or stop trying to fetch price data from the relevant financial
+  /// market data provider
+  Map mapOfAllowedTimeActiveUpdateDevicesTracking={};
+
   /// This method creates the app's files and folders
   Future createFilesAndFoldersOrFirebaseRefs() async {
     // print("allSymbolsDataRef: ${allSymbolsDataRef}");
@@ -1089,13 +1102,122 @@ class Data {
     return mapOfSymbolsPreInitialPriceFetch;
   }
 
+
+  _processActiveUpdateDevices() async{
+
+    /// DATA REFERENCES
+    /// map of devices currently updating prices data within
+    /// getRealTimePriceAll method in data.dart
+    DatabaseReference
+    mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllRef =
+    FirebaseDatabase.instance
+        .ref("mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllRef");
+    /// isAllowedTimeExpired - allowedTimeActiveUpdateDevicesTrackingRef
+    /// Database Reference:
+    DatabaseReference allowedTimeActiveUpdateDevicesTrackingRef=FirebaseDatabase.instance.ref("allowedTimeActiveUpdateDevicesTrackingMapRef");
+
+
+
+    /// DATA SNAPSHOTS
+    /// Firebase Database Snapshot:
+    /// map of devices currently updating prices data within
+    /// getRealTimePriceAll method in data.dart
+    DataSnapshot? mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllSnap;
+    /// allowedTimeActiveUpdateDevicesTracking
+    DataSnapshot? allowedTimeActiveUpdateDevicesTrackingSnap;
+
+    /// defining the above snapshots
+    try{
+      mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllSnap =
+          await mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllRef.get();
+      allowedTimeActiveUpdateDevicesTrackingSnap=await allowedTimeActiveUpdateDevicesTrackingRef.get();
+    }catch(error){
+      print("an error occured while fetching snapshots");
+    }
+
+    /// checking whether the reference that holds the map of devices that are
+    /// currently updating prices data within getRealTimePriceAll method in
+    /// data.dart exists
+    ///
+    /// if it doesn't, create it
+    // if (!listOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllSnap.exists) {
+    if (!mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllSnap!.exists) {
+      // listOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllRef.set(jsonEncode([]));
+      try{
+        print("tried creating mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllRef");
+        // String now=cleanDateTimeAndReturnString(dateTime: DateTime.now());
+        mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllRef.set({'dummyActiveUpdateDevice': jsonEncode({})});
+      }catch(error){
+        print('an error occured: mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllRef.set({});');
+      }
+    } else {
+      /// --->
+      // /// a list of devices that are currently updating prices data within
+      // /// getRealTimePriceAll method
+      // listOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll = jsonDecode(jsonDecode(
+      //     jsonEncode(
+      //         listOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllSnap
+      //             .value!
+      //     )
+      // ));
+      /// a map of devices that are currently updating prices data within
+      /// getRealTimePriceAll method
+      mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll = jsonDecode(
+          jsonEncode(
+              mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllSnap
+                  .value!
+          )
+      );
+    }
+
+    /// emptying mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll if
+    /// it contains only the dummy data set in the above if statement.
+    if (mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll.containsKey("dummyActiveUpdateDevice")){
+      mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll.remove("dummyActiveUpdateDevice");
+    }
+
+    /// SHOULD ONLY
+    /// if allowedTimeActiveUpdateDevicesTrackingRef does not exist, create it
+    if(!allowedTimeActiveUpdateDevicesTrackingSnap!.exists){
+
+      try{
+        allowedTimeActiveUpdateDevicesTrackingRef.set(jsonEncode({}));
+      }catch(error){
+        print("an error occured: allowedTimeActiveUpdateDevicesTrackingRef.set(jsonEncode({}));");
+      }
+    } else{
+      mapOfAllowedTimeActiveUpdateDevicesTracking=jsonDecode(
+          jsonDecode(
+              jsonEncode(
+                  allowedTimeActiveUpdateDevicesTrackingSnap.value!
+              )
+          )
+      );
+    }
+
+  }
+
   /// This method obtains the prices of all saved instruments (symbols)
   /// {} as the return value means:
   /// a. A session took place less than 1 minute ago, OR
   /// b. A session took place but didn't complete due to network or other errors
   /// It is bes to wait for one minute before calling this function again in
   /// the event any of the above two happen..
-  Future<Map<dynamic, dynamic>> getRealTimePriceAll() async {
+  Future<Map<dynamic, dynamic>> getRealTimePriceAll({
+    /// this device's unique id
+    required String deviceUniqueId,
+    // String deviceUniqueId="",
+    /// should this device be able to fetch prices from the financial markets
+    /// data provider?
+    required bool isAllowDeviceFetchDataDataProvider,
+    // bool isAllowDeviceFetchDataDataProvider=true,
+    /// the time this device called updatePrices method in data_provider.dart
+    ///
+    /// it will later mean "the time this device started fetching price data
+    /// within this method after a previous leading device malfunctions, closes
+    /// app, or loses connectivity"
+    required DateTime timeDeviceCalledUpdatePricesOrStartedLeadingInGetRealtimePriceAll
+  }) async {
     print('PRE FOR! 1');
 
     DateTime nowGetRealTimePriceAll = DateTime.now();
@@ -1266,8 +1388,16 @@ class Data {
         // print("lastPricesDataUpdateTime: $lastSymbolsDataUpdateTime");
         // print("now - lastSymbolsDataUpdateTime: ${now.difference(lastSymbolsDataUpdateTime).inHours}");
 
-        /// determining whether to proceed with the prices' data update..
-        if (diffLastPricesDataUpdateTimeInMilliSeconds <= 60000) {
+        /// determining whether to proceed with the prices' data update
+        ///
+        /// if it's not been more than a minute since the last update or
+        /// this device isn't allowed to proceed to fetching new price data
+        /// from the relevant financial market data provider, serve it the
+        /// previously saved price data.
+        if (
+          diffLastPricesDataUpdateTimeInMilliSeconds <= 60000
+              || !isAllowDeviceFetchDataDataProvider /// ---<
+        ) {
           print("Timer.periodic - data - start: ${DateTime.now()}");
           print("nowGetRealTimePriceAll: $nowGetRealTimePriceAll");
           print(
@@ -1279,6 +1409,79 @@ class Data {
           return mapLastSavedPricesOneMinInterval;
         }
       }
+
+      /// THOUGHT PROCESS - PREVENTING MULTIPLE DEVICES FROM FETCHING
+      /// PRICE DATA FROM FINANCIAL MARKET DATA PROVIDER AT THE SAME TIME
+      ///
+      /// listOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll: 'listOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllRef'
+      ///   - check periodically
+      ///     - to update with the latest active update devices
+      /// deviceUniqueId
+      ///   - set immediately
+      /// isLeading
+      ///     - to denote that an active update device is leading
+      ///     - check periodically & reset if any change in leading device
+      ///       happens i.e if
+      ///       timeDeviceCalledUpdatePricesOrStartedLeadingInGetRealtimePriceAll
+      ///       exceed 10 seconds
+      /// timeDeviceCalledUpdatePricesOrStartedLeadingInGetRealtimePriceAll
+      ///   - save to firebase immediately
+      ///     - update for new leading device only when a previous leading
+      ///       device exceeds the max allowed update time - 10 seconds
+      ///       (based on the above check)
+      /// isFinishedUpdatingPrices
+      ///   - set when a leading device has saved new price data to firebase
+      ///
+      /// isAllowedTimeExpired: 'allowedTimeActiveUpdateDevicesTrackingRef'
+      ///   - set everytime a leading device has exceeded the max allowed update time
+      ///     of 10 seconds
+      ///   - make leading devices check for it after exceeding the max
+      ///     allowed update time of 10 seconds
+      ///
+      ///
+      /// implement for currently leading active update device - to switch up
+      /// leading active update device:
+      /// if (numberOfDevicesThatSlippedToUpdatePricesDataWithinGetRealTimePriceAll>1
+      /// &&indexLeadingActiveUpdateDevice!=listOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll.length-1
+      /// &&isFinishedUpdatingPrices==false
+      /// &&diffNowAndTimeDeviceCalledUpdatingPricesOrStartedLeadingInGetRealtimePriceAll>10)
+      ///
+      /// implement for non leading active update devices that are behind the
+      /// actual leading active update device - to allow waiting
+      /// active update devices to get the new firebase saved price data
+      /// but with the ability to try fetching new price data fully
+      /// if (
+      ///   numberOfDevicesThatSlippedToUpdatePricesDataWithinGetRealTimePriceAll>1
+      ///   &&indexLeadingActiveUpdateDevice!=listOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll.length-1
+      ///   &&isFinishedUpdatingPrices==true
+      ///   ){
+      ///     1. listOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll=[];
+      ///     2. isDevicePartOfAMultipleActiveUpdateDeviceList should remain true event after the above list has been reset
+      ///     3. if (
+      ///         isDevicePartOfAMultipleActiveUpdateDeviceList==true
+      ///         && listOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll.isEmpty
+      ///         ) {
+      ///           getRealtimePriceAll(true, true);
+      ///           if (isDevicePartOfAMultipleActiveUpdateDeviceList) return (end previous getRealtimePriceAll process);
+    ///           }
+      ///
+      ///   }
+
+      /// ----------------------------------------------------------------------------------------------------
+      /// Code for active update devices i.e devices that have the permission
+      /// to fetch price data from the relevant financial market data provider
+      /// simultaneously
+
+      /// is there more than one active update device?
+      ///
+      /// to implement this condition that could not be implemented in
+      /// data_provider.dart:
+      /// if (numberOfDevicesThatSlippedToUpdatePricesDataWithinGetRealTimePriceAll>1
+      ///   &&indexLeadingActiveUpdateDevice!=listOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll.length-1
+      ///   &&isFinishedUpdatingPrices==true)
+      bool isDevicePartOfAMultipleActiveUpdateDeviceList=false;
+
+      /// ----------------------------------------------------------------------------------------------------
 
       // checkIfImportantPairsInSavedPairs(
       //   listOfImportantPairs: listOfAppliedImportantPairs,
@@ -1912,7 +2115,7 @@ class Data {
       if (!isUseLocalStorage){
         try{
           print('HERE D');
-          print(lastUpdateSessionsMap);
+          // print(lastUpdateSessionsMap);
           
           await dataUpdateSessionsRef.set(jsonEncode(lastUpdateSessionsMap));
         }catch(error){

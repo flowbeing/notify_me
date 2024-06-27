@@ -39,13 +39,6 @@ void updateIsAllowedTimeExpiredMapInFirebase({
 
   Map isAllowedTimeExpiredMap= jsonDecode(jsonDecode(jsonEncode((await allowedTimeActiveUpdateDevicesTrackingRef.get()).value!)));
 
-  if (deviceUniqueId==""){
-    Random rand=Random();
-    String aRandomNumberString=rand.nextInt(1000000000).toString();
-    String nowToString=cleanDateTimeAndReturnString(dateTime: DateTime.now());
-    deviceUniqueId="$nowToString,$aRandomNumberString";
-  }
-
   isAllowedTimeExpiredMap[deviceUniqueId]=true; /// ---> remove in getRealtimePriceAll when the disconnect device comes alive to stop it's getRealtimePriceAll process
   await allowedTimeActiveUpdateDevicesTrackingRef.set(jsonEncode(isAllowedTimeExpiredMap));
 
