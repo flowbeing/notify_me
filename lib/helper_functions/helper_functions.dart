@@ -33,13 +33,13 @@ String retrieveDatetimeStringFromCleanedDateTimeString({required String cleanedD
 /// it's exceeded the max allowed update time so that it can self-stop it's
 /// price update operation
 void updateIsAllowedTimeExpiredMapInFirebase({
-  required DatabaseReference allowedTimeActiveUpdateDevicesTrackingRef,
+  required DatabaseReference devicesThatExceededAllowedUpdateTimeMapRef,
   required String deviceUniqueId,
 }) async {
 
-  Map isAllowedTimeExpiredMap= jsonDecode(jsonDecode(jsonEncode((await allowedTimeActiveUpdateDevicesTrackingRef.get()).value!)));
+  Map isAllowedTimeExpiredMap= jsonDecode(jsonDecode(jsonEncode((await devicesThatExceededAllowedUpdateTimeMapRef.get()).value!)));
 
   isAllowedTimeExpiredMap[deviceUniqueId]=true; /// ---> remove in getRealtimePriceAll when the disconnect device comes alive to stop it's getRealtimePriceAll process
-  await allowedTimeActiveUpdateDevicesTrackingRef.set(jsonEncode(isAllowedTimeExpiredMap));
+  await devicesThatExceededAllowedUpdateTimeMapRef.set(jsonEncode(isAllowedTimeExpiredMap));
 
 }
