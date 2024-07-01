@@ -188,6 +188,9 @@ class Data {
   /// update price data)..
   Map _mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll = {};
 
+  /// last time map of all active update devices got fetched
+  DateTime _lastAUDMapFetchTime = DateTime.now();
+
   /// list of active update devices' unique ids
   List<dynamic> _listOfActiveUpdateDevicesUniqueId = [];
 
@@ -1195,7 +1198,86 @@ class Data {
     return mapOfSymbolsPreInitialPriceFetch;
   }
 
-  Future checkAUDsStatusAndUpdateAccordingly({
+  /// this method helps ensure that all active update devices have the correct
+  /// configuration to let them know whether it's their time to fetch
+  /// price data or it's past their time to fetch price data
+  Future setActualLeadingActiveUpdateDeviceProperly({
+    required Map mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll,
+    required List listOfActiveUpdateDevicesUniqueId,
+    required DateTime timeRegLeadingAUDCalledUpdatePricesOrStartedLeading,
+    required int indexAUDThatShouldBeSetAsLeading,
+    required int indexRegLeadingAUD
+  }) async{
+
+    /// 2.
+    /// set the registered active update device's "isLeading" to false
+    /// and its "hasPreviouslyBeenSetAsIsLeading" to true alongside that
+    /// of every other active update device in between
+    // ...if their
+    // 'isFinishedUpdatingPrices" value is false.
+    //
+    // if an 'isFinishedUpdatingPrices' value is true stop the task and attempt
+    // to update the active update device that's perceived should
+    // be the actual leading active update device
+    List listOfUniqueIdEveryAUDBeforePresumedActualAUD =
+    listOfActiveUpdateDevicesUniqueId.sublist(
+        0, indexAUDThatShouldBeSetAsLeading
+    );
+
+    int indexAUDBeforePresumedActualAUD = 0;
+    for (var idAUDBeforePresumedActualAUD
+    in listOfUniqueIdEveryAUDBeforePresumedActualAUD) {
+      Map<dynamic, dynamic> AUDBeforePresumedActualAUD = jsonDecode(
+          jsonDecode(jsonEncode(
+              mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll[
+              idAUDBeforePresumedActualAUD])));
+
+      // bool isFinishedAUDBeforePresumedActualAUD=
+      //   AUDBeforePresumedActualAUD["isFinishedUpdatingPrices"];
+      //
+      // /// if the current active update device that's before the
+      // /// active update device that's perceived should be the actual
+      // /// active update device has not finished updating price data,
+      // ///
+      // if (isFinishedAUDBeforePresumedActualAUD){
+      //
+      // }
+
+      AUDBeforePresumedActualAUD['isLeading'] = false;
+      AUDBeforePresumedActualAUD['hasPreviouslyBeenSetAsIsLeading'] = true;
+
+      /// update 'timeDeviceCalledUpdatePricesOrStartedLeadingInGetRealtimePriceAll'
+      /// for every active update device that's not the registered or actual
+      /// update device
+      if (indexAUDBeforePresumedActualAUD != 0) {
+        /// ensuring that each active update device has the time they were
+        /// supposed to start updating prices when an active update device
+        /// before them fails
+        AUDBeforePresumedActualAUD[
+        "timeDeviceCalledUpdatePricesOrStartedLeadingInGetRealtimePriceAll"] =
+            cleanDateTimeAndReturnString(
+                dateTime:
+                timeRegLeadingAUDCalledUpdatePricesOrStartedLeading
+                    .add(Duration(
+                    seconds:
+                    ((indexAUDBeforePresumedActualAUD * 10)-(indexRegLeadingAUD * 10)) +
+                        1)));
+      }
+
+      /// registering the change in firebase..
+      _mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllRef
+          .child(idAUDBeforePresumedActualAUD)
+          .set(jsonEncode(AUDBeforePresumedActualAUD));
+
+      /// updating indexAUDBeforePresumedActualAUD
+      indexAUDBeforePresumedActualAUD += 1;
+    }
+
+  }
+
+  Future<Map<dynamic,dynamic>> _checkAUDsStatusAndUpdateAccordingly({
+    /// to adjust for computing time
+    required DateTime timeMapOfActiveUpdateDevicesGotFetched,
     required String deviceUniqueId,
     required Set<String> setSavedListOfAllSymbols,
     required List<String> listOfAppliedImportantPairs,
@@ -1207,6 +1289,10 @@ class Data {
     required String? lastPricesDataUpdateTimeString,
     required DateTime startTimeUpdatePrices
   }) async {
+
+    /// map to return
+    Map<dynamic, dynamic> mapToReturn={};
+
     /// current registered leading active update device's id
     String currentRegisteredLeadingActiveUpdateDeviceId =
         _mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll[
@@ -1244,6 +1330,7 @@ class Data {
     // }
 
     /// ensuring the list of active update device has the latest data ---<
+    /// sublist removes "leadingDeviceId" from the list of keys
     _listOfActiveUpdateDevicesUniqueId =
         _mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll.keys
             .toList()
@@ -1251,9 +1338,20 @@ class Data {
 
     /// seconds before AUD that should be leading (could be registered leading
     /// AUD) switches
-    _secondsRemBeforeAssumedActualLeadingAUDSwitches =
-    10-(diffNowAndTimeRegLeadingAUDCalledUpdatePricesOrStartedLeading%10)==10
-        ? 0 : 10-(diffNowAndTimeRegLeadingAUDCalledUpdatePricesOrStartedLeading%10);
+    if (diffNowAndTimeRegLeadingAUDCalledUpdatePricesOrStartedLeading==0){
+
+      _secondsRemBeforeAssumedActualLeadingAUDSwitches=
+        10-(diffNowAndTimeRegLeadingAUDCalledUpdatePricesOrStartedLeading%10)==10
+          ? 10 : 10-(diffNowAndTimeRegLeadingAUDCalledUpdatePricesOrStartedLeading%10);
+
+    } else if (diffNowAndTimeRegLeadingAUDCalledUpdatePricesOrStartedLeading!=0) {
+
+      _secondsRemBeforeAssumedActualLeadingAUDSwitches=
+        10-(diffNowAndTimeRegLeadingAUDCalledUpdatePricesOrStartedLeading%10)==10
+          ? 0 : 10-(diffNowAndTimeRegLeadingAUDCalledUpdatePricesOrStartedLeading%10);
+
+    }
+
 
     /// if the time elapsed so far has exceeded the total time all active update
     /// devices can spend fetching prices set
@@ -1296,14 +1394,67 @@ class Data {
 
     /// details of active leading update device that should be leading - map
     Map<dynamic, dynamic> mapAUDThatShouldBeSetAsLeading=
-      _mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll[
-        idDeviceThatShouldBeActualLeadingAUD
-      ];
+      jsonDecode(jsonDecode(jsonEncode(_mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll[
+      idDeviceThatShouldBeActualLeadingAUD
+      ])));
 
+    /// checking whether an active update device has finished fetching price
+    /// data
+    bool isAnAUDFinishedUpdatingPriceData=false;
+
+    for (var audId in _listOfActiveUpdateDevicesUniqueId){
+      Map<dynamic, dynamic> currentAUD=
+      jsonDecode(jsonDecode(jsonEncode(_mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll[
+      idDeviceThatShouldBeActualLeadingAUD
+      ])));
+
+      if (currentAUD['isFinishedUpdatingPrices']){
+        isAnAUDFinishedUpdatingPriceData=true;
+        break;
+      }
+    }
+
+
+    /// if an active update device has finished fetching price data, get the
+    /// price data
+    if (isAnAUDFinishedUpdatingPriceData==true){
+
+      mapToReturn= await getRealTimePriceAll(
+          deviceUniqueId: deviceUniqueId,
+          isAllowDeviceFetchDataDataProvider: false,
+          timeDeviceCalledUpdatePricesOrStartedLeadingInGetRealtimePriceAll:
+          DateTime.now()
+      );
+
+    }
+    /// if the time elapsed so far has exceeded the total time all active
+    /// update devices can spend fetching prices, fetch a previously stored
+    /// price data from firebase and update active update prices configurations
+    if (hasTotalPermissiblePriceFetchTimeBeenExceededByAllPairs==true){
+
+      /// configure active update devices properly in firebase. update their:
+      /// 1. "isLeading"
+      /// 2. "hasPreviouslyBeenSetAsIsLeading"
+      /// 3. "timeDeviceCalledUpdatePricesOrStartedLeadingInGetRealtimePriceAll"
+      setActualLeadingActiveUpdateDeviceProperly(
+          mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll: _mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll,
+          listOfActiveUpdateDevicesUniqueId: _listOfActiveUpdateDevicesUniqueId,
+          timeRegLeadingAUDCalledUpdatePricesOrStartedLeading: _timeRegLeadingAUDCalledUpdatePricesOrStartedLeading!,
+          indexAUDThatShouldBeSetAsLeading: indexAUDThatShouldBeSetAsLeading,
+          indexRegLeadingAUD: indexRegLeadingAUD
+      );
+
+      mapToReturn= await getRealTimePriceAll(
+          deviceUniqueId: deviceUniqueId,
+          isAllowDeviceFetchDataDataProvider: false,
+          timeDeviceCalledUpdatePricesOrStartedLeadingInGetRealtimePriceAll:
+          DateTime.now()
+      );
+    }
     /// if the registered leading active update device is the active update
     /// device that should actually be leading, check back for whether
     /// it's finished updating price data when it should be done
-    if (isCurrentRegisteredAUDSuccess == false &&
+    else if (isCurrentRegisteredAUDSuccess == false &&
         idDeviceThatShouldBeActualLeadingAUD ==
             currentRegisteredLeadingActiveUpdateDeviceId) {
 
@@ -1330,11 +1481,23 @@ class Data {
       ///
       /// 8 seconds used below because 8 seconds should be more than fast enough
       /// for any fast device to fetch and save price data..
+      /// seconds since the last map of active update devices got fetched
+      DateTime now=DateTime.now();
+      int secondsSinceLastAUDMapFetch=now.difference(_lastAUDMapFetchTime).inSeconds;
+      /// adjusting for computing time since map of active update devices got
+      /// fetched..
+      int secondsRetrieveMapAndRunThisMethodAgain=
+          (_secondsRemBeforeAssumedActualLeadingAUDSwitches + 1)-secondsSinceLastAUDMapFetch;
+      if (secondsRetrieveMapAndRunThisMethodAgain<0){
+        secondsRetrieveMapAndRunThisMethodAgain=0;
+      }
+      print("secondsRetrieveMapAndRunThisMethodAgain*: $secondsRetrieveMapAndRunThisMethodAgain");
       if (_isThisDeviceActualLeadingActiveUpdateDevice==true
           &&_isAlreadyRunContinueGetRealtimePriceAll==false
-          &&_secondsRemBeforeAssumedActualLeadingAUDSwitches>=8
+          &&secondsRetrieveMapAndRunThisMethodAgain>=8
       ){
-        _continueGetRealtimePriceAll(
+        mapToReturn=await _continueGetRealtimePriceAll(
+            listOfActiveAUD: _listOfActiveUpdateDevicesUniqueId,
             deviceUniqueId:deviceUniqueId,
             setSavedListOfAllSymbols: setSavedListOfAllSymbols,
             listOfAppliedImportantPairs: listOfAppliedImportantPairs,
@@ -1347,27 +1510,43 @@ class Data {
         );
       }
 
-      /// if the time elapsed so far has exceeded the total time all active update
-      /// devices can spend fetching prices, stop searching for whether prices
-      /// have finished updating or whether an active update device has switched
-      /// to a next one..
-      if (hasTotalPermissiblePriceFetchTimeBeenExceededByAllPairs==false){
+      // if the time elapsed so far has exceeded the total time all active update
+      // devices can spend fetching prices, stop searching for whether prices
+      // have finished updating or whether an active update device has switched
+      // to a next one..
+      // if (hasTotalPermissiblePriceFetchTimeBeenExceededByAllPairs==false){
+      else {
         /// cancelling previous version of _checkAUDsStatusAndUpdateAccordinglyTimer
         _checkAUDsStatusAndUpdateAccordinglyTimer.cancel();
+        /// seconds since the last map of active update devices got fetched
+        DateTime now=DateTime.now();
+        int secondsSinceLastAUDMapFetch=now.difference(_lastAUDMapFetchTime).inSeconds;
+        /// adjusting for computing time since map of active update devices got
+        /// fetched..
+        int secondsRetrieveMapAndRunThisMethodAgain=
+        (_secondsRemBeforeAssumedActualLeadingAUDSwitches + 1)-secondsSinceLastAUDMapFetch;
+        if (secondsRetrieveMapAndRunThisMethodAgain<0){
+          secondsRetrieveMapAndRunThisMethodAgain=0;
+        }
+        print("secondsRetrieveMapAndRunThisMethodAgain*: $secondsRetrieveMapAndRunThisMethodAgain");
+
         /// setting a timer to check back for whether the registered leading active
         /// update device has finished updating price
+
         _checkAUDsStatusAndUpdateAccordinglyTimer = Timer(
             Duration(
-                seconds: _secondsRemBeforeAssumedActualLeadingAUDSwitches + 1),
+                seconds: secondsRetrieveMapAndRunThisMethodAgain),
                 () async {
               try{
                 /// obtaining the latest map of active update devices so that
                 /// checkAUDsStatusAndUpdateAccordingly can have the latest
                 /// active update device configurations to work with..
+                _lastAUDMapFetchTime=DateTime.now();
                 await _retrieveActiveUpdateDevicesRelatedMaps(
                     isRetrieveMapOfDevicesThatExceededAllowedUpdateTime: false);
 
-                await checkAUDsStatusAndUpdateAccordingly(
+                mapToReturn=await _checkAUDsStatusAndUpdateAccordingly(
+                    timeMapOfActiveUpdateDevicesGotFetched: _lastAUDMapFetchTime,
                     deviceUniqueId: deviceUniqueId,
                     setSavedListOfAllSymbols: setSavedListOfAllSymbols,
                     listOfAppliedImportantPairs: listOfAppliedImportantPairs,
@@ -1384,17 +1563,20 @@ class Data {
               }
             });
       }
-      /// else if the time elapsed so far has exceeded the total time all active
-      /// update devices can spend fetching prices, fetch a previously stored
-      /// price data from firebase
-      else {
-        getRealTimePriceAll(
-            deviceUniqueId: deviceUniqueId,
-            isAllowDeviceFetchDataDataProvider: false,
-            timeDeviceCalledUpdatePricesOrStartedLeadingInGetRealtimePriceAll:
-            DateTime.now()
-        );
-      }
+
+      // }
+      // else if the time elapsed so far has exceeded the total time all active
+      // update devices can spend fetching prices, fetch a previously stored
+      // price data from firebase
+      // else {
+      //
+      //   mapToReturn=await getRealTimePriceAll(
+      //       deviceUniqueId: deviceUniqueId,
+      //       isAllowDeviceFetchDataDataProvider: false,
+      //       timeDeviceCalledUpdatePricesOrStartedLeadingInGetRealtimePriceAll:
+      //       DateTime.now()
+      //   );
+      // }
     }
 
     /// if the registered active update device has not finished updating
@@ -1413,7 +1595,7 @@ class Data {
     ///    of every other active update device in between, check whether
     ///    the leading active update device is
     ///    correctly set. If not, correctly set it..
-    if (isCurrentRegisteredAUDSuccess==false &&
+    else if (isCurrentRegisteredAUDSuccess==false &&
         idDeviceThatShouldBeActualLeadingAUD !=
             currentRegisteredLeadingActiveUpdateDeviceId) {
       // if (){
@@ -1459,7 +1641,8 @@ class Data {
         /// to the leading active update device
         mapAUDThatShouldBeTheActualLeadingAUD['isLeading'] = true;
         mapAUDThatShouldBeTheActualLeadingAUD[
-            "hasPreviouslyBeenSetAsIsLeading"] = true;
+            "hasPreviouslyBeenSetAsIsLeading"
+        ] = true;
         /// time the active update device that should be the leading update
         /// device would have started fetching price data
         String timeAUDThatShouldBeActualLeadingAUDStartedFetchingPriceData=
@@ -1484,122 +1667,103 @@ class Data {
 
         _mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllRef
             .child(idDeviceThatShouldBeActualLeadingAUD)
-            .set(mapAUDThatShouldBeTheActualLeadingAUD);
+            .set(jsonEncode(mapAUDThatShouldBeTheActualLeadingAUD));
 
-        /// if the time elapsed so far has exceeded the total time all active update
-        /// devices can spend fetching prices, stop searching for whether prices
-        /// have finished updating or whether an active update device has switched
-        /// to a next one..
-        if (hasTotalPermissiblePriceFetchTimeBeenExceededByAllPairs==false){
-          /// cancelling previous version of _checkAUDsStatusAndUpdateAccordinglyTimer
-          _checkAUDsStatusAndUpdateAccordinglyTimer.cancel();
-          /// setting a timer to check back for whether the registered leading
-          /// active update device has finished updating price
-          _checkAUDsStatusAndUpdateAccordinglyTimer = Timer(
-              Duration(
-                  seconds: _secondsRemBeforeAssumedActualLeadingAUDSwitches + 1),
-                  () async {
-                try{
-                  /// obtaining the latest map of active update devices
-                  await _retrieveActiveUpdateDevicesRelatedMaps(
-                      isRetrieveMapOfDevicesThatExceededAllowedUpdateTime: false);
+        /// configure active update devices properly in firebase. update their:
+        /// 1. "isLeading"
+        /// 2. "hasPreviouslyBeenSetAsIsLeading"
+        /// 3. "timeDeviceCalledUpdatePricesOrStartedLeadingInGetRealtimePriceAll"
+        setActualLeadingActiveUpdateDeviceProperly(
+            mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll: _mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll,
+            listOfActiveUpdateDevicesUniqueId: _listOfActiveUpdateDevicesUniqueId,
+            timeRegLeadingAUDCalledUpdatePricesOrStartedLeading: _timeRegLeadingAUDCalledUpdatePricesOrStartedLeading!,
+            indexAUDThatShouldBeSetAsLeading: indexAUDThatShouldBeSetAsLeading,
+            indexRegLeadingAUD: indexRegLeadingAUD
+        );
 
-                  await checkAUDsStatusAndUpdateAccordingly(
-                      deviceUniqueId: deviceUniqueId,
-                      setSavedListOfAllSymbols: setSavedListOfAllSymbols,
-                      listOfAppliedImportantPairs: listOfAppliedImportantPairs,
-                      mapLastSavedPricesOneMinInterval: mapLastSavedPricesOneMinInterval,
-                      mapInstrumentsType: mapInstrumentsType,
-                      mapOfAllPrices: mapOfAllPrices,
-                      lastUpdateSessionsMap: lastUpdateSessionsMap,
-                      lastUpdateSessionsMapPricesDataKey: lastUpdateSessionsMapPricesDataKey,
-                      lastPricesDataUpdateTimeString: lastPricesDataUpdateTimeString,
-                      startTimeUpdatePrices: startTimeUpdatePrices
-                  );
-                }catch(error){
-                  print("an error occured while trying to rerun checkAUDsStatusAndUpdateAccordingly");
-                }
-              });
+        // if the time elapsed so far has exceeded the total time all active update
+        // devices can spend fetching prices, stop searching for whether prices
+        // have finished updating or whether an active update device has switched
+        // to a next one..
+        // if (hasTotalPermissiblePriceFetchTimeBeenExceededByAllPairs==false){
+        /// cancelling previous version of _checkAUDsStatusAndUpdateAccordinglyTimer
+        _checkAUDsStatusAndUpdateAccordinglyTimer.cancel();
+
+        /// setting a timer to check back for whether the registered leading
+        /// active update device has finished updating price
+
+        /// seconds since the last map of active update devices got fetched
+        DateTime now=DateTime.now();
+        int secondsSinceLastAUDMapFetch=now.difference(_lastAUDMapFetchTime).inSeconds;
+        /// adjusting for computing time since map of active update devices got
+        /// fetched..
+        int secondsRetrieveMapAndRunThisMethodAgain=
+            (_secondsRemBeforeAssumedActualLeadingAUDSwitches + 1)-secondsSinceLastAUDMapFetch;
+        if (secondsRetrieveMapAndRunThisMethodAgain<0){
+          secondsRetrieveMapAndRunThisMethodAgain=0;
         }
-        /// else if the time elapsed so far has exceeded the total time all active
-        /// update devices can spend fetching prices, fetch a previously stored
-        /// price data from firebase
-        else {
-          getRealTimePriceAll(
-              deviceUniqueId: deviceUniqueId,
-              isAllowDeviceFetchDataDataProvider: false,
-              timeDeviceCalledUpdatePricesOrStartedLeadingInGetRealtimePriceAll:
-              DateTime.now()
-          );
-        }
+        print("secondsRetrieveMapAndRunThisMethodAgain: $secondsRetrieveMapAndRunThisMethodAgain");
+        _checkAUDsStatusAndUpdateAccordinglyTimer = Timer(
+            Duration(
+                seconds: secondsRetrieveMapAndRunThisMethodAgain),
+                () async {
+              try{
+                /// obtaining the latest map of active update devices
+                _lastAUDMapFetchTime=DateTime.now();
+                await _retrieveActiveUpdateDevicesRelatedMaps(
+                    isRetrieveMapOfDevicesThatExceededAllowedUpdateTime: false);
 
-        /// 2.
-        /// set the registered active update device's "isLeading" to false
-        /// and its "hasPreviouslyBeenSetAsIsLeading" to true alongside that
-        /// of every other active update device in between
-        // ...if their
-        // 'isFinishedUpdatingPrices" value is false.
+                mapToReturn=await _checkAUDsStatusAndUpdateAccordingly(
+                    timeMapOfActiveUpdateDevicesGotFetched: _lastAUDMapFetchTime,
+                    deviceUniqueId: deviceUniqueId,
+                    setSavedListOfAllSymbols: setSavedListOfAllSymbols,
+                    listOfAppliedImportantPairs: listOfAppliedImportantPairs,
+                    mapLastSavedPricesOneMinInterval: mapLastSavedPricesOneMinInterval,
+                    mapInstrumentsType: mapInstrumentsType,
+                    mapOfAllPrices: mapOfAllPrices,
+                    lastUpdateSessionsMap: lastUpdateSessionsMap,
+                    lastUpdateSessionsMapPricesDataKey: lastUpdateSessionsMapPricesDataKey,
+                    lastPricesDataUpdateTimeString: lastPricesDataUpdateTimeString,
+                    startTimeUpdatePrices: startTimeUpdatePrices
+                );
+              }catch(error){
+                print("an error occured while trying to rerun checkAUDsStatusAndUpdateAccordingly");
+              }
+            });
+        // }
+        // else if the time elapsed so far has exceeded the total time all active
+        // update devices can spend fetching prices, fetch a previously stored
+        // price data from firebase
+        // else {
         //
-        // if an 'isFinishedUpdatingPrices' value is true stop the task and attempt
-        // to update the active update device that's perceived should
-        // be the actual leading active update device
-        List listOfUniqueIdEveryAUDBeforePresumedActualAUD =
-            _listOfActiveUpdateDevicesUniqueId.sublist(
-                0, indexAUDThatShouldBeSetAsLeading
-            );
+        //   /// configure active update devices properly in firebase. update their:
+        //   /// 1. "isLeading"
+        //   /// 2. "hasPreviouslyBeenSetAsIsLeading"
+        //   /// 3. "timeDeviceCalledUpdatePricesOrStartedLeadingInGetRealtimePriceAll"
+        //   setActualLeadingActiveUpdateDeviceProperly(
+        //       indexAUDThatShouldBeSetAsLeading: indexAUDThatShouldBeSetAsLeading,
+        //       indexRegLeadingAUD: indexRegLeadingAUD
+        //   );
+        //
+        //   return await getRealTimePriceAll(
+        //       deviceUniqueId: deviceUniqueId,
+        //       isAllowDeviceFetchDataDataProvider: false,
+        //       timeDeviceCalledUpdatePricesOrStartedLeadingInGetRealtimePriceAll:
+        //       DateTime.now()
+        //   );
+        //
+        //   /// stop this device from continuing running this method
+        //   // return;
+        // }
 
-        int indexAUDBeforePresumedActualAUD = 0;
-        for (var idAUDBeforePresumedActualAUD
-            in listOfUniqueIdEveryAUDBeforePresumedActualAUD) {
-          Map<dynamic, dynamic> AUDBeforePresumedActualAUD = jsonDecode(
-              jsonDecode(jsonEncode(
-                  _mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll[
-                      idAUDBeforePresumedActualAUD])));
 
-          // bool isFinishedAUDBeforePresumedActualAUD=
-          //   AUDBeforePresumedActualAUD["isFinishedUpdatingPrices"];
-          //
-          // /// if the current active update device that's before the
-          // /// active update device that's perceived should be the actual
-          // /// active update device has not finished updating price data,
-          // ///
-          // if (isFinishedAUDBeforePresumedActualAUD){
-          //
-          // }
 
-          AUDBeforePresumedActualAUD['isLeading'] = false;
-          AUDBeforePresumedActualAUD['hasPreviouslyBeenSetAsIsLeading'] = true;
-
-          /// update 'timeDeviceCalledUpdatePricesOrStartedLeadingInGetRealtimePriceAll'
-          /// for every active update device that's not the registered or actual
-          /// update device
-          if (indexAUDBeforePresumedActualAUD != 0) {
-            /// ensuring that each active update device has the time they were
-            /// supposed to start updating prices when an active update device
-            /// before them fails
-            AUDBeforePresumedActualAUD[
-                    "timeDeviceCalledUpdatePricesOrStartedLeadingInGetRealtimePriceAll"] =
-                cleanDateTimeAndReturnString(
-                    dateTime:
-                        _timeRegLeadingAUDCalledUpdatePricesOrStartedLeading!
-                            .add(Duration(
-                                seconds:
-                                    ((indexAUDBeforePresumedActualAUD * 10)-(indexRegLeadingAUD * 10)) +
-                                        1)));
-          }
-
-          /// registering the change in firebase..
-          _mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllRef
-              .child(idAUDBeforePresumedActualAUD)
-              .set(jsonEncode(AUDBeforePresumedActualAUD));
-
-          /// updating indexAUDBeforePresumedActualAUD
-          indexAUDBeforePresumedActualAUD += 1;
-        }
       }
 
       // }
     }
+
+    return mapToReturn;
   }
 
   Future _retrieveActiveUpdateDevicesRelatedMaps(
@@ -2022,7 +2186,8 @@ class Data {
 
       /// retrieving the latest list of active update devices again before this
       /// device gets added to the list
-      DateTime lastAUDMapFetchTime = DateTime.now();
+      _lastAUDMapFetchTime = DateTime.now();
+
       await _retrieveActiveUpdateDevicesRelatedMaps(
           isRetrieveMapOfDevicesThatExceededAllowedUpdateTime: false);
 
@@ -2101,9 +2266,15 @@ class Data {
       /// have been pushed to firebase
       if (leadingDeviceId == "none") {
 
-        _mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllRef
+        /// updating the leadingDeviceId..
+        await _mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllRef
             .child("leadingDeviceId")
             .set(idInitialActiveUpdateDevice);
+
+        /// ...locally as well
+        _mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll[
+          'leadingDeviceId'
+        ]=idInitialActiveUpdateDevice;
 
         /// saving a local copy of the leading active update device details
         _leadingActiveUpdateDevice = {
@@ -2123,10 +2294,17 @@ class Data {
         /// updating this device's details within the map of leading active
         /// update devices to signify that it is the current leading active update
         /// device
-        _mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllRef
+        await _mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllRef
             .child(idInitialActiveUpdateDevice)
             .set(jsonEncode(_leadingActiveUpdateDevice));
-      } else if (leadingDeviceId != "none") {}
+
+        /// ...locally as well
+        _mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll[
+          idInitialActiveUpdateDevice
+        ]=jsonEncode(_leadingActiveUpdateDevice);
+      }
+
+      // else if (leadingDeviceId != "none") {}
 
       // }
 
@@ -2183,38 +2361,64 @@ class Data {
     /// current leading active update device will finish or switch to another
     /// active update device..
     ///
-    /// Future.delayed method is applied to ensure that it this program will
-    /// attempt to run _continueGetRealtimePriceAll first before this block of
-    /// code.. That way _isAlreadyRunContinueGetRealtimePriceAll will be true
-    /// before this block of code runs if this device is the actual leading
-    /// active update device.. This is especially effective when this device
-    /// has been determined by the codes above to be the actual leading active
-    /// update device, which will also prevent '_continueGetRealtimePriceAll'
-    /// method from running again when
-    /// "isCurrentRegisteredAUDSuccess == false && idDeviceThatShouldBeAUD ==
-    /// currentRegisteredLeadingActiveUpdateDeviceId" is true in
-    /// 'checkAUDsStatusAndUpdateAccordingly' method..
-    Future.delayed(const Duration(milliseconds: 500), (){
-      _checkAUDsStatusAndUpdateAccordinglyTimer=Timer(
-          Duration(
-              seconds: _secondsRemBeforeAssumedActualLeadingAUDSwitches
-          ), (){
+    // Future.delayed method is applied to ensure that it this program will
+    // attempt to run _continueGetRealtimePriceAll first before this block of
+    // code.. That way _isAlreadyRunContinueGetRealtimePriceAll will be true
+    // before this block of code runs if this device is the actual leading
+    // active update device.. This is especially effective when this device
+    // has been determined by the codes above to be the actual leading active
+    // update device, which will also prevent '_continueGetRealtimePriceAll'
+    // method from running again when
+    // "isCurrentRegisteredAUDSuccess == false && idDeviceThatShouldBeAUD ==
+    // currentRegisteredLeadingActiveUpdateDeviceId" is true in
+    // 'checkAUDsStatusAndUpdateAccordingly' method..
 
-        checkAUDsStatusAndUpdateAccordingly(
-            deviceUniqueId: deviceUniqueId,
-            setSavedListOfAllSymbols: setSavedListOfAllSymbols,
-            listOfAppliedImportantPairs: listOfAppliedImportantPairs,
-            mapLastSavedPricesOneMinInterval: mapLastSavedPricesOneMinInterval,
-            mapInstrumentsType: mapInstrumentsType,
-            mapOfAllPrices: mapOfAllPrices,
-            lastUpdateSessionsMap: lastUpdateSessionsMap,
-            lastUpdateSessionsMapPricesDataKey: lastUpdateSessionsMapPricesDataKey,
-            lastPricesDataUpdateTimeString: lastPricesDataUpdateTimeString,
-            startTimeUpdatePrices: startTimeUpdatePrices
-        );
+    // Future.delayed(const Duration(milliseconds: 500), (){
+    //   _checkAUDsStatusAndUpdateAccordinglyTimer=Timer(
+    //       Duration(
+    //           seconds: _secondsRemBeforeAssumedActualLeadingAUDSwitches
+    //       ), (){
+    //
+    //     _checkAUDsStatusAndUpdateAccordingly(
+    //         timeMapOfActiveUpdateDevicesGotFetched: _lastAUDMapFetchTime,
+    //         deviceUniqueId: deviceUniqueId,
+    //         setSavedListOfAllSymbols: setSavedListOfAllSymbols,
+    //         listOfAppliedImportantPairs: listOfAppliedImportantPairs,
+    //         mapLastSavedPricesOneMinInterval: mapLastSavedPricesOneMinInterval,
+    //         mapInstrumentsType: mapInstrumentsType,
+    //         mapOfAllPrices: mapOfAllPrices,
+    //         lastUpdateSessionsMap: lastUpdateSessionsMap,
+    //         lastUpdateSessionsMapPricesDataKey: lastUpdateSessionsMapPricesDataKey,
+    //         lastPricesDataUpdateTimeString: lastPricesDataUpdateTimeString,
+    //         startTimeUpdatePrices: startTimeUpdatePrices
+    //     );
+    //
+    //   });
+    // });
 
-      });
-    });
+    /// retrieving the latest list of active update devices again before this
+    /// device gets added to the list
+    _lastAUDMapFetchTime = DateTime.now();
+
+    print("Time since updatePrices was called - initial: ${
+        DateTime.now().difference(
+            timeDeviceCalledUpdatePricesOrStartedLeadingInGetRealtimePriceAll
+        )}*");
+
+    /// get map of realtime prices by running _checkAUDsStatusAndUpdateAccordingly
+    mapRealtimePrice=await _checkAUDsStatusAndUpdateAccordingly(
+        timeMapOfActiveUpdateDevicesGotFetched: _lastAUDMapFetchTime,
+        deviceUniqueId: deviceUniqueId,
+        setSavedListOfAllSymbols: setSavedListOfAllSymbols,
+        listOfAppliedImportantPairs: listOfAppliedImportantPairs,
+        mapLastSavedPricesOneMinInterval: mapLastSavedPricesOneMinInterval,
+        mapInstrumentsType: mapInstrumentsType,
+        mapOfAllPrices: mapOfAllPrices,
+        lastUpdateSessionsMap: lastUpdateSessionsMap,
+        lastUpdateSessionsMapPricesDataKey: lastUpdateSessionsMapPricesDataKey,
+        lastPricesDataUpdateTimeString: lastPricesDataUpdateTimeString,
+        startTimeUpdatePrices: startTimeUpdatePrices
+    );
 
 
     /// _isFirstTimeRunningCheckAUDsStatusAndUpdateAccordingly
@@ -2228,19 +2432,20 @@ class Data {
 
     /// if this device is the leading active update device, proceed to fetching
     /// price data..
-    if (_isThisDeviceActualLeadingActiveUpdateDevice==true) {
-      mapRealtimePrice = await _continueGetRealtimePriceAll(
-          deviceUniqueId:deviceUniqueId,
-          setSavedListOfAllSymbols: setSavedListOfAllSymbols,
-          listOfAppliedImportantPairs: listOfAppliedImportantPairs,
-          mapLastSavedPricesOneMinInterval: mapLastSavedPricesOneMinInterval,
-          mapInstrumentsType: mapInstrumentsType,
-          lastUpdateSessionsMap: lastUpdateSessionsMap,
-          lastUpdateSessionsMapPricesDataKey: lastUpdateSessionsMapPricesDataKey,
-          lastPricesDataUpdateTimeString: lastPricesDataUpdateTimeString,
-          startTimeUpdatePrices: startTimeUpdatePrices
-      );
-    }
+    // if (_isThisDeviceActualLeadingActiveUpdateDevice==true) {
+    //   mapRealtimePrice = await _continueGetRealtimePriceAll(
+    //       listOfActiveAUD: _listOfActiveUpdateDevicesUniqueId,
+    //       deviceUniqueId:deviceUniqueId,
+    //       setSavedListOfAllSymbols: setSavedListOfAllSymbols,
+    //       listOfAppliedImportantPairs: listOfAppliedImportantPairs,
+    //       mapLastSavedPricesOneMinInterval: mapLastSavedPricesOneMinInterval,
+    //       mapInstrumentsType: mapInstrumentsType,
+    //       lastUpdateSessionsMap: lastUpdateSessionsMap,
+    //       lastUpdateSessionsMapPricesDataKey: lastUpdateSessionsMapPricesDataKey,
+    //       lastPricesDataUpdateTimeString: lastPricesDataUpdateTimeString,
+    //       startTimeUpdatePrices: startTimeUpdatePrices
+    //   );
+    // }
 
     /// returning map
     return mapRealtimePrice;
@@ -2255,6 +2460,8 @@ class Data {
     required String deviceUniqueId,
     /// each symbol, no duplicates
     required Set<String> setSavedListOfAllSymbols,
+    /// list of active aud
+    required List<dynamic> listOfActiveAUD,
     /// list of important pairs to be applied in this method..
     required List<String> listOfAppliedImportantPairs,
     /// A map of previously retrieved prices... if any
@@ -2945,12 +3152,24 @@ class Data {
               .child(deviceUniqueId)
               .set(jsonEncode({
             "deviceUniqueId": deviceUniqueId,
-            "isLeading": false,
-            "hasPreviouslyBeenSetAsIsLeading": false,
+            "isLeading": true,
+            "hasPreviouslyBeenSetAsIsLeading": true,
             "timeDeviceCalledUpdatePricesOrStartedLeadingInGetRealtimePriceAll":
             _timeDeviceCalledUpdatePricesOrStartedLeadingInGetRealtimePriceAll,
-            "isFinishedUpdatingPrices": false
+            "isFinishedUpdatingPrices": true
           }));
+
+          /// configure active update devices properly in firebase. update their:
+          /// 1. "isLeading"
+          /// 2. "hasPreviouslyBeenSetAsIsLeading"
+          /// 3. "timeDeviceCalledUpdatePricesOrStartedLeadingInGetRealtimePriceAll"
+          setActualLeadingActiveUpdateDeviceProperly(
+              mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll: _mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll,
+              listOfActiveUpdateDevicesUniqueId: _listOfActiveUpdateDevicesUniqueId,
+              timeRegLeadingAUDCalledUpdatePricesOrStartedLeading: _timeRegLeadingAUDCalledUpdatePricesOrStartedLeading!,
+              indexAUDThatShouldBeSetAsLeading: _listOfActiveUpdateDevicesUniqueId.indexOf(deviceUniqueId),
+              indexRegLeadingAUD: 0
+          );
 
         }
 
