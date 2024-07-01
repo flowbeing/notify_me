@@ -449,7 +449,7 @@ class _NotifyMeAppState extends State<NotifyMeApp> {
                                 // await Share.share("A great app: ${Uri.base}");
                               },
                               color: const Color(0xFFFC8955),
-                              textOrImageString: "LinkedIn"
+                              textOrImageString: "Share on LinkedIn"
                           ),
 
                           /// Spacing
@@ -505,7 +505,7 @@ class _NotifyMeAppState extends State<NotifyMeApp> {
                               .withRed(80)
                               .withBlue(80)
                               .withGreen(80),
-                          textOrImageString: "About Project 🔖"
+                          textOrImageString: "About (Flutter) Project 🔖"
                       ),
 
                       // /// Emperor color
