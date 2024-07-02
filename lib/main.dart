@@ -127,10 +127,12 @@ class _NotifyMeAppState extends State<NotifyMeApp> {
 
   Widget build(BuildContext context) {
 
-    print("defaultTargetPlatform: ${defaultTargetPlatform}");
+    // print("defaultTargetPlatform: ${defaultTargetPlatform}");
 
-    if (defaultTargetPlatform != TargetPlatform.iOS &&
-        defaultTargetPlatform != TargetPlatform.android
+    // defaultTargetPlatform != TargetPlatform.iOS && /// ---<
+    //         defaultTargetPlatform != TargetPlatform.android
+
+    if (true
     ) {
       homepage =
           Container(
@@ -336,7 +338,10 @@ class _NotifyMeAppState extends State<NotifyMeApp> {
                   DeviceFrame(
                       key: ValueKey("${currentDeviceOS==OS.iOS? "iOS": "android"}$countCurrentDeviceIndex"), //allDevices[countCurrentDeviceIndex].name
                       device: allDevices[countCurrentDeviceIndex],
-                      screen: Homepage(),
+                      screen: Homepage(
+                        deviceName: allDevices[countCurrentDeviceIndex].name,
+                        safeAreaDimensions: allDevices[countCurrentDeviceIndex].safeAreas,
+                      ),
                       isFrameVisible: isShowDeviceBorders,
                   ),
 
@@ -406,7 +411,7 @@ class _NotifyMeAppState extends State<NotifyMeApp> {
                       /// "Hire Daniel" button
                       customElevationButton(
                           onPressed: () async{
-                            print("launching url");
+                            // print("launching url"); --
 
                             // Uri uri=Uri.parse("https://www.linkedin.com/feed/?shareActive=true&text=Check out this cool app demo by @danieloyebolu - ${Uri.base}");
                             Uri uri=Uri.parse("https://linkedin.com/in/daniel-oyebolu");
@@ -434,11 +439,11 @@ class _NotifyMeAppState extends State<NotifyMeApp> {
                           /// Share to LinkedIn Button
                           customElevationButton(
                               onPressed: () async{
-                                print("launching url");
+                                // print("launching url"); --
 
                                 // Uri uri=Uri.parse("https://www.linkedin.com/feed/?shareActive=true&text=Check out this cool app demo by @danieloyebolu - ${Uri.base}");
                                 Uri uri=Uri.parse("https://www.linkedin.com/feed/?shareActive=true&text="
-                                    "→ Check out this beautiful app by 👊Daniel Oyebolu 😍 - ${Uri.base}\n"
+                                    "→ Check out this beautiful app by 👊👊🏾🤓Daniel Oyebolu  😍 - ${Uri.base}\n"
                                     "→ It's financial markets application he coded using Flutter, Firebase and Rest API. 👨🏾‍💻\n"
                                     "→ Sharing for reach! \n\n"
                                     "→ P.S: Help Daniel get hired by sharing! 🥂\n"
@@ -460,7 +465,7 @@ class _NotifyMeAppState extends State<NotifyMeApp> {
                           /// Share to FB Button
                           customElevationButton(
                               onPressed: () async{
-                                print("launching url");
+                                // print("launching url");
 
                                 Uri uri=Uri.parse("https://www.facebook.com/sharer/sharer.php?u=${Uri.base}");
 
@@ -479,7 +484,7 @@ class _NotifyMeAppState extends State<NotifyMeApp> {
                           /// Share to Twitter text
                           customElevationButton(
                               onPressed: () async{
-                                print("launching url");
+                                // print("launching url");
 
                                 Uri uri=Uri.parse("http://twitter.com/share?text=→ Check out this beautiful app by Daniel Oyebolu 😍\n"
                                     "→ It's financial markets application he coded using Flutter, Firebase and Rest API. 👨🏾‍💻\n"

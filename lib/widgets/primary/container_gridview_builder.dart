@@ -458,14 +458,18 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
           isSelectedTile = true;
         }
 
+        print("l1");
         /// defining each grid tile's colors
         Color pureColorGridTile = Colors.transparent;
         Color? gridTileColor;
         Color? gridBorderColor;
 
+        print("l2");
+
         /// grid tile color configuration for when prices get fetched for
         /// the first time
         if (isFetchingPrices == true) {
+          print("lc");
           gridTileColor = Colors.black.withOpacity(.02); //  Colors.white
           // gridTileColor = Colors.white;
           gridBorderColor = Colors.black.withOpacity(0.1); //gridTileColor
@@ -473,6 +477,7 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
 
         /// grid tile color configuration for 'demo' priced currency pairs
         else if (isNotDisplayedPrice) {
+          print("ld");
           gridTileColor = Colors.black.withOpacity(.01);
           gridBorderColor = gridTileColor;
         }
@@ -480,6 +485,7 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
         /// grid tile color configuration for when current and previous price
         /// are the same
         else if (isNoPriceMovement) {
+          print("le");
           pureColorGridTile =
               Color(0xFFF5F4FB).withRed(80).withBlue(80).withGreen(
                   80); //Colors.black.withOpacity(1);
@@ -490,6 +496,7 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
         /// grid tile color configuration for when there's an upward price
         /// movement
         else if (isUpwardPriceMovement) {
+          print("lf");
           pureColorGridTile =
               const Color(0xFF069D91).withOpacity(1); // 0xFF0066FF // .67
           gridTileColor = const Color(0xFF069D91).withOpacity(.05);
@@ -499,6 +506,7 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
         /// grid tile color configuration for when there's an downward price
         /// movement
         else if (isDownwardPriceMovement) {
+          print("lg");
           pureColorGridTile = const Color(0xFFFC8955);
           gridTileColor = const Color(0xFFFC8955).withOpacity(0.07);
           gridBorderColor = const Color(0xFFFC8955).withOpacity(0.1);
@@ -513,6 +521,7 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
           /// b. the clicked grid tile is not the currently selected grid
           ///    tile..
           onTap: () {
+
             if (currentInstrumentsData.runtimeType != String
                 && priceDifferenceIfAny != "demo"
                 && indexSelectedGridTile != index
@@ -524,6 +533,8 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
               //     enteredText: null
               // );
 
+              print("l3");
+
               /// resetting any previous manually entered currency pair text
               currentValueKeyBackup = currentValueKey;
               if (manuallyEnteredCurrencyPair != null) {
@@ -532,6 +543,7 @@ class _ContainerGridViewBuilderState extends State<ContainerGridViewBuilder> {
                 );
               }
 
+              print("l4");
               /// updating the selected grid tile's index and calling
               /// notifyListeners
               dataProvider!.updateIndexSelectedGridTile(

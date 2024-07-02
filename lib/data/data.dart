@@ -124,22 +124,41 @@ class Data {
   /// "SHIB", "AVAX", "TRX", "DOT", "LINK", "BCH", "NEAR", "MATIC", "LTC", "ICP",
   /// "LEO", "DAI", "UNI", "PEPE", "ETC", "HBAR", "RNDR"
 
-  final String _apiKey = dotenv.env["API_KEY"]!;
+  // final String _apiKey = dotenv.env["API_KEY"]!;
+  final String _apiKey = "8d842803fefb4c43bc4d936613f79651";
 
   Directory? _appDir;
   String? _appDirPath;
-  final String _dataFolderName = dotenv.env["DATA_FOLDER_NAME"]!;
-  final String _allSymbolsDataFileName = dotenv.env["DATA_FILE_NAME"]!;
-  final String _logFolderName = dotenv.env["LOG_FOLDER_NAME"]!;
+  // final String _dataFolderName = dotenv.env["DATA_FOLDER_NAME"]!;
+  final String _dataFolderName = 'data/';
+
+  // final String _allSymbolsDataFileName = dotenv.env["DATA_FILE_NAME"]!;
+  final String _allSymbolsDataFileName = "all_symbols_data.txt";
+
+  // final String _logFolderName = dotenv.env["LOG_FOLDER_NAME"]!;
+  final String _logFolderName = "log/";
+
+  // final String _dataFetchingErrorLogFileName =
+  //     dotenv.env["DATA_FETCHING_ERROR_LOG_FILE_NAME"]!;
   final String _dataFetchingErrorLogFileName =
-      dotenv.env["DATA_FETCHING_ERROR_LOG_FILE_NAME"]!;
+      "data_fetching_error_log";
+
+  // final String _dataUpdateSessionsFileName =
+  //     dotenv.env["DATA_UPDATE_SESSIONS_FILE_NAME"]!;
   final String _dataUpdateSessionsFileName =
-      dotenv.env["DATA_UPDATE_SESSIONS_FILE_NAME"]!;
+      "data_update_sessions_log";
+
+  // final String _otherErrorsLogFileName =
+  //     dotenv.env["OTHER_ERRORS_LOG_FILE_NAME"]!;
   final String _otherErrorsLogFileName =
-      dotenv.env["OTHER_ERRORS_LOG_FILE_NAME"]!;
-  final String _urlRealTimePrice = dotenv.env["URL_REAL_TIME_PRICE"]!;
-  final String _urlQuote = dotenv.env["URL_LATEST_ONE_MIN_QUOTE"]!;
-  final String _urlAPIUsage = dotenv.env['URL_API_USAGE']!;
+      "other_errors_log";
+
+  // final String _urlRealTimePrice = dotenv.env["URL_REAL_TIME_PRICE"]!;
+  final String _urlRealTimePrice = "api.twelvedata.com/price?symbol={abc}&country={xyz}&apikey=";
+
+  // final String _urlQuote = dotenv.env["URL_LATEST_ONE_MIN_QUOTE"]!;
+  final String _urlQuote = "api.twelvedata.com/quote?symbol={abc}&interval=1min&apikey=";
+  // final String _urlAPIUsage = dotenv.env['URL_API_USAGE']!;
 
   File? _dataFetchingErrorLogFile;
   File? _allSymbolsDataFile;
@@ -410,8 +429,10 @@ class Data {
   Future _updateAllForexSymbolsData() async {
     try {
       /// formatting url & obtaining all forex symbols' data
+      // List<String> urlAllForexPairs =
+      //     dotenv.env['URL_ALL_FOREX_PAIRS']!.split("/");
       List<String> urlAllForexPairs =
-          dotenv.env['URL_ALL_FOREX_PAIRS']!.split("/");
+          "api.twelvedata.com/forex_pairs".split("/");
 
       // print("getAllForexPairsUrl: ${getAllForexPairsUrl}, type: ${getAllForexPairsUrl.runtimeType}");
 
@@ -456,8 +477,10 @@ class Data {
   Future _updateAllStockSymbolsData() async {
     try {
       /// formatting url & obtaining all stock symbols' data
+      // List<String> urlAllStockSymbols =
+      //     dotenv.env['URL_ALL_STOCKS_SYMBOLS']!.split("/");
       List<String> urlAllStockSymbols =
-          dotenv.env['URL_ALL_STOCKS_SYMBOLS']!.split("/");
+      "api.twelvedata.com/stocks".split("/");
 
       // print("getAllForexPairsUrl: ${getAllForexPairsUrl}, type: ${getAllForexPairsUrl.runtimeType}");
 
@@ -506,8 +529,11 @@ class Data {
   Future _updateAllCryptoSymbolsData() async {
     try {
       /// formatting url & obtaining all crypto symbols' data
+      // List<String> urlAllCryptoSymbols =
+      //     dotenv.env['URL_ALL_CRYPTO_SYMBOLS']!.split("/");
+
       List<String> urlAllCryptoSymbols =
-          dotenv.env['URL_ALL_CRYPTO_SYMBOLS']!.split("/");
+          "api.twelvedata.com/cryptocurrencies".split("/");
 
       // print("getAllForexPairsUrl: ${getAllForexPairsUrl}, type: ${getAllForexPairsUrl.runtimeType}");
 
@@ -554,8 +580,11 @@ class Data {
   Future _updateAllETFSymbolsData() async {
     try {
       /// formatting url & obtaining all ETF symbols' data
+      // List<String> urlAllETFSymbols =
+      //     dotenv.env['URL_ALL_ETF_SYMBOLS']!.split("/");
+
       List<String> urlAllETFSymbols =
-          dotenv.env['URL_ALL_ETF_SYMBOLS']!.split("/");
+      "api.twelvedata.com/etf".split("/");
 
       // print("getAllForexPairsUrl: ${getAllForexPairsUrl}, type: ${getAllForexPairsUrl.runtimeType}");
 
@@ -602,8 +631,10 @@ class Data {
   Future _updateAllIndexSymbolsData() async {
     try {
       /// formatting url & obtaining all Index symbols' data
+      // List<String> urlAllIndexSymbols =
+      //     dotenv.env['URL_ALL_INDEX_SYMBOLS']!.split("/");
       List<String> urlAllIndexSymbols =
-          dotenv.env['URL_ALL_INDEX_SYMBOLS']!.split("/");
+      "api.twelvedata.com/indices".split("/");
 
       // print("getAllForexPairsUrl: ${getAllForexPairsUrl}, type: ${getAllForexPairsUrl.runtimeType}");
 
@@ -651,8 +682,10 @@ class Data {
   Future _updateAllFundSymbolsData() async {
     try {
       /// formatting url & obtaining all fund symbols' data
+      // List<String> urlAllFundSymbols =
+      //     dotenv.env['URL_ALL_FUNDS_SYMBOLS']!.split("/");
       List<String> urlAllFundSymbols =
-          dotenv.env['URL_ALL_FUNDS_SYMBOLS']!.split("/");
+      "api.twelvedata.com/funds".split("/");
 
       // print("getAllForexPairsUrl: ${getAllForexPairsUrl}, type: ${getAllForexPairsUrl.runtimeType}");
 
@@ -699,8 +732,10 @@ class Data {
 
     try {
       /// formatting url & obtaining bond symbols' data
+      // List<String> urlAllBondSymbols =
+      //     dotenv.env['URL_ALL_BONDS_SYMBOLS']!.split("/");
       List<String> urlAllBondSymbols =
-          dotenv.env['URL_ALL_BONDS_SYMBOLS']!.split("/");
+      "api.twelvedata.com/bonds".split("/");
 
       // print("getAllForexPairsUrl: ${getAllForexPairsUrl}, type: ${getAllForexPairsUrl.runtimeType}");
 
@@ -1209,69 +1244,74 @@ class Data {
     required int indexRegLeadingAUD
   }) async{
 
-    /// 2.
     /// set the registered active update device's "isLeading" to false
     /// and its "hasPreviouslyBeenSetAsIsLeading" to true alongside that
-    /// of every other active update device in between
+    /// of every other active update device in between, when more than one active
+    /// update devices exist within the list map of acive update devices..
     // ...if their
     // 'isFinishedUpdatingPrices" value is false.
     //
     // if an 'isFinishedUpdatingPrices' value is true stop the task and attempt
     // to update the active update device that's perceived should
     // be the actual leading active update device
-    List listOfUniqueIdEveryAUDBeforePresumedActualAUD =
-    listOfActiveUpdateDevicesUniqueId.sublist(
-        0, indexAUDThatShouldBeSetAsLeading
-    );
 
-    int indexAUDBeforePresumedActualAUD = 0;
-    for (var idAUDBeforePresumedActualAUD
-    in listOfUniqueIdEveryAUDBeforePresumedActualAUD) {
-      Map<dynamic, dynamic> AUDBeforePresumedActualAUD = jsonDecode(
-          jsonDecode(jsonEncode(
-              mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll[
-              idAUDBeforePresumedActualAUD])));
+    if (listOfActiveUpdateDevicesUniqueId.length>1){
+      List listOfUniqueIdEveryAUDBeforePresumedActualAUD=
+          listOfActiveUpdateDevicesUniqueId.sublist(
+              0, indexAUDThatShouldBeSetAsLeading
+          );
 
-      // bool isFinishedAUDBeforePresumedActualAUD=
-      //   AUDBeforePresumedActualAUD["isFinishedUpdatingPrices"];
-      //
-      // /// if the current active update device that's before the
-      // /// active update device that's perceived should be the actual
-      // /// active update device has not finished updating price data,
-      // ///
-      // if (isFinishedAUDBeforePresumedActualAUD){
-      //
-      // }
+      int indexAUDBeforePresumedActualAUD = 0;
+      for (var idAUDBeforePresumedActualAUD
+      in listOfUniqueIdEveryAUDBeforePresumedActualAUD) {
+        Map<dynamic, dynamic> AUDBeforePresumedActualAUD = jsonDecode(
+            jsonDecode(jsonEncode(
+                mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll[
+                idAUDBeforePresumedActualAUD])));
 
-      AUDBeforePresumedActualAUD['isLeading'] = false;
-      AUDBeforePresumedActualAUD['hasPreviouslyBeenSetAsIsLeading'] = true;
+        // bool isFinishedAUDBeforePresumedActualAUD=
+        //   AUDBeforePresumedActualAUD["isFinishedUpdatingPrices"];
+        //
+        // /// if the current active update device that's before the
+        // /// active update device that's perceived should be the actual
+        // /// active update device has not finished updating price data,
+        // ///
+        // if (isFinishedAUDBeforePresumedActualAUD){
+        //
+        // }
 
-      /// update 'timeDeviceCalledUpdatePricesOrStartedLeadingInGetRealtimePriceAll'
-      /// for every active update device that's not the registered or actual
-      /// update device
-      if (indexAUDBeforePresumedActualAUD != 0) {
-        /// ensuring that each active update device has the time they were
-        /// supposed to start updating prices when an active update device
-        /// before them fails
-        AUDBeforePresumedActualAUD[
-        "timeDeviceCalledUpdatePricesOrStartedLeadingInGetRealtimePriceAll"] =
-            cleanDateTimeAndReturnString(
-                dateTime:
-                timeRegLeadingAUDCalledUpdatePricesOrStartedLeading
-                    .add(Duration(
-                    seconds:
-                    ((indexAUDBeforePresumedActualAUD * 10)-(indexRegLeadingAUD * 10)) +
-                        1)));
+        AUDBeforePresumedActualAUD['isLeading'] = false;
+        AUDBeforePresumedActualAUD['hasPreviouslyBeenSetAsIsLeading'] = true;
+
+        /// update 'timeDeviceCalledUpdatePricesOrStartedLeadingInGetRealtimePriceAll'
+        /// for every active update device that's not the registered or actual
+        /// update device
+        if (indexAUDBeforePresumedActualAUD != 0) {
+          /// ensuring that each active update device has the time they were
+          /// supposed to start updating prices when an active update device
+          /// before them fails
+          AUDBeforePresumedActualAUD[
+          "timeDeviceCalledUpdatePricesOrStartedLeadingInGetRealtimePriceAll"] =
+              cleanDateTimeAndReturnString(
+                  dateTime:
+                  timeRegLeadingAUDCalledUpdatePricesOrStartedLeading
+                      .add(Duration(
+                      seconds:
+                      ((indexAUDBeforePresumedActualAUD * 10)-(indexRegLeadingAUD * 10)) +
+                          1)));
+        }
+
+        /// registering the change in firebase..
+        _mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllRef
+            .child(idAUDBeforePresumedActualAUD)
+            .set(jsonEncode(AUDBeforePresumedActualAUD));
+
+        /// updating indexAUDBeforePresumedActualAUD
+        indexAUDBeforePresumedActualAUD += 1;
       }
 
-      /// registering the change in firebase..
-      _mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllRef
-          .child(idAUDBeforePresumedActualAUD)
-          .set(jsonEncode(AUDBeforePresumedActualAUD));
-
-      /// updating indexAUDBeforePresumedActualAUD
-      indexAUDBeforePresumedActualAUD += 1;
     }
+
 
   }
 

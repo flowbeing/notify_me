@@ -16,6 +16,15 @@ import "../widgets/secondary/dot_divider.dart";
 import "../widgets/secondary/instrument_filters.dart";
 
 class Homepage extends StatefulWidget {
+
+  Homepage({
+    this.deviceName,
+    this.safeAreaDimensions,
+  });
+
+  final String? deviceName;
+  final EdgeInsets? safeAreaDimensions;
+
   State<Homepage> createState() {
     return HomepageState();
   }
@@ -181,6 +190,8 @@ class HomepageState extends State<Homepage> with WidgetsBindingObserver {
     print("");
     print("within didChangeDependencies");
 
+    print("deviceName: ${widget.deviceName}");
+
     /// media query
     MediaQueryData mediaQuery = MediaQuery.of(context);
 
@@ -189,6 +200,20 @@ class HomepageState extends State<Homepage> with WidgetsBindingObserver {
     deviceWidth = mediaQuery.size.width;
     deviceHeight = mediaQuery.size.height;
     safeAreaHeight = deviceHeight - paddingTop - paddingBottom;
+
+    /// adjusting padding top if the device has no padding bottom to allow for
+    /// an even and clean look or device content spacing between the top and
+    /// bottom paddings
+    if (widget.safeAreaDimensions!=null){
+      double paddingTopFrame=widget.safeAreaDimensions!.top;
+      double paddingBottomFrame=widget.safeAreaDimensions!.bottom;
+
+      if (paddingBottomFrame==0){
+        paddingTop=paddingTopFrame/2;
+      }
+    }
+
+    // paddingBottom=
 
     // paddingTopScreen = paddingTop + (0.00321888412 * deviceHeight);
     paddingLeftAndRightScreen = 0.02325581395 * deviceWidth;
@@ -264,6 +289,13 @@ class HomepageState extends State<Homepage> with WidgetsBindingObserver {
     widthSpaceInBetweenAlertsMenu =
         0.14 * deviceWidth; // 0.2348837208 // 0.215 // 0.2325581395
 
+    /// adjusting alerts menu widget dimensions for Sony Xperia 1 II
+    if (widget.deviceName=="Sony Xperia 1 II"){
+      widthAlertsAndMuteAllContainer=widthAlertsAndMuteAllContainer*1.05;
+      widthSpaceInBetweenAlertsMenu=widthSpaceInBetweenAlertsMenu*.8;
+      widthInstrumentFilterWidget=widthInstrumentFilterWidget*1.05;
+    }
+
     /// dimensions - alerts ListView Builder
     heightAlertsListViewBuilder = 0.1321428571 *
         safeAreaHeight; // 0.1190987124 * deviceHeight; // 0.1201716738
@@ -330,6 +362,22 @@ class HomepageState extends State<Homepage> with WidgetsBindingObserver {
         borderBottomLeftOrRightRadiusCreateAlert=borderTopLeftOrRightRadiusCreateAlert;
         radiusGridTile=borderBottomLeftOrRightRadiusCreateAlert;
       }
+    }
+
+    List devicesAdjBorderBottom=[
+      'iPhone SE',
+      'Samsung Galaxy Note 20 Ultra',
+      'Sony Xperia 1 II',
+      'Small',
+      'Medium',
+      'Big'
+    ];
+
+    /// adjust create new alert widget's border bottom for the above devices to
+    /// allow for a clean look.. to ensure the border bottom's radius rhymes with
+    /// the devices edges
+    if (devicesAdjBorderBottom.contains(widget.deviceName)){
+      borderBottomLeftOrRightRadiusCreateAlert=borderTopLeftOrRightRadiusCreateAlert;
     }
 
     /// Data Provider
@@ -2362,6 +2410,7 @@ class _AlertsAndOtherMenuItemsState extends State<AlertsAndOtherMenuItems> {
         /// Space in between - "Alerts -> Mute All" &
         /// Instruments Filter ("All", "Forex", "Crypto")
         SizedBox(
+          // color: Colors.yellow,
           width: widget.widthSpaceInBetweenAlertsMenu,
         ),
 
@@ -2880,18 +2929,21 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
               borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(widget.isCurrencyPairTextField
                       ? widget.borderTopLeftOrRightRadiusCreateAlert
-                      : 0),
+                      : widget.borderTopLeftOrRightRadiusCreateAlert
+                  ),
                   bottomLeft: Radius.circular(widget.isCurrencyPairTextField
                       ? widget.borderBottomLeftOrRightRadiusCreateAlert
-                      : 0),
+                      : widget.borderTopLeftOrRightRadiusCreateAlert
+                  ),
                   topRight: Radius.circular(
                       widget.isCurrencyPairTextField == false
                           ? widget.borderTopLeftOrRightRadiusCreateAlert
-                          : 0),
+                          : widget.borderTopLeftOrRightRadiusCreateAlert),
                   bottomRight: Radius.circular(
                       widget.isCurrencyPairTextField == false
                           ? widget.borderBottomLeftOrRightRadiusCreateAlert
-                          : 0)),
+                          : widget.borderTopLeftOrRightRadiusCreateAlert
+                  )),
               border: Border.all(
                   width: widget.borderWidthGridTile / 4,
                   color: Colors.black
