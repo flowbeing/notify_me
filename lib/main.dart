@@ -43,7 +43,7 @@ class NotifyMeApp extends StatefulWidget {
 /// Notify Me App's State
 class _NotifyMeAppState extends State<NotifyMeApp> {
   /// homepage widget
-  Widget homepage = Homepage();
+  // Widget homepage = Homepage();
 
   /// devices
   // DeviceInfo iPhone13ProMax= Devices.ios.iPhone13ProMax;
@@ -132,10 +132,11 @@ class _NotifyMeAppState extends State<NotifyMeApp> {
     // defaultTargetPlatform != TargetPlatform.iOS && /// ---<
     //         defaultTargetPlatform != TargetPlatform.android
 
-    if (true
-    ) {
-      homepage =
-          Container(
+    return ChangeNotifierProvider<DataProvider>(
+      create: (_) => DataProvider(),
+      child: MaterialApp(
+          title: "Notify Me - Daniel Oyebolu",
+          home: Container(
             alignment: Alignment.center,
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
@@ -336,13 +337,13 @@ class _NotifyMeAppState extends State<NotifyMeApp> {
 
                   /// APPLICATION WITH A SMART DEVICE'S FRAME
                   DeviceFrame(
-                      key: ValueKey("${currentDeviceOS==OS.iOS? "iOS": "android"}$countCurrentDeviceIndex"), //allDevices[countCurrentDeviceIndex].name
-                      device: allDevices[countCurrentDeviceIndex],
-                      screen: Homepage(
-                        deviceName: allDevices[countCurrentDeviceIndex].name,
-                        safeAreaDimensions: allDevices[countCurrentDeviceIndex].safeAreas,
-                      ),
-                      isFrameVisible: isShowDeviceBorders,
+                    key: ValueKey("${currentDeviceOS==OS.iOS? "iOS": "android"}$countCurrentDeviceIndex"), //allDevices[countCurrentDeviceIndex].name
+                    device: allDevices[countCurrentDeviceIndex],
+                    screen: Homepage(
+                      deviceName: allDevices[countCurrentDeviceIndex].name,
+                      safeAreaDimensions: allDevices[countCurrentDeviceIndex].safeAreas,
+                    ),
+                    // isFrameVisible: isShowDeviceBorders,
                   ),
 
                   /// Spacing
@@ -366,7 +367,7 @@ class _NotifyMeAppState extends State<NotifyMeApp> {
                             shape: WidgetStateProperty.all(RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(5),
                                 side: const BorderSide(
-                                  color: Colors.black
+                                    color: Colors.black
                                 )
                             ))
                         ),
@@ -384,7 +385,7 @@ class _NotifyMeAppState extends State<NotifyMeApp> {
                       const SizedBox(
                         height: 10,
                       ),
-                      
+
                       /// "Hire The Developer" button
                       // ElevatedButton(
                       //   onPressed: (null),
@@ -505,7 +506,15 @@ class _NotifyMeAppState extends State<NotifyMeApp> {
                         height: 10,
                       ),
 
+                      /// About (Flutter) Project
                       customElevationButton(
+                          onPressed: () async{
+
+                            Uri uri=Uri.parse("https://www.linkedin.com/posts/daniel-oyebolu_strategic-alliances-appearances-expectations-activity-7213893394060750848-gsCq");
+
+                            await launchUrl(uri);
+
+                          },
                           color: Color(0xFFF5F4FB)
                               .withRed(80)
                               .withBlue(80)
@@ -597,14 +606,7 @@ class _NotifyMeAppState extends State<NotifyMeApp> {
                 ],
               ),
             ),
-          );
-    }
-
-    return ChangeNotifierProvider<DataProvider>(
-      create: (_) => DataProvider(),
-      child: MaterialApp(
-          title: "Notify Me - Daniel Oyebolu",
-          home: homepage
+          )
       ),
     );
   }

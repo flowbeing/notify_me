@@ -187,10 +187,10 @@ class HomepageState extends State<Homepage> with WidgetsBindingObserver {
 
   @override
   void didChangeDependencies() async {
-    print("");
-    print("within didChangeDependencies");
-
-    print("deviceName: ${widget.deviceName}");
+    // print("");
+    // print("within didChangeDependencies");
+    //
+    // print("deviceName: ${widget.deviceName}");
 
     /// media query
     MediaQueryData mediaQuery = MediaQuery.of(context);
@@ -228,14 +228,14 @@ class HomepageState extends State<Homepage> with WidgetsBindingObserver {
     mainAxisSpacing = 0.01612903226*heightGridView; // 0.0119047615*safeAreaHeight;// 0.01072961373 * deviceHeight;
     crossAxisSpacing = 0.0243902439*widthGridView; // 0.02325581395 * deviceWidth;
 
-    print("safeAreaHeight: $safeAreaHeight");
-    print("heightGridView: $heightGridView");
-    print("widthGridView: $widthGridView");
-    print("widthGridTile: $widthGridTile");
-    print("heightGridTile: $heightGridTile");
-    print("crossAxisSpacing: $crossAxisSpacing");
-    print("mainAxisSpacing: $mainAxisSpacing");
-    print("aspectRatioGridtile: $aspectRatioGridtile");
+    // print("safeAreaHeight: $safeAreaHeight");
+    // print("heightGridView: $heightGridView");
+    // print("widthGridView: $widthGridView");
+    // print("widthGridTile: $widthGridTile");
+    // print("heightGridTile: $heightGridTile");
+    // print("crossAxisSpacing: $crossAxisSpacing");
+    // print("mainAxisSpacing: $mainAxisSpacing");
+    // print("aspectRatioGridtile: $aspectRatioGridtile");
 
     radiusGridTile = 0.01162790698 * deviceWidth;
     borderWidthGridTile = 0.001290322581*heightGridTile; // 0.0008583690987 * deviceHeight;
@@ -252,7 +252,7 @@ class HomepageState extends State<Homepage> with WidgetsBindingObserver {
     fontSizeMinus = 0.02682403433 * deviceHeight;
 
     /// symbol & price boxes' dimensions
-    print("fontSizeSymbols: $fontSizeSymbols");
+    // print("fontSizeSymbols: $fontSizeSymbols");
 
     heightSymbolSizedBox = 0.0321888412 * deviceHeight; // fontSizeSymbols;
     heightPriceSizedBox = 0.0321888412 * deviceHeight;
@@ -261,15 +261,15 @@ class HomepageState extends State<Homepage> with WidgetsBindingObserver {
     /// 2. currency pair & currency price
     marginPriceDirectionAndCurrencyPair = 0.01716738197 * deviceHeight;
     marginCurrencyPairAndCurrencyPrice = 0.01287553648 * deviceHeight;
-    print(
-        "marginCurrencyPairAndCurrencyPrice: $marginCurrencyPairAndCurrencyPrice");
+    // print(
+    //     "marginCurrencyPairAndCurrencyPrice: $marginCurrencyPairAndCurrencyPrice");
 
-    print("widthGridTile: ${widthGridTile}");
-    print("heightGridTile: $heightGridTile");
-    print("crossAxisSpacing: $crossAxisSpacing");
-    print("mainAxisSpacing: $mainAxisSpacing");
-    print("radiusGridTile: $radiusGridTile");
-    print("heightFirstSixGridTiles: $heightGridView");
+    // print("widthGridTile: ${widthGridTile}");
+    // print("heightGridTile: $heightGridTile");
+    // print("crossAxisSpacing: $crossAxisSpacing");
+    // print("mainAxisSpacing: $mainAxisSpacing");
+    // print("radiusGridTile: $radiusGridTile");
+    // print("heightFirstSixGridTiles: $heightGridView");
 
     /// dimensions and other measurements - alerts and other menu items SizedBox
     heightAlertsAndOtherMenuItemsSizedBox = 0.04166666667 *
@@ -390,8 +390,8 @@ class HomepageState extends State<Homepage> with WidgetsBindingObserver {
     }
 
     /// REGISTERING WHETHER THE KEYBOARD IS VISIBLE
-    print("");
-    print("Registering Keyboard's visibility");
+    // print("");
+    // print("Registering Keyboard's visibility");
     double bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     /// if a bottom inset becomes visible i.e a keyboard is being displayed,
@@ -399,14 +399,14 @@ class HomepageState extends State<Homepage> with WidgetsBindingObserver {
     if (bottomInset > 0) {
       // isGridTileOrFilterOptionClickedOrKeyboardVisible = true;
       isKeyboardVisible = true;
-      print("Keyboard is visible");
+      // print("Keyboard is visible");
 
       /// ...otherwise if the keyboard is being hidden, signal that the keyboard
       /// is still visible..
     } else if (bottomInset == 0 && previousKeyboardValue > 0) {
       // isGridTileOrFilterOptionClickedOrKeyboardVisible = true;
       isKeyboardVisible = true;
-      print("Keyboard is visible");
+      // print("Keyboard is visible");
     }
 
     /// updating previousKeyboardValue
@@ -437,12 +437,12 @@ class HomepageState extends State<Homepage> with WidgetsBindingObserver {
     // TODO: implement didChangeDependencies
     super.didChangeDependencies();
 
-    print("deviceHeight: $deviceHeight");
-    print("deviceWidth: $deviceWidth");
-    print(
-        "deviceHeightManual: ${paddingTop + heightGridView + (heightAlertsAndOtherMenuItemsSizedBox + marginTopAlertsAndOtherMenuItemsSizedBox + marginBottomAlertsAndOtherMenuItemsSizedBox) + heightAlertsListViewBuilder + heightSwipeNotification + heightCreateNewAlertContainer + paddingBottom}");
-    print(
-        "paddingTop: $paddingTop, paddingBottom: $paddingBottom \n total padding: ${paddingTop + paddingBottom}\n safearea: ${deviceHeight - paddingTop - paddingBottom}");
+    // print("deviceHeight: $deviceHeight");
+    // print("deviceWidth: $deviceWidth");
+    // print(
+    //     "deviceHeightManual: ${paddingTop + heightGridView + (heightAlertsAndOtherMenuItemsSizedBox + marginTopAlertsAndOtherMenuItemsSizedBox + marginBottomAlertsAndOtherMenuItemsSizedBox) + heightAlertsListViewBuilder + heightSwipeNotification + heightCreateNewAlertContainer + paddingBottom}");
+    // print(
+    //     "paddingTop: $paddingTop, paddingBottom: $paddingBottom \n total padding: ${paddingTop + paddingBottom}\n safearea: ${deviceHeight - paddingTop - paddingBottom}");
   }
 
   @override
@@ -469,7 +469,7 @@ class HomepageState extends State<Homepage> with WidgetsBindingObserver {
           .showNotification(context: context, message: "Hiya! Welcome back!");
     }
 
-    print("AppLifecycleState: ${state}");
+    // print("AppLifecycleState: ${state}");
 
     super.didChangeAppLifecycleState(state);
   }
@@ -532,13 +532,13 @@ class HomepageState extends State<Homepage> with WidgetsBindingObserver {
   }
 
   Widget build(BuildContext context) {
-    print("");
-    print("");
-    print(
-        "--------------------------------------------------------------------------------");
-    print("");
-    print("HOMEPAGE - BEGINNING (BUILT HOMEPAGE!)");
-    print("");
+    // print("");
+    // print("");
+    // print(
+    //     "--------------------------------------------------------------------------------");
+    // print("");
+    // print("HOMEPAGE - BEGINNING (BUILT HOMEPAGE!)");
+    // print("");
 
     return Scaffold(
       // key: ValueKey("$indexSelectedGridTile$indexSelectedGridTile$indexSelectedGridTile"),
@@ -860,7 +860,7 @@ class _CurrencyPriceAdjustmentContainerState
 
   @override
   didChangeDependencies() {
-    print("begin didChangeDependencies CurrencyPriceAdjustmentContainer");
+    // print("begin didChangeDependencies CurrencyPriceAdjustmentContainer");
 
     /// prevents the alert price textform field from rebuilding everytime
     /// notifyListeners gets called, since selectedInstrument (valueKey) will
@@ -875,7 +875,7 @@ class _CurrencyPriceAdjustmentContainerState
       /// setting the initial alert price
       initialValuePrice = dataProvider!.getAlertPriceCurrencyPriceTextField();
 
-      print("initializedState focusNode");
+      // print("initializedState focusNode");
       focusNodeAlertPrice = FocusNode(
           debugLabel: "alertPrice$selectedInstrument", skipTraversal: true);
 
@@ -894,8 +894,8 @@ class _CurrencyPriceAdjustmentContainerState
       flexPlusAndMinusButtons = (0.2 * 100).round(); //0.1761363636
       flexPriceContainer = 100 - (flexPlusAndMinusButtons * 2);
 
-      print("flexPlusAndMinusButtons: $flexPlusAndMinusButtons");
-      print("flexPriceContainer: $flexPriceContainer");
+      // print("flexPlusAndMinusButtons: $flexPlusAndMinusButtons");
+      // print("flexPriceContainer: $flexPriceContainer");
     }
 
     /// setting alert price string's color depending on whether prices have
@@ -926,13 +926,13 @@ class _CurrencyPriceAdjustmentContainerState
     currentPairLatestPrice =
         dataProvider!.getCurrentlySelectedInstrumentPrice();
 
-    print("currentPairLatestPrice get: ${currentPairLatestPrice}");
+    // print("currentPairLatestPrice get: ${currentPairLatestPrice}");
 
     if (currentSelectedInstrument.toLowerCase() ==
             selectedInstrument.toLowerCase() &&
         focusNodeAlertPrice!.hasFocus == false) {
-      print(
-          "hasEditedAlertPriceAtLeastOnce: ${hasEditedAlertPriceAtLeastOnce}");
+      // print(
+      //     "hasEditedAlertPriceAtLeastOnce: ${hasEditedAlertPriceAtLeastOnce}");
       if (hasEditedAlertPriceAtLeastOnce == false) {
         if (isFirstTimeFetching) {
           textColor = Colors.grey;
@@ -1006,16 +1006,16 @@ class _CurrencyPriceAdjustmentContainerState
     else if (currentSelectedInstrument.toLowerCase() !=
             selectedInstrument.toLowerCase() &&
         focusNodeAlertPrice!.hasFocus == false) {
-      print("updatedFilters?a");
+      // print("updatedFilters?a");
 
       textColor = Colors.black;
 
       selectedInstrument = currentSelectedInstrument; // uppercase
       initialValuePrice = currentlySelectedInstrumentPrice;
 
-      print("selectedInstrument: $selectedInstrument");
-      print("initialValuePrice: $initialValuePrice");
-      print("updatedFilters?b");
+      // print("selectedInstrument: $selectedInstrument");
+      // print("initialValuePrice: $initialValuePrice");
+      // print("updatedFilters?b");
 
       /// if prices have been fetched at least once, ie. when the grid view
       /// widget has loaded all currency pairs and their prices correctly,
@@ -1073,7 +1073,7 @@ class _CurrencyPriceAdjustmentContainerState
       correctEnteredErrorTextTimer =
           Timer(const Duration(milliseconds: 2250), () {
         setState(() {
-          print("colorRedInt is");
+          // print("colorRedInt is");
           String currentlySelectedPairAlertPrice =
               dataProvider!.getAlertPriceCurrencyPriceTextField();
 
@@ -1093,8 +1093,8 @@ class _CurrencyPriceAdjustmentContainerState
             selectedInstrument = selectedInstrument.toUpperCase();
             initialValuePrice = currentlySelectedInstrumentPrice.toUpperCase();
           }
-          print(
-              "currentlySelectedInstrumentPrice == previouslyEnteredErrorText: ${currentlySelectedInstrumentPrice == previouslyEnteredErrorText}");
+          // print(
+          //     "currentlySelectedInstrumentPrice == previouslyEnteredErrorText: ${currentlySelectedInstrumentPrice == previouslyEnteredErrorText}");
 
           /// if prices have been fetched at least once, ie. when the grid view
           /// widget has loaded all currency pairs and their prices correctly,
@@ -1146,7 +1146,7 @@ class _CurrencyPriceAdjustmentContainerState
     /// register this didChangeDependencies call
     numTimesDidChangeDependenciesRan += 1;
 
-    print("end didChangeDependencies CurrencyPriceAdjustmentContainer");
+    // print("end didChangeDependencies CurrencyPriceAdjustmentContainer");
 
     super.didChangeDependencies();
   }
@@ -1159,8 +1159,8 @@ class _CurrencyPriceAdjustmentContainerState
               alertPrice: enteredAlertPriceText,
               isSubtract: isSubtract ? true : false);
 
-      print(
-          "decreasedOrIncreasedAlertPrice: ${decreasedOrIncreasedAlertPrice}");
+      // print(
+      //     "decreasedOrIncreasedAlertPrice: ${decreasedOrIncreasedAlertPrice}");
 
       // focusNodeAlertPrice!.requestFocus();
 
@@ -1202,7 +1202,7 @@ class _CurrencyPriceAdjustmentContainerState
               // skipTraversal: true
               );
 
-          print("focusNodeAlertPrice: ${focusNodeAlertPrice}");
+          // print("focusNodeAlertPrice: ${focusNodeAlertPrice}");
 
           /// the new alert price
           // initialValuePrice = decreasedAlertPrice;
@@ -1224,26 +1224,26 @@ class _CurrencyPriceAdjustmentContainerState
               // skipTraversal: true
               );
 
-          print("focusNodeAlertPrice: ${focusNodeAlertPrice}");
+          // print("focusNodeAlertPrice: ${focusNodeAlertPrice}");
 
           /// the new alert price
           // initialValuePrice = decreasedAlertPrice;
         }
 
-        print("alertPrice hasFocus: ${isKeyboardVisibleBeforeButtonClick}");
+        // print("alertPrice hasFocus: ${isKeyboardVisibleBeforeButtonClick}");
 
         /// ensuring that the keyboard remains visible if it
         /// was visible before this button was clicked
         /// - (after the old focus node has been disposed)..
         if (isKeyboardVisibleBeforeButtonClick) {
           // FocusScope.of(context).nextFocus();
-          print("requestingFocus");
+          // print("requestingFocus");
           // FocusScope.of(context).requestFocus(focusNodeAlertPrice!);
 
           focusNodeAlertPrice!.requestFocus();
-          print(
-              "focusNodeAlertPrice.hasFocus:${focusNodeAlertPrice!.hasFocus}");
-          print("requestedFocus");
+          // print(
+          //     "focusNodeAlertPrice.hasFocus:${focusNodeAlertPrice!.hasFocus}");
+          // print("requestedFocus");
           // FocusScope.of(context).requestFocus(focusNodeAlertPrice!);
         }
 
@@ -1297,8 +1297,8 @@ class _CurrencyPriceAdjustmentContainerState
                       }
                     },
                     onLongPress: () {
-                      print("");
-                      print("onLongPress");
+                      // print("");
+                      // print("onLongPress");
 
                       /// create and run a subtraction timer that runs and
                       /// updates the screen every 65 millisecond
@@ -1485,8 +1485,8 @@ class _CurrencyPriceAdjustmentContainerState
                     },
                     onLongPress: () {
                       if (!isFirstTimeFetching) {
-                        print("");
-                        print("onLongPress");
+                        // print("");
+                        // print("onLongPress");
 
                         /// create and run an addition timer that runs and
                         /// updates the screen every 65 millisecond
@@ -1647,7 +1647,7 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
 
   @override
   void didChangeDependencies() {
-    print("didChangeDependencies Blurrable");
+    // print("didChangeDependencies Blurrable");
     dataProvider = Provider.of<DataProvider>(context, listen: true);
 
     isFocusedAnyTextField =
@@ -1660,7 +1660,7 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
     /// alerts
     listOfExistingAlerts = getListOfExistingAlerts();
 
-    print("listOfExistingAlerts: $listOfExistingAlerts");
+    // print("listOfExistingAlerts: $listOfExistingAlerts");
 
     /// setting bool that signals whether prices have not been fetched at least
     /// once
@@ -1730,10 +1730,10 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
 
   @override
   Widget build(BuildContext context) {
-    print("mapOfExistingAlerts.isEmpty: ${mapOfExistingAlerts.isEmpty}");
-    print("mapOfExistingAlerts: ${mapOfExistingAlerts}");
-    print(
-        "isFirstTimeFetchingPrices == true: ${isFirstTimeFetchingPrices == true}");
+    // print("mapOfExistingAlerts.isEmpty: ${mapOfExistingAlerts.isEmpty}");
+    // print("mapOfExistingAlerts: ${mapOfExistingAlerts}");
+    // print(
+    //     "isFirstTimeFetchingPrices == true: ${isFirstTimeFetchingPrices == true}");
 
     return Stack(
       // fit: StackFit.loose,
@@ -1904,10 +1904,10 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
                                   "assets/images/alert_price_above_current_price.png";
                             }
 
-                            print(
-                                "currentAlertInstrument: ${currentAlertInstrument}, currentAlertPrice: ${currentAlertInstrumentAlertPrice}");
-                            print(
-                                "diffAlertPriceAndLatestPrice: ${diffAlertPriceAndLatestPrice}");
+                            // print(
+                            //     "currentAlertInstrument: ${currentAlertInstrument}, currentAlertPrice: ${currentAlertInstrumentAlertPrice}");
+                            // print(
+                            //     "diffAlertPriceAndLatestPrice: ${diffAlertPriceAndLatestPrice}");
 
                             /// is the current alert muted?
                             bool isMuted =
@@ -1944,18 +1944,18 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
                               key: UniqueKey(),
                               direction: DismissDirection.endToStart,
                               onDismissed: (dismissDirection) async {
-                                print("dismissDirection: ${dismissDirection}");
-                                print(
-                                    "dismissDirection index: ${dismissDirection.index}");
-                                print(
-                                    "dismissDirection name: ${dismissDirection.name}");
+                                // print("dismissDirection: ${dismissDirection}");
+                                // print(
+                                //     "dismissDirection index: ${dismissDirection.index}");
+                                // print(
+                                //     "dismissDirection name: ${dismissDirection.name}");
 
                                 /// remove alert from the local list of all
                                 /// alerts
                                 setState(() {
                                   listOfExistingAlerts.removeAt(index);
-                                  print(
-                                      "listOfExistingAlerts: $listOfExistingAlerts");
+                                  // print(
+                                  //     "listOfExistingAlerts: $listOfExistingAlerts");
                                 });
 
                                 /// removing alert from the map of all alert
@@ -2205,8 +2205,8 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
                                               setState(() {
                                                 listOfExistingAlerts
                                                     .removeAt(index);
-                                                print(
-                                                    "listOfExistingAlerts: $listOfExistingAlerts");
+                                                // print(
+                                                //     "listOfExistingAlerts: $listOfExistingAlerts");
                                               });
 
                                               /// removing alert from the map of all alert
@@ -2282,17 +2282,17 @@ class _BlurrableWidgetsAboveCreateAlertWidgetState
                   onTap: () {
                     /// hide the software keyboard and unblur the screen when
                     /// the blurred container gets clicked
-                    print("tapped positioned");
+                    // print("tapped positioned");
                     FocusScope.of(context).unfocus();
                     dataProvider!
                         .updateHasFocusCurrencyPairTextField(hasFocus: false);
                     dataProvider!
                         .updateHasFocusAlertPriceTextField(hasFocus: false);
 
-                    print(
-                        "dataProvider!.getHasFocusCurrencyPairTextField(): ${dataProvider!.getHasFocusCurrencyPairTextField()}");
-                    print(
-                        "dataProvider!.getHasFocusAlertPriceTextField();: ${dataProvider!.getHasFocusAlertPriceTextField()}");
+                    // print(
+                    //     "dataProvider!.getHasFocusCurrencyPairTextField(): ${dataProvider!.getHasFocusCurrencyPairTextField()}");
+                    // print(
+                    //     "dataProvider!.getHasFocusAlertPriceTextField();: ${dataProvider!.getHasFocusAlertPriceTextField()}");
 
                     // dataProvider!.updateHasFocusCurrencyPairTextField(hasFocus: false);
                     // dataP
@@ -2524,7 +2524,7 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
 
   @override
   void initState() {
-    print("Ran init State");
+    // print("Ran init State");
 
     // TODO: implement initState
     super.initState();
@@ -2532,7 +2532,7 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
 
   @override
   void didChangeDependencies() {
-    print("");
+    // print("");
 
     if (dataProvider == null) {
       dataProvider = Provider.of<DataProvider>(context, listen: true);
@@ -2552,7 +2552,7 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
       /// the first value of the text form field's
       /// Note: keyboard toggle will make it null due to multiple rebuilds
       initialValue ??= selectedInstrument;
-      print("initialValue: $initialValue");
+      // print("initialValue: $initialValue");
 
       focusNodeCurrencyPair = FocusNode(
         debugLabel: "currencyPair$selectedInstrument",
@@ -2562,8 +2562,8 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
         descendantsAreTraversable: false,
       );
 
-      print("textColorDidChangeDependencies: $textColor");
-      print("textColor!.value: ${textColor!.value}");
+      // print("textColorDidChangeDependencies: $textColor");
+      // print("textColor!.value: ${textColor!.value}");
     }
 
     // /// setting this widget's focus note in data provider
@@ -2573,16 +2573,16 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
     isFirstValueInMapOfAllInstrumentsContainsFetching =
         dataProvider!.getIsFirstValueInMapOfAllInstrumentsContainsFetching();
 
-    print(
-        "textColor: didChangeDependencies: $textColor, int: ${textColor!.value}"
-    );
+    // print(
+    //     "textColor: didChangeDependencies: $textColor, int: ${textColor!.value}"
+    // );
     int colorGreyInt = 4288585374;
 
     /// if instruments' prices have been fetched for the first time,
     /// color the text black
     if (isFirstValueInMapOfAllInstrumentsContainsFetching == false &&
         textColor!.value == colorGreyInt) {
-      print("color changed to black");
+      // print("color changed to black");
       textColor = Colors.black;
     }
 
@@ -2611,7 +2611,7 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
             correctEnteredErrorTextTimer.isActive) &&
         focusNodeCurrencyPair!.hasFocus == false &&
         isFirstValueInMapOfAllInstrumentsContainsFetching == false) {
-      print("initial value before change: ${initialValue}");
+      // print("initial value before change: ${initialValue}");
 
       correctEnteredErrorTextTimer.cancel();
       textColor = Colors.black;
@@ -2625,7 +2625,7 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
         focusNodeCurrencyPair!.hasFocus == false) {
       correctEnteredErrorTextTimer =
           Timer(const Duration(milliseconds: 2250), () {
-        print("colorRedInt is");
+        // print("colorRedInt is");
         String currentlySelectedPair =
             dataProvider!.getCurrentlySelectedInstrument();
 
@@ -2647,12 +2647,12 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
             initialValue = currentlySelectedPair.toUpperCase();
           }
         });
-        print(
-            "currentlySelectedPair == previouslyEnteredErrorText: ${currentlySelectedPair == previouslyEnteredErrorText}");
+        // print(
+        //     "currentlySelectedPair == previouslyEnteredErrorText: ${currentlySelectedPair == previouslyEnteredErrorText}");
       });
     }
 
-    print("");
+    // print("");
 
     // TODO: implement didChangeDependencies
     super.didChangeDependencies();
@@ -2661,7 +2661,7 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
   @override
   void didUpdateWidget(
       covariant CurrencyPairTextFieldOrCreateAlertButton oldWidget) {
-    print("");
+    // print("");
 
     // if the entered currency pair text is invalid, set the value key to
     // the error text,
@@ -2688,13 +2688,13 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
     /// with the right color (Colors.black)..
 
     // print("isRunningErrorOnChangedSetState == false: ${isRunningErrorOnChangedSetState == false}");
-    print(
-        "textColor!.value != colorRedInt: ${textColor!.value != colorRedInt}");
-    print("focusNode.hasFocus: ${focusNodeCurrencyPair!.hasFocus == false}");
-    print(
-        "isFirstValueInMapOfAllInstrumentsContainsFetching == false: ${isFirstValueInMapOfAllInstrumentsContainsFetching == false}");
-
-    print("Colors.red.value: ${Colors.red.value}");
+    // print(
+    //     "textColor!.value != colorRedInt: ${textColor!.value != colorRedInt}");
+    // print("focusNode.hasFocus: ${focusNodeCurrencyPair!.hasFocus == false}");
+    // print(
+    //     "isFirstValueInMapOfAllInstrumentsContainsFetching == false: ${isFirstValueInMapOfAllInstrumentsContainsFetching == false}");
+    //
+    // print("Colors.red.value: ${Colors.red.value}");
     // if (
     //   isRunningErrorOnChangedSetState == false && textColor!.value != colorRedInt && focusNode.hasFocus == false  && isFirstValueInMapOfAllInstrumentsContainsFetching == false
     // ) {
@@ -2704,9 +2704,9 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
     //   //   print("initial value after change: ${initialValue}");
     // }
 
-    print("initialValue didUpdateWidget: ${initialValue}");
-
-    print("focusNode.hasFocus: ${focusNodeCurrencyPair!.hasFocus}");
+    // print("initialValue didUpdateWidget: ${initialValue}");
+    //
+    // print("focusNode.hasFocus: ${focusNodeCurrencyPair!.hasFocus}");
 
     // /// setting this widget's focus note in data provider
     // dataProvider!.hasFocusCurrencyPairTextField = focusNode;
@@ -2718,11 +2718,11 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
 
   @override
   Widget build(BuildContext context) {
-    print("textColor: $textColor");
-    print("initialValue build: ${initialValue}");
-
-    print("selectedInstrument: ${selectedInstrument}");
-    print("");
+    // print("textColor: $textColor");
+    // print("initialValue build: ${initialValue}");
+    //
+    // print("selectedInstrument: ${selectedInstrument}");
+    // print("");
 
     /// Selected Currency Pair Or Currency Pair To Select
     Widget currencyPairTextField = TextFormField(
@@ -2749,13 +2749,13 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
         // /// setting this widget's focus note in data provider
         // dataProvider!.hasFocusCurrencyPairTextField = true;
 
-        print("within onChanged");
+        // print("within onChanged");
 
         /// entered text if any
         // String enteredTextUpper = string == null ? "" : string.toUpperCase();
         String enteredTextUpper = enteredText.toUpperCase();
 
-        print("enteredTextUpper: ${enteredTextUpper}");
+        // print("enteredTextUpper: ${enteredTextUpper}");
 
         /// checking whether the entered text is a valid instrument
         List<dynamic> listOfAllInstruments =
@@ -2764,7 +2764,7 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
         /// if the entered instrument is not valid, display the entered text
         /// with an error color - red
         if (!listOfAllInstruments.contains(enteredTextUpper)) {
-          print('does not contain: ${enteredTextUpper}');
+          // print('does not contain: ${enteredTextUpper}');
 
           // if (widget.isKeyBoardStillVisible == false){
 
@@ -2796,7 +2796,7 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
           // row within the app's gridview builder
           // show the focusedBorder
         } else {
-          print('contains: ${enteredTextUpper}');
+          // print('contains: ${enteredTextUpper}');
 
           setState(() {
             // initialValue = enteredTextUpper;
@@ -2818,7 +2818,7 @@ class _CurrencyPairTextFieldOrCreateAlertButtonState
         dataProvider!.updateHasFocusCurrencyPairTextField(hasFocus: false);
         dataProvider!.updateHasFocusAlertPriceTextField(hasFocus: false);
 
-        print("dataProvider!.hasFocusCurrencyPairTextField");
+        // print("dataProvider!.hasFocusCurrencyPairTextField");
       },
       style: TextStyle(
           fontFamily: "PT-Mono",

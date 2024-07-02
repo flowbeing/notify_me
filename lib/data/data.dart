@@ -293,7 +293,7 @@ class Data {
 
     if (!isUseLocalStorage) {
       try {
-        print("Creating firebase references if they don't already exist");
+        // print("Creating firebase references if they don't already exist");
 
         /// FIREBASE REALTIME DATABASE SNAPSHOTS - represents the above files
         /// GENERIC DATA 'DataSnapshot'
@@ -313,10 +313,10 @@ class Data {
         DataSnapshot otherErrorLogSnap = await _otherErrorLogRef.get();
 
         // print("genericDataSnap: ${genericDataSnap.exists}");
-        print("allSymbolsDataSnap: ${allSymbolsDataSnap.exists}");
-        print("dataUpdateSessionsSnap: ${dataUpdateSessionsSnap.exists}");
-        print("dataFetchingErrorLogSnap: ${dataFetchingErrorLogSnap.exists}");
-        print("otherErrorLogSnap: ${otherErrorLogSnap.exists}");
+        // print("allSymbolsDataSnap: ${allSymbolsDataSnap.exists}");
+        // print("dataUpdateSessionsSnap: ${dataUpdateSessionsSnap.exists}");
+        // print("dataFetchingErrorLogSnap: ${dataFetchingErrorLogSnap.exists}");
+        // print("otherErrorLogSnap: ${otherErrorLogSnap.exists}");
 
         /// DETERMINING AN APPROXIMATE (NOW) TIME FOR REFERENCES CREATION
         /// now - time as string:
@@ -326,30 +326,30 @@ class Data {
 
         /// creating references if they do not already exist..
         if (allSymbolsDataSnap.exists == false) {
-          print('setting allSymbolsDataRef');
+          // print('setting allSymbolsDataRef');
           await _allSymbolsDataRef.set(jsonEncode([]));
         }
 
         if (dataUpdateSessionsSnap.exists == false) {
-          print('setting dataUpdateSessionsRef');
+          // print('setting dataUpdateSessionsRef');
 
           // print("now: $now");
           await _dataUpdateSessionsRef.set("{}");
         }
 
         if (dataFetchingErrorLogSnap.exists == false) {
-          print('setting dataFetchingErrorLogRef');
+          // print('setting dataFetchingErrorLogRef');
           await _dataFetchingErrorLogRef
               .set({now: "initializedDataFetchingErrorLogRef"});
         }
 
         if (otherErrorLogSnap.exists == false) {
-          print('setting otherErrorLogRef');
+          // print('setting otherErrorLogRef');
           // String now=DateTime.now().toString();
           await _otherErrorLogRef.set({now: "initializedOtherErrorLogRef"});
         }
       } catch (error) {
-        print(error);
+        // print(error);
       }
     }
 
@@ -357,9 +357,9 @@ class Data {
     /// creating files and folders if local storage should be used..
     else if (isUseLocalStorage) {
       _appDir = await getApplicationDocumentsDirectory();
-      print("+Creating files");
+      // print("+Creating files");
       _appDirPath = "${_appDir!.path}/";
-      print("appDirUri: ${_appDir!.uri}");
+      // print("appDirUri: ${_appDir!.uri}");
 
       /// creating all relevant files & folders in this app's document directory
       /// i.e appDir..
@@ -422,7 +422,7 @@ class Data {
       _otherErrorsLogFile = otherErrorsLogFile;
     }
 
-    print("Done with creating files!");
+    // print("Done with creating files!");
   }
 
   /// This method updates all forex symbols data
@@ -444,7 +444,7 @@ class Data {
       for (var i in resolvedResponse) {
         i["type"] = "forex";
         _listOfAllSymbolsDataMaps.add(i);
-        print(i);
+        // print(i);
       }
     } catch (error) {
       String now = cleanDateTimeAndReturnString(dateTime: DateTime.now());
@@ -458,10 +458,10 @@ class Data {
                   "AN ERROR OCCURRED WHILE FETCHING FOREX SYMBOLS' DATA!\n"
                   "${error.toString()}\n\n");
         } catch (error) {
-          print(error);
+          // print(error);
         }
       } else {
-        print("_dataFetchingErrorLogFile: $_dataFetchingErrorLogFile");
+        // print("_dataFetchingErrorLogFile: $_dataFetchingErrorLogFile");
         await _dataFetchingErrorLogFile!.writeAsString(
             ""
             "$now: \n"
@@ -492,7 +492,7 @@ class Data {
       for (var i in resolvedResponse) {
         i["type"] = "stock";
         _listOfAllSymbolsDataMaps.add(i);
-        print(i);
+        // print(i);
       }
     } catch (error) {
       String now = cleanDateTimeAndReturnString(dateTime: DateTime.now());
@@ -506,13 +506,13 @@ class Data {
                   "AN ERROR OCCURRED WHILE FETCHING STOCK SYMBOLS' DATA!"
                   "${error.toString()}");
         } catch (error) {
-          print(error);
+          // print(error);
         }
       }
 
       /// SEAL ELSE-IF
       else if (isUseLocalStorage) {
-        print("_dataFetchingErrorLogFile: $_dataFetchingErrorLogFile");
+        // print("_dataFetchingErrorLogFile: $_dataFetchingErrorLogFile");
 
         _dataFetchingErrorLogFile!.writeAsString(
             ""
@@ -545,7 +545,7 @@ class Data {
       for (var i in resolvedResponse) {
         i["type"] = "crypto";
         _listOfAllSymbolsDataMaps.add(i);
-        print(i);
+        // print(i);
       }
     } catch (error) {
       String now = cleanDateTimeAndReturnString(dateTime: DateTime.now());
@@ -558,13 +558,13 @@ class Data {
                   "AN ERROR OCCURRED WHILE FETCHING CRYPTO SYMBOLS' DATA!\n"
                   "${error.toString()}\n\n");
         } catch (error) {
-          print(error);
+          // print(error);
         }
       }
 
       /// SEAL ELSE-IF
       else {
-        print("_dataFetchingErrorLogFile: $_dataFetchingErrorLogFile");
+        // print("_dataFetchingErrorLogFile: $_dataFetchingErrorLogFile");
         await _dataFetchingErrorLogFile!.writeAsString(
             ""
             "$now: \n"
@@ -596,7 +596,7 @@ class Data {
       for (var i in resolvedResponse) {
         i["type"] = "etf";
         _listOfAllSymbolsDataMaps.add(i);
-        print(i);
+        // print(i);
       }
     } catch (error) {
       String now = cleanDateTimeAndReturnString(dateTime: DateTime.now());
@@ -609,13 +609,13 @@ class Data {
                   "AN ERROR OCCURRED WHILE FETCHING ETF SYMBOL'S DATA!\n"
                   "${error.toString()}\n\n");
         } catch (error) {
-          print(error);
+          // print(error);
         }
       }
 
       /// SEAL ELSE-IF
       else {
-        print("_dataFetchingErrorLogFile: $_dataFetchingErrorLogFile");
+        // print("_dataFetchingErrorLogFile: $_dataFetchingErrorLogFile");
         _dataFetchingErrorLogFile!.writeAsString(
             ""
             "$now: \n"
@@ -646,7 +646,7 @@ class Data {
       for (var i in resolvedResponse) {
         i["type"] = "indices";
         _listOfAllSymbolsDataMaps.add(i);
-        print(i);
+        // print(i);
       }
     } catch (error) {
       String now = cleanDateTimeAndReturnString(dateTime: DateTime.now());
@@ -660,13 +660,13 @@ class Data {
                   "AN ERROR OCCURRED WHILE FETCHING INDEX SYMBOLS' DATA!\n"
                   "${error.toString()}\n\n");
         } catch (error) {
-          print(error);
+          // print(error);
         }
       }
 
       /// SEAL ELSE-IF
       else {
-        print("_dataFetchingErrorLogFile: $_dataFetchingErrorLogFile");
+        // print("_dataFetchingErrorLogFile: $_dataFetchingErrorLogFile");
         _dataFetchingErrorLogFile!.writeAsString(
             ""
             "$now: \n"
@@ -697,7 +697,7 @@ class Data {
       for (var i in resolvedResponse) {
         i["type"] = "fund";
         _listOfAllSymbolsDataMaps.add(i);
-        print(i);
+        // print(i);
       }
     } catch (error) {
       String now = cleanDateTimeAndReturnString(dateTime: DateTime.now());
@@ -711,10 +711,10 @@ class Data {
                   "AN ERROR OCCURRED WHILE FETCHING FUND SYMBOL'S DATA!\n"
                   "${error.toString()}\n\n");
         } catch (error) {
-          print(error);
+          // print(error);
         }
       } else {
-        print("_dataFetchingErrorLogFile: $_dataFetchingErrorLogFile");
+        // print("_dataFetchingErrorLogFile: $_dataFetchingErrorLogFile");
         _dataFetchingErrorLogFile!.writeAsString(
             ""
             "$now: \n"
@@ -748,7 +748,7 @@ class Data {
         i["type"] = "bond";
 
         _listOfAllSymbolsDataMaps.add(i);
-        print(i);
+        // print(i);
       }
 
       // print("finished running updateAllBondsData");
@@ -764,10 +764,10 @@ class Data {
                   "AN ERROR OCCURRED WHILE FETCHING BOND SYMBOL'S DATA!\n"
                   "${error.toString()}\n\n");
         } catch (error) {
-          print(error);
+          // print(error);
         }
       } else {
-        print("_dataFetchingErrorLogFile: $_dataFetchingErrorLogFile");
+        // print("_dataFetchingErrorLogFile: $_dataFetchingErrorLogFile");
         _dataFetchingErrorLogFile!.writeAsString(
             ""
             "$now: \n"
@@ -785,7 +785,7 @@ class Data {
       {
       /// a bool to break free from the 24 hrs limit set for this function
       bool unconditionally = false}) async {
-    print("///");
+    // print("///");
 
     /// saving the update session's time to 'data update sessions' log file
     String lastUpdateTimeString =
@@ -801,8 +801,8 @@ class Data {
       try {
         DataSnapshot dataUpdateSessionsSnap =
             await _dataUpdateSessionsRef.get();
-        print(
-            "dataUpdateSessionsSnap.value: ${dataUpdateSessionsSnap.value.runtimeType}");
+        // print(
+        //     "dataUpdateSessionsSnap.value: ${dataUpdateSessionsSnap.value.runtimeType}");
 
         /// obtaining the update sessions map from a firebase string object
         /// Steps:
@@ -812,17 +812,17 @@ class Data {
         /// 3. decode the proper json string to a map..
         updateSessions =
             jsonDecode(jsonDecode(jsonEncode(dataUpdateSessionsSnap.value!)));
-        print(
-            "updateSessions firebase: $updateSessions, ${updateSessions.runtimeType}");
+        // print(
+        //     "updateSessions firebase: $updateSessions, ${updateSessions.runtimeType}");
       } catch (error) {
-        print(error);
+        // print(error);
       }
     } else {
       updateSessions =
           json.decode(await _dataUpdateSessionsFile!.readAsString());
     }
 
-    print("////");
+    // print("////");
     dynamic lastSymbolsDataUpdateTime =
         updateSessions["last_symbols_data_update_time"];
 
@@ -830,14 +830,14 @@ class Data {
     dynamic lastSymbolsDataUpdateErrorTime =
         updateSessions["last_symbols_data_update_error_time"];
 
-    print("//////");
+    // print("//////");
 
     /// checking whether the last symbols' data updated over 24 hrs ago.
     /// 1. If not, task will be cancelled..
     /// 2. If no previous symbols' data update session exists, this task will
     /// continue..
     if (lastSymbolsDataUpdateTime != null) {
-      print("//////");
+      // print("//////");
       lastSymbolsDataUpdateTime = DateTime.parse(
           retrieveDatetimeStringFromCleanedDateTimeString(
               cleanedDateTimeString: lastSymbolsDataUpdateTime));
@@ -861,34 +861,34 @@ class Data {
           lastSymbolsDataUpdateTime.toString() ==
               lastSymbolsDataUpdateErrorTime.toString();
 
-      print("///////");
-      print("lastSymbolsDataUpdateTime: $lastSymbolsDataUpdateTime, "
-          "lastSymbolsDataUpdateErrorTime: $lastSymbolsDataUpdateErrorTime");
+      // print("///////");
+      // print("lastSymbolsDataUpdateTime: $lastSymbolsDataUpdateTime, "
+      //     "lastSymbolsDataUpdateErrorTime: $lastSymbolsDataUpdateErrorTime");
 
-      print(
-          "isLastSymbolsDataUpdateTimeEqualToLastSymbolsDataUpdateErrorTime: $isLastSymbolsDataUpdateTimeEqualToLastSymbolsDataUpdateErrorTime");
+      // print(
+      //     "isLastSymbolsDataUpdateTimeEqualToLastSymbolsDataUpdateErrorTime: $isLastSymbolsDataUpdateTimeEqualToLastSymbolsDataUpdateErrorTime");
 
       /// determining whether to proceed with the symbols' data update..
       /// if all symbols were updated within the last 24 hours and there was
       /// no update error, cancel the current session
-      print("////////");
+      // print("////////");
       if (diffLastSymbolsDataUpdateTimeInHours < 24 &&
           isLastSymbolsDataUpdateTimeEqualToLastSymbolsDataUpdateErrorTime ==
               false &&
           unconditionally == false) {
-        print(
-            "Can't update symbols data now! Last update session was under 24hrs ago..");
+        // print(
+        //     "Can't update symbols data now! Last update session was under 24hrs ago..");
         return {};
       }
     }
 
     // print("aDay - lastSymbolsDataUpdateTime: ${aDay.}")
     // if (lastSymbolsDataUpdateTime )
-    print("/////////");
+    // print("/////////");
 
     /// updating symbols' data
     try {
-      print("Updating All Data..");
+      // print("Updating All Data..");
 
       /// updating all financial data
       await _updateAllForexSymbolsData();
@@ -906,7 +906,7 @@ class Data {
         try {
           await _allSymbolsDataRef.set(allSymbolsData);
         } catch (error) {
-          print(error);
+          // print(error);
         }
       }
 
@@ -940,7 +940,7 @@ class Data {
 
           // await dataUpdateSessionsRef.child("last_symbols_data_update_time").set(lastUpdateTimeString);
         } catch (error) {
-          print(error);
+          // print(error);
         }
       }
 
@@ -949,15 +949,15 @@ class Data {
         updateSessions =
             json.decode(await _dataUpdateSessionsFile!.readAsString());
         updateSessions["last_symbols_data_update_time"] = lastUpdateTimeString;
-        print("updateSessions: $updateSessions");
+        // print("updateSessions: $updateSessions");
 
         _dataUpdateSessionsFile!.writeAsString(json.encode(updateSessions));
       }
 
-      print("Data Update Complete!");
-      print("");
+      // print("Data Update Complete!");
+      // print("");
     } catch (error) {
-      print("AN ERROR OCCURRED WHILE UPDATING AND SAVING ALL SYMBOLS' DATA!");
+      // print("AN ERROR OCCURRED WHILE UPDATING AND SAVING ALL SYMBOLS' DATA!");
 
       /// logging symbols' data update and update error time for current session
       /// .. to firebase
@@ -985,7 +985,7 @@ class Data {
           // await dataUpdateSessionsRef.child("last_symbols_data_update_time").set(lastUpdateTimeString);
           // await dataUpdateSessionsRef.child("last_symbols_data_update_error_time").set(lastUpdateTimeString);
         } catch (error) {
-          print(error);
+          // print(error);
         }
       }
 
@@ -999,7 +999,7 @@ class Data {
             lastUpdateTimeString;
 
         _dataUpdateSessionsFile!.writeAsString(json.encode(updateSessions));
-        print("");
+        // print("");
       }
 
       /// logging error
@@ -1010,7 +1010,7 @@ class Data {
               "AN ERROR OCCURRED WHILE UPDATING AND SAVING ALL SYMBOLS' DATA!\n"
               "${error.toString()}\n\n");
         } catch (error) {
-          print(error);
+          // print(error);
         }
       }
 
@@ -1029,10 +1029,10 @@ class Data {
 
   /// This method retrieves all locally saved symbols' data
   Future<List<dynamic>> getAllSymbolsLocalData() async {
-    print("");
-    print("List of all Symbols / Instruments - getAllSymbolsLocalData");
-    print("__________________________________________________________");
-    print("");
+    // print("");
+    // print("List of all Symbols / Instruments - getAllSymbolsLocalData");
+    // print("__________________________________________________________");
+    // print("");
 
     int count = 0;
 
@@ -1051,7 +1051,7 @@ class Data {
         // print(
         //     "savedListOfAllSymbolsDataMaps Object: ${savedListOfAllSymbolsDataMaps}");
       } catch (error) {
-        print(error);
+        // print(error);
       }
     }
 
@@ -1081,17 +1081,17 @@ class Data {
     // }
 
     count = savedListOfAllSymbolsDataMaps.length; // 5846
-    print("Total number of instruments - getAllSymbolsLocalData: $count");
-    print("");
+    // print("Total number of instruments - getAllSymbolsLocalData: $count");
+    // print("");
 
-    print("__________________________________________________________");
+    // print("__________________________________________________________");
 
     return savedListOfAllSymbolsDataMaps;
   }
 
   /// This method prints the app's directory uri
   void getUriAppDirectory() {
-    print("This app's directory: ${_appDir!.uri}");
+    // print("This app's directory: ${_appDir!.uri}");
   }
 
   /// This method retrieves a symbol(s)'s realtime price
@@ -1202,14 +1202,14 @@ class Data {
 
       for (var importantPair in listOfImportantPairs) {
         if (currentSavedPair == importantPair) {
-          print(
-              "currentSavedPair: $currentSavedPair, importantPair: $importantPair");
+          // print(
+          //     "currentSavedPair: $currentSavedPair, importantPair: $importantPair");
 
           count += 1;
         }
       }
     }
-    print("Total number of important pairs: ${count}");
+    // print("Total number of important pairs: ${count}");
   }
 
   Future<Map<dynamic, dynamic>>
@@ -1333,7 +1333,7 @@ class Data {
     /// map to return
     Map<dynamic, dynamic> mapToReturn={};
 
-    print("_mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll _check: $_mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll");
+    // print("_mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll _check: $_mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll");
 
     /// current registered leading active update device's id
     String currentRegisteredLeadingActiveUpdateDeviceId =
@@ -1369,7 +1369,7 @@ class Data {
         .difference(_timeRegLeadingAUDCalledUpdatePricesOrStartedLeading!)
         .inSeconds;
 
-    print("p");
+    // print("p");
     /// determining the number of active update devices that would have
     /// been set as the leading active update device considering the
     /// time that has passed since the time the currently registered
@@ -1384,7 +1384,7 @@ class Data {
     // if (indexAUDThatShouldBeSetAsLeading!=0){
     //   indexAUDThatShouldBeSetAsLeading=indexAUDThatShouldBeSetAsLeading-1;
     // }
-    print("q");
+    // print("q");
     /// ensuring the list of active update device has the latest data ---<
     /// sublist removes "leadingDeviceId" from the list of keys
     _listOfActiveUpdateDevicesUniqueId =
@@ -1392,7 +1392,7 @@ class Data {
             .toList();
     _listOfActiveUpdateDevicesUniqueId.remove("leadingDeviceId");
 
-    print("r");
+    // print("r");
     /// seconds before AUD that should be leading (could be registered leading
     /// AUD) switches
     if (diffNowAndTimeRegLeadingAUDCalledUpdatePricesOrStartedLeading==0){
@@ -1409,7 +1409,7 @@ class Data {
 
     }
 
-    print("s");
+    // print("s");
     /// if the time elapsed so far has exceeded the total time all active update
     /// devices can spend fetching prices set
     /// _secondsRemBeforeAssumedActualLeadingAUDSwitches to zero i.e no more
@@ -1417,18 +1417,18 @@ class Data {
     bool hasTotalPermissiblePriceFetchTimeBeenExceededByAllPairs=
         indexAUDThatShouldBeSetAsLeading>_listOfActiveUpdateDevicesUniqueId.length;
 
-    print("t");
+    // print("t");
     if (hasTotalPermissiblePriceFetchTimeBeenExceededByAllPairs==true){
       _secondsRemBeforeAssumedActualLeadingAUDSwitches=0;
     }
 
-    print("u");
+    // print("u");
     /// index of currently registered leading active update device
     int indexRegLeadingAUD=_listOfActiveUpdateDevicesUniqueId.indexOf(
         currentRegisteredLeadingActiveUpdateDeviceId
     );
 
-    print("v");
+    // print("v");
     /// uniqueId of the active update device that should be the actual
     /// leading active update device
     String idDeviceThatShouldBeActualLeadingAUD = indexAUDThatShouldBeSetAsLeading <
@@ -1441,20 +1441,20 @@ class Data {
         : _listOfActiveUpdateDevicesUniqueId[
             _listOfActiveUpdateDevicesUniqueId.length - 1];
 
-    print("idDeviceThatShouldBeActualLeadingAUD: $idDeviceThatShouldBeActualLeadingAUD");
-    print("w");
+    // print("idDeviceThatShouldBeActualLeadingAUD: $idDeviceThatShouldBeActualLeadingAUD");
+    // print("w");
     /// details of active leading update device that should be leading - map
     Map<dynamic, dynamic> mapAUDThatShouldBeSetAsLeading=
       jsonDecode(_mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll[
         idDeviceThatShouldBeActualLeadingAUD
       ]);
 
-    print("x");
+    // print("x");
     /// checking whether an active update device has finished fetching price
     /// data
     bool isAnAUDFinishedUpdatingPriceData=false;
 
-    print("y");
+    // print("y");
     for (var audId in _listOfActiveUpdateDevicesUniqueId){
       Map<dynamic, dynamic> currentAUD=
       jsonDecode(jsonDecode(jsonEncode(_mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll[
@@ -1467,14 +1467,14 @@ class Data {
       }
     }
 
-    print("z");
+    // print("z");
 
 
     /// if an active update device has finished fetching price data, get the
     /// price data
     if (isAnAUDFinishedUpdatingPriceData==true){
 
-      print("isAnAUDFinishedUpdatingPriceData*: $isAnAUDFinishedUpdatingPriceData");
+      // print("isAnAUDFinishedUpdatingPriceData*: $isAnAUDFinishedUpdatingPriceData");
 
       mapToReturn= await getRealTimePriceAll(
           deviceUniqueId: deviceUniqueId,
@@ -1489,7 +1489,7 @@ class Data {
     /// price data from firebase and update active update prices configurations
     if (hasTotalPermissiblePriceFetchTimeBeenExceededByAllPairs==true){
 
-      print("hasTotalPermissiblePriceFetchTimeBeenExceededByAllPairs*: $hasTotalPermissiblePriceFetchTimeBeenExceededByAllPairs");
+      // print("hasTotalPermissiblePriceFetchTimeBeenExceededByAllPairs*: $hasTotalPermissiblePriceFetchTimeBeenExceededByAllPairs");
 
       /// configure active update devices properly in firebase. update their:
       /// 1. "isLeading"
@@ -1550,13 +1550,13 @@ class Data {
       if (secondsRetrieveMapAndRunThisMethodAgain<0){
         secondsRetrieveMapAndRunThisMethodAgain=0;
       }
-      print("secondsRetrieveMapAndRunThisMethodAgain*: $secondsRetrieveMapAndRunThisMethodAgain");
+      // print("secondsRetrieveMapAndRunThisMethodAgain*: $secondsRetrieveMapAndRunThisMethodAgain");
       if (_isThisDeviceActualLeadingActiveUpdateDevice==true
           &&_isAlreadyRunContinueGetRealtimePriceAll==false
           &&secondsRetrieveMapAndRunThisMethodAgain>=8
       ){
 
-        print("qualified to _continueGetRealtimePriceAll*");
+        // print("qualified to _continueGetRealtimePriceAll*");
 
         mapToReturn=await _continueGetRealtimePriceAll(
             listOfActiveAUD: _listOfActiveUpdateDevicesUniqueId,
@@ -1583,7 +1583,7 @@ class Data {
         /// seconds since the last map of active update devices got fetched
         DateTime now=DateTime.now();
         int secondsSinceLastAUDMapFetch=now.difference(_lastAUDMapFetchTime).inSeconds;
-        print("secondsSinceLastAUDMapFetch*: $secondsSinceLastAUDMapFetch");
+        // print("secondsSinceLastAUDMapFetch*: $secondsSinceLastAUDMapFetch");
         /// adjusting for computing time since map of active update devices got
         /// fetched..
         int secondsRetrieveMapAndRunThisMethodAgain=
@@ -1591,7 +1591,7 @@ class Data {
         if (secondsRetrieveMapAndRunThisMethodAgain<0){
           secondsRetrieveMapAndRunThisMethodAgain=0;
         }
-        print("secondsRetrieveMapAndRunThisMethodAgain*: $secondsRetrieveMapAndRunThisMethodAgain");
+        // print("secondsRetrieveMapAndRunThisMethodAgain*: $secondsRetrieveMapAndRunThisMethodAgain");
 
         /// setting a timer to check back for whether the registered leading active
         /// update device has finished updating price
@@ -1625,7 +1625,7 @@ class Data {
               startTimeUpdatePrices: startTimeUpdatePrices
           );
         }catch(error){
-          print('an error occured while trying to rerun checkAUDsStatusAndUpdateAccordingly');
+          // print('an error occured while trying to rerun checkAUDsStatusAndUpdateAccordingly');
         }
       }
 
@@ -1767,7 +1767,7 @@ class Data {
         if (secondsRetrieveMapAndRunThisMethodAgain<0){
           secondsRetrieveMapAndRunThisMethodAgain=0;
         }
-        print("secondsRetrieveMapAndRunThisMethodAgain: $secondsRetrieveMapAndRunThisMethodAgain");
+        // print("secondsRetrieveMapAndRunThisMethodAgain: $secondsRetrieveMapAndRunThisMethodAgain");
 
         /// this future ensures that this device will only run
         /// _checkAUDsStatusAndUpdateAccordingly when the current leading
@@ -1806,7 +1806,7 @@ class Data {
           );
 
         }catch(error){
-          print("an error occured while trying to rerun checkAUDsStatusAndUpdateAccordingly");
+          // print("an error occured while trying to rerun checkAUDsStatusAndUpdateAccordingly");
         }
 
 
@@ -1869,7 +1869,7 @@ class Data {
       devicesThatExceededAllowedUpdateTimeMapSnap =
           await _devicesThatExceededAllowedUpdateTimeMapRef.get();
     } catch (error) {
-      print("an error occured while fetching snapshots");
+      // print("an error occured while fetching snapshots");
     }
 
     /// checking whether the reference that holds the map of devices that are
@@ -1881,14 +1881,14 @@ class Data {
     if (!mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllSnap!.exists) {
       // listOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllRef.set(jsonEncode([]));
       try {
-        print(
-            "tried creating mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllRef");
+        // print(
+        //     "tried creating mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllRef");
         // String now=cleanDateTimeAndReturnString(dateTime: DateTime.now());
         await _mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllRef
             .set({'dummyActiveUpdateDevice': jsonEncode({})});
       } catch (error) {
-        print(
-            'an error occured: mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllRef.set({});');
+        // print(
+        //     'an error occured: mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAllRef.set({});');
       }
     } else {
       /// a map of devices that are currently updating prices data within
@@ -1914,8 +1914,8 @@ class Data {
         try {
           await _devicesThatExceededAllowedUpdateTimeMapRef.set(jsonEncode({}));
         } catch (error) {
-          print(
-              "an error occured: devicesThanExceededAllowedUpdateTimeMapRef.set(jsonEncode({}));");
+          // print(
+          //     "an error occured: devicesThanExceededAllowedUpdateTimeMapRef.set(jsonEncode({}));");
         }
       } else {
         _mapOfAllowedTimeActiveUpdateDevicesTracking = jsonDecode(jsonDecode(
@@ -1966,15 +1966,15 @@ class Data {
     /// updatePrices' operation
     _isAlreadyRunContinueGetRealtimePriceAll=false;
 
-    print('PRE FOR! 1');
+    // print('PRE FOR! 1');
 
     DateTime nowGetRealTimePriceAll = DateTime.now();
 
-    print("");
-    print(
-        "--------------------------------------------------------------------------------");
-    print("GETREALTIMEPRICEALL METHOD - START");
-    print("");
+    // print("");
+    // print(
+    //     "--------------------------------------------------------------------------------");
+    // print("GETREALTIMEPRICEALL METHOD - START");
+    // print("");
 
     /// last update session's data -> both time and prices
     Map<String, dynamic> lastUpdateSessionsMap = {};
@@ -1988,7 +1988,7 @@ class Data {
 
         // lastUpdateSessionsMap=jsonDecode(jsonEncode(dataUpdateSessionsSnap.value!));
       } catch (error) {
-        print(error);
+        // print(error);
       }
     }
 
@@ -2059,9 +2059,9 @@ class Data {
     /// A map of previously retrieved prices... if any
     Map<String, dynamic> mapLastSavedPricesOneMinInterval = {};
 
-    print("lengthMapOfAllPrices 1: ${mapOfAllPrices.length}");
+    // print("lengthMapOfAllPrices 1: ${mapOfAllPrices.length}");
 
-    print('PRE FOR! 2');
+    // print('PRE FOR! 2');
 
     DateTime startTimeUpdatePrices = DateTime.now();
     try {
@@ -2089,8 +2089,8 @@ class Data {
                   .keys
                   .toList()[0];
 
-          print(
-              "lastPricesDataUpdateTimeString: $lastPricesDataUpdateTimeString");
+          // print(
+          //     "lastPricesDataUpdateTimeString: $lastPricesDataUpdateTimeString");
 
           /// latest prices of all forex and crypto pairs...
           mapLastSavedPricesOneMinInterval =
@@ -2144,25 +2144,25 @@ class Data {
         /// this device isn't allowed to proceed to fetching new price data
         /// from the relevant financial market data provider, serve it the
         /// previously saved price data.
-        print("isAllowDeviceFetchDataDataProvider: $isAllowDeviceFetchDataDataProvider");
+        // print("isAllowDeviceFetchDataDataProvider: $isAllowDeviceFetchDataDataProvider");
         if (diffLastPricesDataUpdateTimeInMilliSeconds <= 60000 ||
                 isAllowDeviceFetchDataDataProvider==false
 
             /// ---<
             ) {
-          print("Timer.periodic - data - start: ${DateTime.now()}");
-          print("nowGetRealTimePriceAll: $nowGetRealTimePriceAll");
-          print(
-              "diffLastPricesDataUpdateTimeInMilliSeconds: $diffLastPricesDataUpdateTimeInMilliSeconds");
-          print(
-              "Can't update symbols data now! Last update session was under 1 minute (approx) ago..");
+          // print("Timer.periodic - data - start: ${DateTime.now()}");
+          // print("nowGetRealTimePriceAll: $nowGetRealTimePriceAll");
+          // print(
+          //     "diffLastPricesDataUpdateTimeInMilliSeconds: $diffLastPricesDataUpdateTimeInMilliSeconds");
+          // print(
+          //     "Can't update symbols data now! Last update session was under 1 minute (approx) ago..");
 
           /// return the last saved prices' data
           return mapLastSavedPricesOneMinInterval;
         }
       }
 
-      print("made it past the above block");
+      // print("made it past the above block");
 
       /// THOUGHT PROCESS - PREVENTING MULTIPLE DEVICES FROM FETCHING
       /// PRICE DATA FROM FINANCIAL MARKET DATA PROVIDER AT THE SAME TIME
@@ -2291,7 +2291,7 @@ class Data {
       /// removing "leadingDeviceId" from list..
       _listOfActiveUpdateDevicesUniqueId.remove("leadingDeviceId");
 
-      print("_listOfActiveUpdateDevicesUniqueId beginning: ${_listOfActiveUpdateDevicesUniqueId}");
+      // print("_listOfActiveUpdateDevicesUniqueId beginning: ${_listOfActiveUpdateDevicesUniqueId}");
 
       /// setting the bool that signals whether this active update device part
       /// of a multiple active update device map
@@ -2435,7 +2435,7 @@ class Data {
 
 
     } catch (error) {
-      print('an error occured: getRealTimePricesAll}');
+      // print('an error occured: getRealTimePricesAll}');
     }
 
 
@@ -2506,10 +2506,10 @@ class Data {
     /// fetching prices is applied
     _lastAUDMapFetchTime = timeDeviceCalledUpdatePricesOrStartedLeadingInGetRealtimePriceAll;
 
-    print("Time since updatePrices was called (fairer time applied) - initial*: ${
-        DateTime.now().difference(
-            timeDeviceCalledUpdatePricesOrStartedLeadingInGetRealtimePriceAll
-        )}");
+    // print("Time since updatePrices was called (fairer time applied) - initial*: ${
+    //     DateTime.now().difference(
+    //         timeDeviceCalledUpdatePricesOrStartedLeadingInGetRealtimePriceAll
+    //     )}");
 
     /// get map of realtime prices by running _checkAUDsStatusAndUpdateAccordingly
     mapRealtimePrice= await _checkAUDsStatusAndUpdateAccordingly(
@@ -2526,10 +2526,10 @@ class Data {
         startTimeUpdatePrices: startTimeUpdatePrices
     );
 
-    print("post _check");
+    // print("post _check");
 
     /// returning map
-    print("returning mapRealtimePrice");
+    // print("returning mapRealtimePrice");
     return mapRealtimePrice;
 
 
@@ -2612,7 +2612,7 @@ class Data {
       /// obtaining each pair's price, especially the most important ones
       /// i.e the most traded ones..
 
-      print('PRE FOR!');
+      // print('PRE FOR!');
       for (var symbol in setSavedListOfAllSymbols) {
 
 
@@ -2641,7 +2641,7 @@ class Data {
           /// when compared with the previous minute's closing price provided
           /// by mapPriceOfCurrentPairResponseQuote..
 
-          print("");
+          // print("");
           // print("Getting quote - 1");
           if (mapLastSavedPricesOneMinInterval.isEmpty) {
             // print("");
@@ -2666,7 +2666,7 @@ class Data {
           // print("");
           // print("obtaining realtime price");
 
-          print("");
+          // print("");
           // print("Getting realtime price - 4");
           mapPriceOfCurrentPairResponseRealTime = await getRealTimePriceSingle(
               symbol: currentPair,
@@ -2880,7 +2880,7 @@ class Data {
                     .set(jsonEncode(lastUpdateSessionsMap));
                 // await dataUpdateSessionsRef.update(lastUpdateSessionsMap);
               } catch (error) {
-                print(error);
+                // print(error);
               }
             }
 
@@ -2899,7 +2899,7 @@ class Data {
       /// Hence, update and save the symbols / instruments' data unconditionally
       /// Note:
       else {
-        print("Updating and Saving All Symbols Locally & Unconditionally");
+        // print("Updating and Saving All Symbols Locally & Unconditionally");
 
         await updateAndSaveAllSymbolsData(unconditionally: true);
       }
@@ -2908,7 +2908,7 @@ class Data {
     DateTime finishTimeUpdatePrices = DateTime.now();
     Duration durationUpdatePrice =
         finishTimeUpdatePrices.difference(startTimeUpdatePrices);
-    print("durationUpdatePrice: $durationUpdatePrice");
+    // print("durationUpdatePrice: $durationUpdatePrice");
 
     // print("Out here!");
     // print("mapLastSavedPricesOneMinInterval: $mapLastSavedPricesOneMinInterval}");
@@ -2917,7 +2917,7 @@ class Data {
     // print("mapOfAllPrices: $mapOfAllPrices");
     // print("mapLastSavedPricesOneMinInterval: $mapLastSavedPricesOneMinInterval");
 
-    print("");
+    // print("");
     // print("lengthMapOfAllPrices 2: ${mapOfAllPrices.length}");
 
     /// re-ordering mapOfAllPrice to ensure that instruments or symbols that
@@ -3017,7 +3017,7 @@ class Data {
           /// will be available after the next retrieval process if it
           /// does not already exist within mapLastSavedPricesOneMinInterval -
           /// a map of previously retrieved prices' data..
-          print("");
+          // print("");
           // print("listOfAppliedImportantPairs: $listOfAppliedImportantPairs");
           // print("allRetrievedSymbolsOrInstrumentsKey: $allRetrievedSymbolsOrInstrumentsKey");
           // print("lengthMapofAllPrices: ${mapOfAllPrices.length}");
@@ -3048,7 +3048,7 @@ class Data {
             // print("");
             // print('here! Refresh - 1 min');
 
-            print("symbol: $symbol, type: ${mapInstrumentsType[symbol]}");
+            // print("symbol: $symbol, type: ${mapInstrumentsType[symbol]}");
 
             mapEntryCurrentInstrument = MapEntry(symbol, {
               "old_price": "Refresh - 1 min",
@@ -3073,7 +3073,7 @@ class Data {
               !allRetrievedSymbolsOrInstrumentsKey.contains(symbol)) {
             // print("Unimportant Pair - Unsaved - Start");
 
-            print("symbol: $symbol, type: ${mapInstrumentsType[symbol]}");
+            // print("symbol: $symbol, type: ${mapInstrumentsType[symbol]}");
 
             mapEntryCurrentInstrument = MapEntry(symbol, {
               "old_price": "demo",
@@ -3108,7 +3108,7 @@ class Data {
                   .set(jsonEncode(lastUpdateSessionsMap));
               // await dataUpdateSessionsRef.update(lastUpdateSessionsMap);
             } catch (error) {
-              print(error);
+              // print(error);
             }
           }
 
@@ -3174,11 +3174,11 @@ class Data {
       }
 
       // print("mapOfAllPrices is lesser than savedListOfAllSymbolsDataMaps");
-      print("✔");
+      // print("✔");
       // print("listOfMapEntryAllRetrievedPrices: $listOfMapEntryAllRetrievedPrices");
       // print("countRefreshInOneMin: $countRefreshInOneMin");
 
-      print("mapEntryAllRetrievedPrices: $mapEntryAllRetrievedPrices");
+      // print("mapEntryAllRetrievedPrices: $mapEntryAllRetrievedPrices");
 
       /// updateAndSaveAllSymbolsData();
       return mapEntryAllRetrievedPrices;
@@ -3191,9 +3191,9 @@ class Data {
     ///    length of mapOfAllPrices cannot be lesser than the length of
     ///    setSavedListOfAllSymbols when both objects have a size of zero
     else {
-      print("");
+      // print("");
       print("It's a match. Prices update completed!");
-      print("");
+      // print("");
 
       /// converting listOfMapEntryAllRetrievedPrices from a List<MapEntry> to
       /// Iterable<MapEntry>
@@ -3216,7 +3216,7 @@ class Data {
       if (_isFinishedFetchingPriceDataNaturally==true){
         /// LOGGING THIS PRICES UPDATE SESSION TIME
         String now = cleanDateTimeAndReturnString(dateTime: DateTime.now());
-        print("currentPricesDataUpdateTimeString: $now");
+        // print("currentPricesDataUpdateTimeString: $now");
 
         /// if no prices data have previously been retrieved or saved, save the
         /// latest prices data as the initial..
@@ -3224,7 +3224,7 @@ class Data {
             .containsKey('last_prices_data_update_time_initial') &&
             !lastUpdateSessionsMap.containsKey('last_prices_data_update_time') &&
             finalMapAllInstrumentsPrices.isNotEmpty) {
-          print('HERE A');
+          // print('HERE A');
 
           lastUpdateSessionsMap["last_prices_data_update_time_initial"] = {
             now: finalMapAllInstrumentsPrices
@@ -3240,12 +3240,12 @@ class Data {
             lastUpdateSessionsMap
                 .containsKey('last_prices_data_update_time')) &&
             finalMapAllInstrumentsPrices.isNotEmpty) {
-          print('HERE B');
+          // print('HERE B');
           lastUpdateSessionsMap["last_prices_data_update_time"] = {
             now: finalMapAllInstrumentsPrices
           };
 
-          print('HERE C');
+          // print('HERE C');
 
           /// removing the initial prices data, if any, to free up file space..
           /// This code is best placed here to ensure that an initial prices data
@@ -3286,29 +3286,29 @@ class Data {
 
         if (!isUseLocalStorage) {
           try {
-            print('HERE D');
+            // print('HERE D');
             // print(lastUpdateSessionsMap);
 
             await _dataUpdateSessionsRef.set(jsonEncode(lastUpdateSessionsMap));
           } catch (error) {
-            print(error);
+            // print(error);
           }
         }
 
         /// SEAL ELSE-IF
         else {
-          print('HERE E');
+          // print('HERE E');
           _dataUpdateSessionsFile!.writeAsString(
               json.encode(lastUpdateSessionsMap),
               mode: FileMode.write);
         }
       }
 
-      print("GETREALTIMEPRICEALL METHOD - END");
-      print("");
-      print(
-          "--------------------------------------------------------------------------------");
-      print("");
+      // print("GETREALTIMEPRICEALL METHOD - END");
+      // print("");
+      // print(
+      //     "--------------------------------------------------------------------------------");
+      // print("");
 
       /// 1. if there's been a connection error and no prices data have been
       ///    retrieved, if there's a previous prices' data map, serve it..
@@ -3332,7 +3332,7 @@ class Data {
           mapLastSavedPricesOneMinInterval.isEmpty) {
         return {};
       } else if (mapOfAllPrices.length == setSavedListOfAllSymbols.length) {
-        print("Timer.periodic - data - complete: ${DateTime.now()}");
+        // print("Timer.periodic - data - complete: ${DateTime.now()}");
         return finalMapAllInstrumentsPrices;
       } else {
         return finalMapAllInstrumentsPrices;
