@@ -1,0 +1,90 @@
+Financial Markets Price Alert App
+Author: Oyebolu Daniel
+LinkedIn: linkedin.com/in/daniel-oyebolu
+Refresh Rate: Once Per Minute
+Instruments: 27 (Forex & Crypto)
+Solutions - API based data provision (A websocket would eliminate the need for the solutions below):
+    -   When there's a connection error during a prices' data update, the previous prices' data update session time,
+        if any, will be updated to prevent immediate API access. Hence, ensuring that the app does not exceed the
+        current API credit limit - 55 credits per minute.
+    -   Where prices are partially retrieved, a previous price data map, if any, will be updated and served.
+        If none exists, a temporary map will be created and served
+
+Verdict: A web socket, which costs too much for this demo would greatly reduce the need for ingenuity,
+         and the need to come up with creative ways to walk around the limitations of the current
+         API limit - 55 credits per minute..
+
+
+
+Scenarios:
+    1. There are multiple active update devices (as least one)
+        a. the last one is leading:
+            i. the last leading one has finished
+            ii. the last leading one is still running
+
+        b. a middle one is leading:
+            i. the middle one has finished
+            ii. the middle one is still running
+
+    2. There's no active update device
+
+
+    Common scenarios:
+        a. only one new active update device will be added
+        a. two or more new active update devices will be added at the same time
+
+
+Solution (from above):
+    1. add the new active update device to the map of active update devices without setting isLeading to true
+    2. fetch the map of active update devices which will now include devices added at the same time
+    3. keep a copy of this active update device's immediate superior active update device's info
+    4. check if the copy has exceeded the permitted update time:
+        if true:
+            - make it not leading
+            - set it's isAllowedTimeExpired to true
+            - make this active update device leading
+
+    5. CALCULATING HOW LONG EACH ACTIVE DEVICE SHOULD WAIT BEFORE CHECKING AGAIN WHETHER A SUPERIOR ACTIVE UPDATE DEVICE
+       HAS FINISHED OR EXCEEDED THE MAX ALLOWED UPDATE TIME
+       - use leadingActiveIndex key-value pair within mapOfDevicesUpdatingPricesDataWithinGetRealTimePriceAll to track
+         the current leading pair and calculate how long
+
+
+Changes to implement:
+    switching isLeading - left to right
+        a. i. all devices should determine when to check back for whether the current isLeading have finished
+               - timeStarted + 10 seconds
+           ii. each active update device should know when it should exactly be its turn: isThisDeviceActiveUpdateTurn
+
+        b. i. if the current isLeading (with the exact unique id) has not finished in timeStarted + 10seconds, the active
+              device immediately after it should unset the current isLeading device's isLeading to false if itself has not
+              exceeded its 10 seconds allowable time
+              i.e currentIsLeadingTimeTaken>10seconds && immediateNextDeviceTimeAtCheckNotGreaterThan20seconds
+              and set it's own to true; then proceed to fetching price data from the relevant financial market data provider.
+
+           ii. if (currentIsLeadingTimeTaken>10seconds && immediateNextDeviceTimeAtCheckGreaterThan20seconds){
+                    // do not proceed to fetching price data from the relevant financial market data provider
+                    // set the immediate next device's hasPreviouslyBeenSetAsIsLeading to true
+               }
+
+        c. IMPLEMENT THIS BEFORE b. : b might be not take place because the device immediately after the current isLeading has connection issues or has closed the application. Therefore;
+           -
+
+
+        - all isLeading should automatically stop their fetching process when time spent fetching has exceeded 10 seconds
+    notifying previous isLeading's allowedTimeHasExpired (periodical checking allowedTimeHasExpired, local storage of isLeadingVariable?)
+
+
+-- shouldThisDeviceStartFetching? ✔️
+-- isThisDevicePartOfAMultipleAUDMap
+-- remember to cancel timers
+-- ifIsFinished clause within ...accordingly
+
+
+-- the active update device finishing after it's been ordered to stop
+-- allowing devices with isAllowDeviceFetchDataDataProvider set to false to proceed..
+
+-- Time since updatePrices was called - initial,
+
+
+value (helping people) + personality
