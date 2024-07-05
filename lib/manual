@@ -13,3 +13,5 @@ Solutions - API based data provision (A websocket would eliminate the need for t
 Verdict: A web socket, which costs too much for this demo would greatly reduce the need for ingenuity,
          and the need to come up with creative ways to walk around the limitations of the current
          API limit - 55 credits per minute..
+
+Includes: A look of how the application would look on different iOS and Android devices
