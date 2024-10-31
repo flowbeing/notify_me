@@ -386,7 +386,7 @@ class _NotifyMeAppState extends State<NotifyMeApp> {
                         height: 10,
                       ),
 
-                      /// "Hire The Developer" button
+                      /// "Hire / Contact The Developer" button
                       // ElevatedButton(
                       //   onPressed: (null),
                       //   onHover: null,
@@ -409,7 +409,7 @@ class _NotifyMeAppState extends State<NotifyMeApp> {
                       //   ),
                       // ),
 
-                      /// "Hire Daniel" button
+                      /// "Hire / Contact Daniel" button
                       customElevationButton(
                           onPressed: () async{
                             // print("launching url"); --
@@ -421,7 +421,7 @@ class _NotifyMeAppState extends State<NotifyMeApp> {
                             // await Share.share("A great app: ${Uri.base}");
                           },
                           color: const Color(0xFF069D91),
-                          textOrImageString: "Hire Daniel 🤝"
+                          textOrImageString: "Contact Daniel 🤝"
                       ),
 
                       /// Spacing
@@ -447,8 +447,8 @@ class _NotifyMeAppState extends State<NotifyMeApp> {
                                     "→ Check out this beautiful app by 👊👊🏾🤓Daniel Oyebolu  😍 - ${Uri.base}\n"
                                     "→ It's financial markets application he coded using Flutter, Firebase and Rest API. 👨🏾‍💻\n"
                                     "→ Sharing for reach! \n\n"
-                                    "→ P.S: Help Daniel get hired by sharing! 🥂\n"
-                                    "#innovator #helphimgethired #flutter #firebase #RESTAPI"
+
+                                    "#innovator #flutter #firebase #RESTAPI"
                                 );
 
                                 await launchUrl(uri);
@@ -489,7 +489,7 @@ class _NotifyMeAppState extends State<NotifyMeApp> {
 
                                 Uri uri=Uri.parse("http://twitter.com/share?text=→ Check out this beautiful app by Daniel Oyebolu 😍\n"
                                     "→ It's financial markets application he coded using Flutter, Firebase and Rest API. 👨🏾‍💻\n"
-                                    "→ P.S: Help Daniel get hired by sharing! 🥂\n\n&url=${Uri.base}&hashtags=innovator,HelpHimGetHired,flutter,firebase,RESTAPI");
+                                    "🥂\n\n&url=${Uri.base}&hashtags=innovator,flutter,firebase,RESTAPI");
 
                                 await launchUrl(uri);
                                 // await Share.share("A great app: ${Uri.base}");

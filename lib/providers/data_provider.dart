@@ -1962,6 +1962,12 @@ class DataProvider with ChangeNotifier {
     /// determining a unit of the current alert price
     String aUnitOfTheAlertPrice = "1";
 
+    /// ensuring that there's at least four decimal numbers when no decimal
+    /// numbers exist to avoid errors..
+    if (countOfNumAfterDot==0){
+      countOfNumAfterDot=4;
+    }
+
     if (countOfNumAfterDot != 0) {
       aUnitOfTheAlertPrice = "0.${"0" * countOfNumAfterDot}";
       List<String> incrementValueOneUnitSplit = aUnitOfTheAlertPrice.split('');

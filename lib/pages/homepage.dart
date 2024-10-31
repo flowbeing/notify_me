@@ -969,7 +969,8 @@ class _CurrencyPriceAdjustmentContainerState
           Map unitPriceDataCurrentPairMap = dataProvider!
               .subtractOrAddOneOrFiveUnitsFromAlertPrice(
                   currentPairPriceStructure: initialValuePrice!,
-                  alertOperationType: AlertOperationType.calcUnitPrice);
+                  alertOperationType: AlertOperationType.calcUnitPrice
+          );
 
           /// current pair's unit price
           String unitPriceCurrentPair =
